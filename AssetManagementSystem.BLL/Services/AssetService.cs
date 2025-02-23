@@ -123,5 +123,12 @@ namespace AssetManagementSystem.BLL.Services
 		{
 			await _assetRepository.BulkDisposeAsync(assetTags, disposalType, saleValue);
 		}
+
+		// Add this new method
+		public async Task<IEnumerable<Asset>> GetAssetsByTags(IEnumerable<string> assetTags)
+		{
+			var allAssets = await _assetRepository.GetAllAsync();
+			return allAssets.Where(a => assetTags.Contains(a.AssetTag));
+		}
 	}
 }

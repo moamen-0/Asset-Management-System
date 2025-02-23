@@ -741,18 +741,22 @@ namespace AssetManagementSystem.PL.Controllers
 		{
 			try
 			{
-				// Get current user for audit trail
 				var currentUser = await GetCurrentUserAsync();
 				if (currentUser == null)
 				{
 					return Unauthorized();
 				}
 
-				// Validate the request
+				// Validate request
 				if (request.AssetTags == null || !request.AssetTags.Any())
 				{
 					return BadRequest("No assets selected for disposal");
 				}
+
+				// Get the assets being disposed
+				var assets = await _assetService.GetAssetsByTags(request.AssetTags);
+
+				
 
 				// Perform bulk disposal
 				await _assetService.BulkDisposeAssetsAsync(
@@ -761,7 +765,7 @@ namespace AssetManagementSystem.PL.Controllers
 					(decimal)request.SaleValue
 				);
 
-				// Add entry to changelog
+				// Log the change
 				await _unitOfWork.ChangeLogRepository.AddAsync(new ChangeLog
 				{
 					EntityName = "Asset",
@@ -772,13 +776,162 @@ namespace AssetManagementSystem.PL.Controllers
 					EntityId = string.Join(",", request.AssetTags)
 				});
 
-				return Ok(new { message = "Bulk disposal completed successfully" });
+				// Generate disposal document
+				var pdfBytes = await GenerateDisposalDocumentAsync(assets, request, currentUser);
+
+				// Return PDF file
+				return File(pdfBytes, "application/pdf", $"Disposal_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
 			}
 			catch (Exception ex)
 			{
 				return StatusCode(500, new { error = ex.Message });
 			}
 		}
+
+		private async Task<byte[]> GenerateDisposalDocumentAsync(
+			IEnumerable<Asset> assets,
+			BulkOperationRequest request,
+			User currentUser)
+		{
+			// Set QuestPDF license
+			QuestPDF.Settings.License = LicenseType.Community;
+
+			var department = assets.FirstOrDefault()?.Department;
+			var document = Document.Create(container =>
+			{
+				container.Page(page =>
+				{
+					page.Size(PageSizes.A4);
+					page.Margin(20);
+					page.DefaultTextStyle(x => x.FontSize(12));
+
+					// Header
+					page.Header().Row(row =>
+					{
+						// Logo
+						var logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "logo.png");
+						if (System.IO.File.Exists(logoPath))
+						{
+							row.ConstantItem(100).Image(logoPath).FitWidth();
+						}
+
+						// Title and Date
+						row.RelativeItem().Column(col =>
+						{
+							col.Item().Text("Disposal Document")
+								.FontSize(20)
+								.SemiBold()
+								.FontColor(Colors.Blue.Medium);
+
+							col.Item().Text($"Date: {DateTime.Now:dd/MM/yyyy}");
+							col.Item().Text($"Department: {department?.Name ?? "N/A"}");
+						});
+					});
+
+					// Main Content
+					page.Content().Column(col =>
+					{
+						// Disposal Details
+						col.Item().Table(table =>
+						{
+							table.ColumnsDefinition(columns =>
+							{
+								columns.ConstantColumn(150);
+								columns.RelativeColumn();
+							});
+
+							// Add disposal details
+							AddTableRow(table, "Disposal Type:", request.DisposalType);
+							AddTableRow(table, "Sale Value:", request.SaleValue?.ToString("C") ?? "N/A");
+							AddTableRow(table, "Disposed By:", currentUser.FullName);
+							AddTableRow(table, "Disposal Date:", DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
+						});
+
+						// Assets Table
+						col.Item().Padding(10).Table(table =>
+						{
+							table.ColumnsDefinition(columns =>
+							{
+								columns.RelativeColumn();
+								columns.RelativeColumn();
+								columns.RelativeColumn();
+								columns.RelativeColumn();
+							});
+
+							// Table Header
+							table.Header(header =>
+							{
+								header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Asset Tag");
+								header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Description");
+								header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Serial Number");
+								header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Location");
+							});
+
+							// Table Rows
+							foreach (var asset in assets)
+							{
+								table.Cell().Padding(5).Text(asset.AssetTag);
+								table.Cell().Padding(5).Text(asset.AssetDescription);
+								table.Cell().Padding(5).Text(asset.SerialNumber ?? "N/A");
+								table.Cell().Padding(5).Text(GetAssetLocation(asset));
+							}
+						});
+
+						// Signatures Section
+						col.Item().PaddingTop(50).Row(row =>
+						{
+							row.RelativeItem().Column(col =>
+							{
+								col.Item().Text("Disposed By:").Bold();
+								col.Item().PaddingTop(20).Text("_________________");
+								col.Item().Text(currentUser.FullName);
+							});
+
+							row.RelativeItem().Column(col =>
+							{
+								col.Item().Text("Approved By:").Bold();
+								col.Item().PaddingTop(20).Text("_________________");
+								col.Item().Text("Name and Signature");
+							});
+						});
+					});
+
+					// Footer
+					page.Footer()
+						.AlignCenter()
+						.Text(x =>
+						{
+							x.Span("Generated on: ").FontSize(10);
+							x.Span(DateTime.Now.ToString("dd/MM/yyyy HH:mm")).FontSize(10);
+						});
+				});
+			});
+
+			// Generate PDF
+			using var stream = new MemoryStream();
+			document.GeneratePdf(stream);
+			return stream.ToArray();
+		}
+
+		private void AddTableRow(TableDescriptor table, string label, string value)
+		{
+			table.Cell().Padding(5).Text(label).Bold();
+			table.Cell().Padding(5).Text(value);
+		}
+
+		private string GetAssetLocation(Asset asset)
+		{
+			var locations = new[]
+			{
+		asset.Facility?.Name,
+		asset.Building?.Name,
+		asset.Floor?.Name,
+		asset.Room?.Name
+	};
+
+			return string.Join(" / ", locations.Where(l => !string.IsNullOrEmpty(l)));
+		}
+
 		[HttpGet]
 		public async Task<IActionResult> GetUsers()
 		{

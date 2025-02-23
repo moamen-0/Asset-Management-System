@@ -27,7 +27,7 @@ namespace AssetManagementSystem.BLL.Interfaces.IService
 		Task<IEnumerable<User>> GetAllUsersAsync();
 		Task BulkTransferAssetsAsync(IEnumerable<string> assetTags, int targetDepartmentId, string? targetUserId);
 		Task BulkDisposeAssetsAsync(IEnumerable<string> assetTags, string disposalType, decimal saleValue);
-
+		Task<IEnumerable<Asset>> GetAssetsByTags(IEnumerable<string> assetTags);
 
 	}
 }

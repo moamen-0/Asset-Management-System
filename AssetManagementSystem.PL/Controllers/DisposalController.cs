@@ -168,7 +168,7 @@ namespace AssetManagementSystem.PL.Controllers
 			return View(disposal);
 		}
 
-		// 🟢 تنفيذ الحذف
+		//  تنفيذ الحذف
 		[HttpPost, ActionName("Delete")]
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> DeleteConfirmed(int id)

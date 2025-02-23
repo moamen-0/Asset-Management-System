@@ -189,6 +189,7 @@ AST004&#9;AST005"></textarea>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="bulkDisposalForm">
+                <!-- Update the bulk disposal modal body -->
                 <div class="modal-body">
                     <div class="alert alert-warning">
                         <span id="disposeAssetCount">0</span> assets selected for disposal
@@ -200,11 +201,23 @@ AST004&#9;AST005"></textarea>
                             <option value="Sale">Sale</option>
                             <option value="Scrapped">Scrapped</option>
                             <option value="Donated">Donated</option>
+                            <option value="Return">Return to Supplier</option>
+                            <option value="Lost">Lost/Missing</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Sale Value</label>
                         <input type="number" id="saleValue" class="form-control" value="0" min="0" step="0.01" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Disposal Reason</label>
+                        <textarea id="disposalReason" class="form-control" rows="3"
+                                  placeholder="Enter reason for disposal"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea id="disposalNotes" class="form-control" rows="2"
+                                  placeholder="Additional notes (optional)"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -224,8 +237,48 @@ AST004&#9;AST005"></textarea>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.min.js"></script>
+    <style>
+        .downloading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
 
+        .downloading-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+    </style>
     <script>
+                function showDownloadingOverlay() {
+            const overlay = $(`
+                <div class="downloading-overlay">
+                    <div class="downloading-content">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <h5>Generating Disposal Document</h5>
+                        <p class="text-muted">Please wait while we prepare your document...</p>
+                    </div>
+                </div>
+            `);
+            $('body').append(overlay);
+            return overlay;
+        }
         $(document).ready(function () {
             // Initialize DataTable
             let table = $('#assetsTable').DataTable({
@@ -259,9 +312,9 @@ AST004&#9;AST005"></textarea>
                                     <a href="/Asset/Delete/${row.assetTag}" class="btn btn-sm btn-danger" title="Delete">
                                         <i class="bi bi-trash"></i>
                                     </a>
-                                    <a href="/Asset/Dispose/${row.assetTag}" class="btn btn-sm btn-warning" title="Dispose">
+                                    <button class="btn btn-sm btn-warning dispose-btn" title="Dispose" data-asset-tag="${row.assetTag}">
                                         <i class="bi bi-recycle"></i>
-                                    </a>
+                                    </button>
                                 </div>`;
                         }
                     },
@@ -568,32 +621,79 @@ AST004&#9;AST005"></textarea>
             });
 
             // Handle bulk disposal form submission
-            $('#bulkDisposalForm').on('submit', function (e) {
-                e.preventDefault();
+                    // Replace the existing bulk disposal form submission with this:
+        $('#bulkDisposalForm').on('submit', function (e) {
+            e.preventDefault();
 
-                const request = {
-                    assetTags: Array.from(selectedAssets),
-                    disposalType: $('#disposalType').val(),
-                    saleValue: parseFloat($('#saleValue').val()) || 0
-                };
+            const request = {
+                assetTags: Array.from(selectedAssets),
+                disposalType: $('#disposalType').val(),
+                saleValue: parseFloat($('#saleValue').val()) || 0
+            };
 
-                $.ajax({
-                    url: '/Asset/BulkDispose',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(request),
-                    success: function () {
-                        $('#bulkDisposalModal').modal('hide');
-                        selectedAssets.clear();
-                        updateBulkControls();
-                        table.ajax.reload();
-                        toastr.success('Assets disposed successfully');
-                    },
-                    error: function (xhr) {
-                        toastr.error(xhr.responseJSON?.error || 'Error performing bulk disposal');
+            if (!request.disposalType) {
+                alert('Please select a disposal type');
+                return;
+            }
+
+            // Show confirmation dialog
+            if (!confirm(`Are you sure you want to dispose of ${request.assetTags.length} assets?`)) {
+                return;
+            }
+
+            // Send the request
+            $.ajax({
+                url: '/Asset/BulkDispose',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(request),
+                xhrFields: {
+                    responseType: 'blob' // Expect binary data (PDF) in response
+                },
+                success: function (blob) {
+                    // Handle PDF download
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Disposal_Document_${new Date().toISOString().slice(0,10)}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+
+                    // Clean up and update UI
+                    $('#bulkDisposalModal').modal('hide');
+                    selectedAssets.clear();
+                    updateBulkControls();
+                    table.ajax.reload();
+
+                    // Show success message
+                    toastr.success('Assets disposed successfully. Downloading disposal document...');
+                },
+                error: function (xhr) {
+                    // Try to parse error message
+                    let errorMessage = 'Error performing bulk disposal';
+                    if (xhr.responseType !== 'blob') {
+                        try {
+                            const errorResponse = JSON.parse(xhr.responseText);
+                            errorMessage = errorResponse.error || errorMessage;
+                        } catch (e) {
+                            console.error('Error parsing error response:', e);
+                        }
                     }
-                });
+                    toastr.error(errorMessage);
+                }
             });
+        });
+
+        // Handle individual dispose button click
+        $(document).on('click', '.dispose-btn', function () {
+            const assetTag = $(this).data('asset-tag');
+            selectedAssets.clear();
+            selectedAssets.add(assetTag);
+
+            // Trigger the bulk disposal modal
+            $('#bulkDisposalModal').modal('show');
+        });
         });
     </script>
 }
