@@ -1,4 +1,5 @@
-﻿@model EditProfileViewModel
+﻿@using AssetManagementSystem.DAL.Entities
+@model EditProfileViewModel
 @{
     ViewData["Title"] = "Edit Profile";
     Layout = "~/Views/Shared/_Dashboard.cshtml";
@@ -23,15 +24,26 @@
                             <label asp-for="Email">Email</label>
                             <input asp-for="Email" class="form-control" type="email">
                             <span asp-validation-for="Email" class="text-danger"></span>
+                        </div> 
+                        <div class="form-group mb-3">
+                            <label asp-for="NationalId">National Id</label>
+                            <input asp-for="NationalId" class="form-control">
+                            <span asp-validation-for="NationalId" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label asp-for="FileNumber">File Number</label>
+                            <input asp-for="FileNumber" class="form-control">
+                            <span asp-validation-for="FileNumber" class="text-danger"></span>
                         </div>
 
                         <div class="form-group mb-3">
                             <label asp-for="DepartmentId">Department</label>
                             <select asp-for="DepartmentId" class="form-control"
-                                    asp-items="@(new SelectList(ViewBag.Departments, "Id", "Name"))">
-                                <option value="">-- Select Department --</option>
+                                    asp-items="@(ViewBag.Departments)">
                             </select>
                         </div>
+
+
 
                         <button type="submit" class="btn btn-primary">Save Changes</button>
                         <a asp-action="Profile" class="btn btn-secondary">Cancel</a>

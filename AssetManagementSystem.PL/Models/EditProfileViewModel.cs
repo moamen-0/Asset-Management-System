@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 
 namespace AssetManagementSystem.PL.Models
 {
@@ -11,6 +12,13 @@ namespace AssetManagementSystem.PL.Models
 		[EmailAddress]
 		public string Email { get; set; }
 
-		public int? DepartmentId { get; set; }
+		public string NationalId { get; set; }
+
+		public string FileNumber { get; set; }
+
+		public int? DepartmentId { get; set; } // Nullable
+
+		public List<SelectListItem> Departments { get; set; } = new List<SelectListItem>();
 	}
+
 }

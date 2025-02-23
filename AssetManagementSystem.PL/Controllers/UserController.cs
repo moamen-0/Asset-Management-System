@@ -10,17 +10,21 @@ using System.Security.Claims;
 using AssetManagementSystem.BLL.Interfaces.IService;
 using AssetManagementSystem.PL.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using AssetManagementSystem.DAL.Utilities;
 
+[Authorize]
 public class UserController : Controller
 {
 	private readonly UserManager<User> _userManager;
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly IUserService _userService;
-	public UserController(UserManager<User> userManager,IUnitOfWork unitOfWork, IUserService userService)
+	private readonly RoleManager<IdentityRole> _roleManager;
+	public UserController(UserManager<User> userManager,IUnitOfWork unitOfWork, IUserService userService, RoleManager<IdentityRole> roleManager)
 	{
 		_userManager = userManager;
 		_unitOfWork = unitOfWork;
 		_userService = userService;
+		_roleManager = roleManager;
 	}
 
 	[HttpGet]
@@ -41,6 +45,7 @@ public class UserController : Controller
 	}
 
 	// List all users
+	[Authorize(Roles = Roles.Admin)]
 	public async Task<IActionResult> Index()
 	{
 		var users = await _unitOfWork.user.GetAllUsersAsync();
@@ -57,9 +62,10 @@ public class UserController : Controller
 		return View(user);
 	}
 
-	
+
 
 	// Create new user (GET)
+	[Authorize(Roles = Roles.Admin)]
 	public IActionResult Create()
 	{
 		return View();
@@ -79,6 +85,7 @@ public class UserController : Controller
 	}
 
 	// Edit user (GET)
+	[Authorize(Roles = $"{Roles.Admin},{Roles.Manager}")]
 	public async Task<IActionResult> Edit(string id)
 	{
 		var user = await _unitOfWork.user.GetUserByIdAsync(id);
@@ -100,6 +107,7 @@ public class UserController : Controller
 	}
 
 	// Delete user (GET)
+	[Authorize(Roles = Roles.Admin)]
 	public async Task<IActionResult> Delete(string id)
 	{
 		var user = await _unitOfWork.user.GetUserByIdAsync(id);
@@ -126,28 +134,15 @@ public class UserController : Controller
 			if (user == null)
 				return NotFound();
 
-			// Get departments and check if the list is not null
-			var departments = await _unitOfWork.DepartmentRepository.GetAllAsync() ?? new List<Department>();
-
-			// Add a default "No Department" option
-			var departmentList = new List<SelectListItem>
-		{
-			new SelectListItem { Value = "", Text = "-- No Department --" }
-		};
-
-			// Add the rest of the departments
-			departmentList.AddRange(departments.Select(d => new SelectListItem
-			{
-				Value = d.Id.ToString(),
-				Text = d.Name
-			}));
-
-			ViewBag.Departments = departmentList;
+			// Populate the department dropdown
+			await PopulateDepartmentsDropdown(user.DepartmentId);
 
 			var model = new EditProfileViewModel
 			{
 				FullName = user.FullName,
 				Email = user.Email,
+				NationalId = user.NationalId,
+				FileNumber = user.RecipientFileNumber,
 				DepartmentId = user.DepartmentId
 			};
 
@@ -155,9 +150,11 @@ public class UserController : Controller
 		}
 		catch (Exception ex)
 		{
+			Console.WriteLine($"Error in EditProfile (GET): {ex.Message}");
 			return RedirectToAction("Error", "Home");
 		}
 	}
+
 
 	[HttpPost]
 	[ValidateAntiForgeryToken]
@@ -178,7 +175,9 @@ public class UserController : Controller
 
 			user.FullName = model.FullName;
 			user.Email = model.Email;
-			user.DepartmentId = model.DepartmentId; // This can be null
+			user.DepartmentId = model.DepartmentId ?? null;
+			user.NationalId = model.NationalId;
+			user.RecipientFileNumber = model.FileNumber;
 
 			var result = await _userService.UpdateUserProfileAsync(user);
 			if (result)
@@ -188,35 +187,45 @@ public class UserController : Controller
 			}
 
 			ModelState.AddModelError("", "Failed to update profile");
-			await PopulateDepartmentsDropdown(model.DepartmentId);
-			return View(model);
+		}
+		catch (DbUpdateException dbEx)
+		{
+			ModelState.AddModelError("", "Database error occurred while updating profile");
+			Console.WriteLine($"Database Error: {dbEx.Message}");
 		}
 		catch (Exception ex)
 		{
-			ModelState.AddModelError("", "An error occurred while updating the profile");
-			await PopulateDepartmentsDropdown(model.DepartmentId);
-			return View(model);
+			ModelState.AddModelError("", "An unexpected error occurred while updating profile");
+			Console.WriteLine($"Unexpected Error: {ex.Message}");
 		}
+
+		await PopulateDepartmentsDropdown(model.DepartmentId);
+		return View(model);
 	}
+
+
 
 	private async Task PopulateDepartmentsDropdown(int? selectedDepartmentId)
 	{
+		// Fetch all departments from the database
 		var departments = await _unitOfWork.DepartmentRepository.GetAllAsync() ?? new List<Department>();
 
-		var departmentList = new List<SelectListItem>
-	{
-		new SelectListItem { Value = "", Text = "-- No Department --" }
-	};
-
-		departmentList.AddRange(departments.Select(d => new SelectListItem
+		// Convert departments to a SelectList
+		var departmentList = departments.Select(d => new SelectListItem
 		{
 			Value = d.Id.ToString(),
 			Text = d.Name,
-			Selected = d.Id == selectedDepartmentId
-		}));
+			Selected = selectedDepartmentId.HasValue && d.Id == selectedDepartmentId.Value
+		}).ToList();
 
+		// Optional: Add a default "No Department" option at the top
+		departmentList.Insert(0, new SelectListItem { Value = "", Text = "-- Department --" });
+
+		// Pass the list to ViewBag
 		ViewBag.Departments = departmentList;
 	}
+
+
 
 	[HttpGet]
 	public IActionResult ChangePassword()
@@ -238,5 +247,50 @@ public class UserController : Controller
 
 		ModelState.AddModelError("", "Password change failed");
 		return View(model);
+	}
+
+	[Authorize(Roles = Roles.Admin)]
+	public async Task<IActionResult> ManageRoles(string userId)
+	{
+		var user = await _userManager.FindByIdAsync(userId);
+		if (user == null)
+		{
+			return NotFound();
+		}
+
+		var model = new UserRoleViewModel
+		{
+			UserId = user.Id,
+			Email = user.Email,
+			FullName = user.FullName,
+			CurrentRoles = (await _userManager.GetRolesAsync(user)).ToList(),
+			AvailableRoles = _roleManager.Roles.Select(r => r.Name).ToList()
+		};
+
+		return View(model);
+	}
+
+	[HttpPost]
+	[Authorize(Roles = Roles.Admin)]
+	public async Task<IActionResult> UpdateRoles(string userId, List<string> selectedRoles)
+	{
+		var user = await _userManager.FindByIdAsync(userId);
+		if (user == null)
+		{
+			return NotFound();
+		}
+
+		var currentRoles = await _userManager.GetRolesAsync(user);
+
+		// Remove existing roles
+		await _userManager.RemoveFromRolesAsync(user, currentRoles);
+
+		// Add selected roles
+		if (selectedRoles != null && selectedRoles.Any())
+		{
+			await _userManager.AddToRolesAsync(user, selectedRoles);
+		}
+
+		return RedirectToAction(nameof(Index));
 	}
 }

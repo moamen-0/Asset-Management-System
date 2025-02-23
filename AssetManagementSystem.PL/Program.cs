@@ -6,9 +6,11 @@ using AssetManagementSystem.BLL.Repositories;
 using AssetManagementSystem.BLL.Services;
 using AssetManagementSystem.DAL.Data;
 using AssetManagementSystem.DAL.Entities;
+using AssetManagementSystem.DAL.Utilities;
 using AssetManagementSystem.PL.Mapping;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using NETCore.MailKit.Extensions;
 using NETCore.MailKit.Infrastructure.Internal;
 using System.Text.Json.Serialization;
@@ -60,14 +62,79 @@ namespace AssetManagementSystem.PL
 				.AddDefaultTokenProviders();
 			builder.Services.AddMemoryCache();
 
-			// تفعيل المصادقة
+			// Add this after AddIdentity<User, IdentityRole>()
+			builder.Services.Configure<IdentityOptions>(options =>
+			{
+				// Password settings
+				options.Password.RequiredLength = 6;
+				options.Password.RequireNonAlphanumeric = false;
+				options.Password.RequireDigit = false;
+				options.Password.RequireLowercase = false;
+				options.Password.RequireUppercase = false;
+
+				// Lockout settings
+				options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+				options.Lockout.MaxFailedAccessAttempts = 5;
+				options.Lockout.AllowedForNewUsers = true;
+
+				// User settings
+				options.User.RequireUniqueEmail = true;
+			});
+
+			// Add caching
+			builder.Services.AddMemoryCache();
+
+			builder.Services.AddDbContextPool<AssetManagementDbContext>(options =>
+			{
+				options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+					sqlServerOptionsAction: sqlOptions =>
+					{
+						sqlOptions.CommandTimeout(30);  // Set command timeout to 30 seconds
+						sqlOptions.EnableRetryOnFailure(
+							maxRetryCount: 5,
+							maxRetryDelay: TimeSpan.FromSeconds(30),
+							errorNumbersToAdd: null);
+					});
+			});
+			// Add this after AddMemoryCache()
+			builder.Services.Configure<MemoryCacheOptions>(options =>
+			{
+				options.SizeLimit = 1024;
+				options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
+			});
+
+			// Update your ConfigureApplicationCookie
 			builder.Services.ConfigureApplicationCookie(options =>
 			{
 				options.LoginPath = "/Auth/Login";
 				options.AccessDeniedPath = "/Auth/AccessDenied";
+				options.ExpireTimeSpan = TimeSpan.FromHours(2);
+				options.SlidingExpiration = true;
+				options.Cookie.HttpOnly = true;
+				options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 			});
 
+			builder.Services.AddSession(options =>
+			{
+				options.IdleTimeout = TimeSpan.FromMinutes(30);
+				options.Cookie.HttpOnly = true;
+				options.Cookie.IsEssential = true;
+			});
 
+			builder.Services.AddAuthorization(options =>
+			{
+				options.AddPolicy("RequireAdminRole",
+					policy => policy.RequireRole(Roles.Admin));
+
+				options.AddPolicy("RequireManagerRole",
+					policy => policy.RequireRole(Roles.Manager));
+
+				options.AddPolicy("RequireSupervisorRole",
+					policy => policy.RequireRole(Roles.Supervisor));
+
+				options.AddPolicy("RequireDataEntryRole",
+					policy => policy.RequireRole(Roles.DataEntry));
+			});
 
 			builder.Services.AddHttpContextAccessor();
 
@@ -103,6 +170,7 @@ namespace AssetManagementSystem.PL
 			}
 
 			app.UseStaticFiles();
+			app.UseSession();
 			app.UseRouting();
 			app.UseAuthentication();
 			app.UseAuthorization();
@@ -110,7 +178,7 @@ namespace AssetManagementSystem.PL
             app.MapStaticAssets();
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}")
+                pattern: "{controller=Auth}/{action=Login}/{id?}")
                 .WithStaticAssets();
 
             app.Run();

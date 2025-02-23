@@ -3,8 +3,10 @@ using AssetManagementSystem.BLL.Interfaces;
 using AssetManagementSystem.BLL.Interfaces.IRepository;
 using AssetManagementSystem.BLL.Interfaces.IService;
 using AssetManagementSystem.DAL.Entities;
+using AssetManagementSystem.DAL.Utilities;
 using AssetManagementSystem.PL.Models;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -18,6 +20,7 @@ using System.Threading.Tasks;
 
 namespace AssetManagementSystem.PL.Controllers
 {
+	[Authorize]
 	public class AssetController : Controller
 	{
 		private readonly IAssetService _assetService;
@@ -229,7 +232,7 @@ namespace AssetManagementSystem.PL.Controllers
 		}
 
 		// GET: Create
-	
+		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
 		public IActionResult Create()
 		{
 			return View();
@@ -265,27 +268,8 @@ namespace AssetManagementSystem.PL.Controllers
 		}
 
 
-		//// Helper Method to Populate Dropdown Lists Using Repositories
-		//private async Task PopulateDropdownLists(AssetViewModel model)
-		//{
-		//	model.Facilities = (await _unitOfWork.FacilityRepository.GetAllAsync())
-		//		.Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name }).ToList();
-
-		//	model.Buildings = (await _unitOfWork.buildingRepository.GetAllAsync())
-		//		.Select(b => new SelectListItem { Value = b.Id.ToString(), Text = b.Name }).ToList();
-
-		//	model.Floors = (await _unitOfWork.floorRepository.GetAllAsync())
-		//		.Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Name }).ToList();
-
-		//	model.Rooms = (await _unitOfWork.RoomRepository.GetAllAsync())
-		//		.Select(r => new SelectListItem { Value = r.RoomTag, Text = r.RoomTag }).ToList();
-
-		//	model.Departments = (await _unitOfWork.DepartmentRepository.GetAllAsync())
-		//		.Select(d => new SelectListItem { Value = d.Id.ToString(), Text = d.Name }).ToList();
-
-
-		//}
-
+	
+		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.Supervisor}")]
 		public async Task<IActionResult> Edit(string id)
 		{
 			var asset = await _assetService.GetAssetByIdAsync(id);
@@ -318,6 +302,7 @@ namespace AssetManagementSystem.PL.Controllers
 
 
 		[HttpGet("Asset/Delete/{id}")]
+		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager}")]
 		public async Task<IActionResult> Delete(string id)
 		{
 			var asset = await _assetService.GetAssetByIdAsync(id);
@@ -351,6 +336,8 @@ namespace AssetManagementSystem.PL.Controllers
 			return RedirectToAction(nameof(Index));
 		}
 
+		[HttpGet]
+		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
 		public async Task<IActionResult> Dispose(string id)
 		{
 			var asset = await _assetService.GetAssetByIdAsync(id);
@@ -392,6 +379,7 @@ namespace AssetManagementSystem.PL.Controllers
 
 
 		[HttpPost]
+		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
 		public  IActionResult UpdateAsset([FromBody] Asset asset)
 		{
 			 _assetService.UpdateAssetAsync(asset);
@@ -399,12 +387,14 @@ namespace AssetManagementSystem.PL.Controllers
 		}
 
 		[HttpPost]
+		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
 		public IActionResult AddAsset([FromBody] Asset asset)
 		{
 			_assetService.AddAssetAsync(asset);
 			return Ok();
 		}
 		[HttpPost]
+		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
 		public async Task<IActionResult> ImportAssets(IFormFile file)
 		{
 			if (file == null || file.Length == 0)
@@ -481,6 +471,7 @@ namespace AssetManagementSystem.PL.Controllers
 
 
 		[HttpGet]
+		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
 		public async Task<ActionResult> ExportAssets()
 		{
 			try
@@ -567,6 +558,7 @@ namespace AssetManagementSystem.PL.Controllers
 		}
 
 		[HttpGet]
+		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
 		public async Task<IActionResult> ExportAssetsToPdf()
 		{
 			// Set QuestPDF license type
@@ -681,6 +673,7 @@ namespace AssetManagementSystem.PL.Controllers
 		}
 
 		[HttpPost]
+		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
 		public async Task<IActionResult> BulkTransfer([FromBody] BulkOperationRequest request)
 		{
 			try
@@ -737,6 +730,7 @@ namespace AssetManagementSystem.PL.Controllers
 		}
 
 		[HttpPost]
+		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
 		public async Task<IActionResult> BulkDispose([FromBody] BulkOperationRequest request)
 		{
 			try

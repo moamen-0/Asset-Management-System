@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 using AssetManagementSystem.BLL.Interfaces;
 using AssetManagementSystem.DAL.Entities;
 using AssetManagementSystem.PL.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace AssetManagementSystem.PL.Controllers
 {
+	[Authorize]
 	public class HomeController : Controller
 	{
 		private readonly IUnitOfWork _unitOfWork;
@@ -22,6 +24,7 @@ namespace AssetManagementSystem.PL.Controllers
 			_userManager = userManager;
 		}
 
+		[Authorize]
 		public async Task<IActionResult> Index()
 		{
 			// Get the logged-in user's ID

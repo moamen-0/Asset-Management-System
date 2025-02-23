@@ -4,6 +4,10 @@ using System.Threading.Tasks;
 using AssetManagementSystem.DAL.Entities;
 using AssetManagementSystem.PL.Models;
 using AssetManagementSystem.BLL.Interfaces.IService;
+using AssetManagementSystem.DAL.Utilities;
+using Microsoft.AspNetCore.Authorization;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.EntityFrameworkCore;
 
 namespace AssetManagementSystem.Controllers
 {
@@ -12,12 +16,24 @@ namespace AssetManagementSystem.Controllers
 		private readonly SignInManager<User> _signInManager;
 		private readonly UserManager<User> _userManager;
 		private readonly IUserService _userService;
+		
 
 		public AuthController(SignInManager<User> signInManager, UserManager<User> userManager, IUserService userService)
 		{
 			_signInManager = signInManager;
 			_userManager = userManager;
 			_userService = userService;
+		}
+
+		[Authorize(Roles = Roles.Admin)]
+		public async Task<IActionResult> AssignRole(string userId, string roleName)
+		{
+			var user = await _userManager.FindByIdAsync(userId);
+			if (user != null)
+			{
+				await _userManager.AddToRoleAsync(user, roleName);
+			}
+			return RedirectToAction("Index", "User");
 		}
 
 		public IActionResult Login() => View();
@@ -30,7 +46,11 @@ namespace AssetManagementSystem.Controllers
 				return View(model);
 			}
 
-			var user = await _userManager.FindByEmailAsync(model.Email);
+			// Use AsNoTracking() for read-only query
+			var user = await _userManager.Users
+				.AsNoTracking()
+				.FirstOrDefaultAsync(u => u.Email == model.Email);
+
 
 			if (user != null)
 			{
@@ -39,7 +59,7 @@ namespace AssetManagementSystem.Controllers
 				if (result.Succeeded)
 				{
 					
-					return RedirectToAction("Index", "Home");
+					return RedirectToAction("Profile", "User");
 				}
 			}
 
@@ -80,6 +100,8 @@ namespace AssetManagementSystem.Controllers
 
 			if (result.Succeeded)
 			{
+				// Assign default role
+				await _userManager.AddToRoleAsync(newUser, Roles.User);
 				return RedirectToAction("Login");
 			}
 

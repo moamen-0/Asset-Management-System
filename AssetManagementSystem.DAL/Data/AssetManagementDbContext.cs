@@ -1,5 +1,6 @@
 ﻿using AssetManagementSystem.DAL.Entities;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -134,7 +135,19 @@ namespace AssetManagementSystem.DAL.Data
 			}
 			else
 			{
-				entityId = entry.Property("Id")?.CurrentValue?.ToString() ?? "0";
+				if (entry.Metadata.ClrType == typeof(IdentityUserRole<string>))
+				{
+					var userIdProp = entry.Property("UserId");
+					var roleIdProp = entry.Property("RoleId");
+
+					entityId = $"UserId: {userIdProp?.CurrentValue?.ToString() ?? "Unknown"}, RoleId: {roleIdProp?.CurrentValue?.ToString() ?? "Unknown"}";
+				}
+				else
+				{
+					var idProp = entry.Property("Id");
+					entityId = idProp?.CurrentValue?.ToString() ?? "0";
+				}
+
 
 				// If the entity is new and hasn't been saved yet, use a temporary GUID
 				if (preSaveState == EntityState.Added && entityId == "0")
@@ -185,6 +198,14 @@ namespace AssetManagementSystem.DAL.Data
 				UserId = userId // Assign the logged-in user's ID
 			};
 		}
+
+		//protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+		//{
+		//	base.OnConfiguring(optionsBuilder);
+		//	optionsBuilder.UseSqlServer("DefaultConnection",
+		//		sqlOptions => sqlOptions.CommandTimeout(60)); 
+		//}
+
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -262,6 +283,8 @@ namespace AssetManagementSystem.DAL.Data
 
 			modelBuilder.Entity<ChangeLog>()
 				.HasIndex(c => new { c.EntityName, c.EntityId });
+
+
 		}
 	}
 }
