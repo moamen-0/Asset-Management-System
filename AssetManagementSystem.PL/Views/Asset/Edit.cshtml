@@ -1,0 +1,117 @@
+﻿@model AssetManagementSystem.DAL.Entities.Asset
+@{
+    ViewData["Title"] = "Edit Asset";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="card shadow rounded">
+        <div class="card-header bg-primary text-white d-flex align-items-center">
+            <i class="bi bi-pencil-square me-2"></i>
+            <h4 class="mb-0">Edit Asset</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit">
+                <input type="hidden" asp-for="AssetTag" />
+
+                <div class="row">
+                    <!-- Left Column -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Cluster" class="fw-bold"><i class="bi bi-diagram-3 me-1"></i> Cluster</label>
+                            <input asp-for="Cluster" class="form-control" placeholder="Enter cluster name" />
+                            <span asp-validation-for="Cluster" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="FacilityId" class="fw-bold"><i class="bi bi-buildings me-1"></i> Facility</label>
+                            <select asp-for="FacilityId" class="form-control" asp-items="ViewBag.Facilities"></select>
+                            <span asp-validation-for="FacilityId" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="BuildingId" class="fw-bold"><i class="bi bi-house me-1"></i> Building</label>
+                            <select asp-for="BuildingId" class="form-control" asp-items="ViewBag.Buildings"></select>
+                            <span asp-validation-for="BuildingId" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="FloorId" class="fw-bold"><i class="bi bi-layers me-1"></i> Floor</label>
+                            <select asp-for="FloorId" class="form-control" asp-items="ViewBag.Floors"></select>
+                            <span asp-validation-for="FloorId" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="RoomTag" class="fw-bold"><i class="bi bi-door-closed me-1"></i> Room</label>
+                            <input asp-for="RoomTag" class="form-control" placeholder="Enter room tag" />
+                            <span asp-validation-for="RoomTag" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="DepartmentId" class="fw-bold"><i class="bi bi-people me-1"></i> Department</label>
+                            <select asp-for="DepartmentId" class="form-control" asp-items="ViewBag.Departments"></select>
+                            <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="AssetDescription" class="fw-bold"><i class="bi bi-file-text me-1"></i> Description</label>
+                            <input asp-for="AssetDescription" class="form-control" placeholder="Enter asset description" />
+                            <span asp-validation-for="AssetDescription" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Brand" class="fw-bold"><i class="bi bi-building me-1"></i> Brand</label>
+                            <input asp-for="Brand" class="form-control" placeholder="Enter brand name" />
+                            <span asp-validation-for="Brand" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Model" class="fw-bold"><i class="bi bi-cpu me-1"></i> Model</label>
+                            <input asp-for="Model" class="form-control" placeholder="Enter model" />
+                            <span asp-validation-for="Model" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="AssetType" class="fw-bold"><i class="bi bi-list-ul me-1"></i> Asset Type</label>
+                            <select asp-for="AssetType" class="form-control" asp-items="ViewBag.AssetTypes"></select>
+                            <span asp-validation-for="AssetType" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Status" class="fw-bold"><i class="bi bi-exclamation-circle me-1"></i> Status</label>
+                            <select asp-for="Status" class="form-control">
+                                <option value="Active">Active</option>
+                                <option value="Under Maintenance">Under Maintenance</option>
+                                <option value="Decommissioned">Decommissioned</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="SerialNumber" class="fw-bold"><i class="bi bi-upc-scan me-1"></i> Serial Number</label>
+                            <input asp-for="SerialNumber" class="form-control" placeholder="Enter serial number" />
+                            <span asp-validation-for="SerialNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group form-check mb-3">
+                            <input type="checkbox" asp-for="IsDisposed" class="form-check-input" />
+                            <label class="form-check-label fw-bold" asp-for="IsDisposed"><i class="bi bi-trash me-1"></i> Disposed?</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-save me-1"></i> Save
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

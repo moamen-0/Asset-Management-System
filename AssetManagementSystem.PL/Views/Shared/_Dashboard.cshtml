@@ -1,0 +1,340 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- AdminLTE CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
+
+    <style>
+        .nav-item .icon-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 0.75rem;
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            padding: 3px 6px;
+        }
+
+        /* Dark Mode Styles */
+        .dark-mode {
+            background-color: #343a40 !important;
+            color: white !important;
+        }
+
+            .dark-mode .main-header.navbar {
+                background-color: #343a40 !important;
+                border-color: #454d55 !important;
+            }
+
+            .dark-mode .main-header .navbar-nav .nav-link {
+                color: white !important;
+            }
+
+            .dark-mode .main-sidebar {
+                background-color: #343a40 !important;
+            }
+
+                .dark-mode .main-sidebar .nav-sidebar .nav-link {
+                    color: white !important;
+                }
+
+            .dark-mode .content-wrapper {
+                background-color: #454d55 !important;
+            }
+
+            .dark-mode .brand-link {
+                background-color: #343a40 !important;
+                color: white !important;
+            }
+
+            .dark-mode .user-panel .info a {
+                color: white !important;
+            }
+
+            .dark-mode .dropdown-menu {
+                background-color: #343a40 !important;
+                border-color: #454d55 !important;
+            }
+
+            .dark-mode .dropdown-item {
+                color: white !important;
+            }
+
+                .dark-mode .dropdown-item:hover {
+                    background-color: #454d55 !important;
+                }
+    </style>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+
+    <div class="wrapper">
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+                        <i class="fas fa-bars"></i>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                        <i class="fas fa-expand"></i>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Live Search Bar -->
+            <form class="form-inline mx-auto">
+                <input class="form-control" id="liveSearch" type="text" placeholder="Search...">
+                <button type="button" id="resetSearch" class="btn btn-secondary ml-2">Reset</button>
+            </form>
+
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ms-auto">
+                <!-- Notifications Icon -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link" href="#" id="notificationIcon" data-bs-toggle="dropdown">
+                        <i class="fas fa-bell"></i>
+                        <span class="icon-badge">3</span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationIcon">
+                        <a class="dropdown-item" href="#">New asset added</a>
+                        <a class="dropdown-item" href="#">Approval pending</a>
+                        <a class="dropdown-item" href="#">System update</a>
+                    </div>
+                </li>
+
+                <!-- Language Switcher -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-globe"></i> Language
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                        <li><a class="dropdown-item" href="#" onclick="changeLanguage('en')">English 🇺🇸</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="changeLanguage('ar')">العربية 🇪🇬</a></li>
+                    </ul>
+                </li>
+
+                <!-- Dark Mode Toggle -->
+                <li class="nav-item">
+                    <a class="nav-link" href="#" id="darkModeToggle">
+                        <i class="fas fa-moon"></i>
+                    </a>
+                </li>
+
+                <!-- User Profile Link -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle"></i> Profile
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" asp-controller="User" asp-action="Profile">View Profile</a></li>
+                        <li><a class="dropdown-item" asp-controller="User" asp-action="EditProfile">Edit Profile</a></li>
+                        <li><a class="dropdown-item" asp-controller="User" asp-action="ChangePassword">Change Password</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" asp-controller="Auth" asp-action="Logout">Logout</a></li>
+                    </ul>
+                </li>
+
+                <!-- Logout Button -->
+                <li class="nav-item">
+                    <form asp-controller="Auth" asp-action="Logout" method="post" id="logoutForm">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Sidebar -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <!-- Brand Logo -->
+            <a href="#" class="brand-link text-center">
+                <i class="fas fa-cubes pl-3"></i> <span class="brand-text font-weight-light">Asset Management</span>
+            </a>
+
+            <div class="sidebar">
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                        <li class="nav-item">
+                            <!-- User Profile -->
+                            <div class="user-panel d-flex align-items-center">
+                                <div class="image">
+                                    <i class="fas fa-user-circle fa-2x text-white"></i>
+                                </div>
+                                <div class="info">
+                                    <a href="#" class="d-block">Admin</a>
+                                    <small class="text-white-50">System Administrator</small>
+                                </div>
+                            </div>
+                        </li>
+                        <!-- Dashboard -->
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "Home")" class="nav-link">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>Dashboard</p>
+                            </a>
+                        </li>
+
+                        <!-- Assets -->
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "Asset")" class="nav-link">
+                                <i class="nav-icon fas fa-box"></i>
+                                <p>Assets</p>
+                            </a>
+                        </li>
+
+                        <!-- Changelog -->
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "ChangeLog")" class="nav-link">
+                                <i class="nav-icon fas fa-history"></i>
+                                <p>Changelog</p>
+                            </a>
+                        </li>
+
+                        <!-- Disposal -->
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "Disposal")" class="nav-link">
+                                <i class="nav-icon fas fa-trash-alt"></i>
+                                <p>Disposal</p>
+                            </a>
+                        </li>
+
+                        <!-- Asset Transfers -->
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "AssetTransfer")" class="nav-link">
+                                <i class="nav-icon fas fa-exchange-alt"></i>
+                                <p>Asset Transfers</p>
+                            </a>
+                        </li>
+
+                        <!-- User Management -->
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "User")" class="nav-link">
+                                <i class="nav-icon fas fa-users-cog"></i>
+                                <p>User Management</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "Facilities")" class="nav-link">
+                                <i class="nav-icon fas fa-building"></i>
+                                <p>Facilities</p>
+                            </a>
+                        </li>
+
+                        <!-- Departments -->
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "Departments")" class="nav-link">
+                                <i class="nav-icon fas fa-sitemap"></i>
+                                <p>Departments</p>
+                            </a>
+                        </li>
+
+                        <!-- Buildings -->
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "Buildings")" class="nav-link">
+                                <i class="nav-icon fas fa-city"></i>
+                                <p>Buildings</p>
+                            </a>
+                        </li>
+
+                        <!-- Rooms -->
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "Rooms")" class="nav-link">
+                                <i class="nav-icon fas fa-door-open"></i>
+                                <p>Rooms</p>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Content Wrapper -->
+        <div class="content-wrapper">
+            @RenderBody()
+        </div>
+    </div>
+
+    <!-- Required JS Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Sidebar toggle
+            $('[data-widget="pushmenu"]').on('click', function () {
+                $('.main-sidebar').toggleClass('sidebar-collapse');
+            });
+
+            // Fullscreen toggle with cross-browser support
+            $('[data-widget="fullscreen"]').on('click', function () {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+
+            // Dark Mode Toggle
+            function applyDarkMode(enabled) {
+                if (enabled) {
+                    $('body').addClass('dark-mode');
+                    $('#darkModeToggle i').removeClass('fa-moon').addClass('fa-sun');
+                } else {
+                    $('body').removeClass('dark-mode');
+                    $('#darkModeToggle i').removeClass('fa-sun').addClass('fa-moon');
+                }
+            }
+
+            let darkMode = localStorage.getItem('darkMode') === 'enabled';
+            applyDarkMode(darkMode);
+
+            $('#darkModeToggle').on('click', function () {
+                darkMode = !darkMode;
+                localStorage.setItem('darkMode', darkMode ? 'enabled' : 'disabled');
+                applyDarkMode(darkMode);
+            });
+
+            // Language Switcher
+            function changeLanguage(lang) {
+                localStorage.setItem('selectedLanguage', lang);
+                location.reload(); // Reload to apply language change
+            }
+
+            let selectedLanguage = localStorage.getItem('selectedLanguage') || 'en';
+            if (selectedLanguage === 'ar') {
+                $('html').attr('lang', 'ar');
+                $('body').css('direction', 'rtl');
+            } else {
+                $('html').attr('lang', 'en');
+                $('body').css('direction', 'ltr');
+            }
+
+            $('.dropdown-item').on('click', function () {
+                let lang = $(this).attr('onclick').match(/'([^']+)'/)[1];
+                changeLanguage(lang);
+            });
+        });
+    </script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,28 @@
+﻿<!-- Create.cshtml -->
+@model AssetManagementSystem.DAL.Entities.AssetTransfer
+@{
+	ViewData["Title"] = "Create Asset Transfer";
+	Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+<h2>Create Asset Transfer</h2>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label asp-for="TransferType"></label>
+        <input asp-for="TransferType" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="FromDepartment"></label>
+        <input asp-for="FromDepartment" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="ToDepartment"></label>
+        <input asp-for="ToDepartment" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="AssetTag"></label>
+        <input asp-for="AssetTag" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

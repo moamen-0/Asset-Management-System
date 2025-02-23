@@ -1,0 +1,56 @@
+﻿@model AssetManagementSystem.DAL.Entities.Disposal
+
+@{
+    ViewData["Title"] = "Delete Disposal";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0 text-danger">
+            <i class="bi bi-trash3-fill me-2"></i> Delete Disposal
+        </h2>
+    </div>
+
+    <div class="alert alert-danger d-flex align-items-center mt-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <div>Are you sure you want to delete this disposal? This action cannot be undone.</div>
+    </div>
+
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body">
+            <h5 class="card-title text-primary"><i class="bi bi-info-circle-fill me-2"></i> Disposal Details</h5>
+            <hr />
+
+            <dl class="row">
+                <dt class="col-sm-3"><i class="bi bi-upc-scan"></i> Asset Tag:</dt>
+                <dd class="col-sm-9">@Model.Asset?.AssetTag</dd>
+
+                <dt class="col-sm-3"><i class="bi bi-file-earmark-text"></i> Asset Description:</dt>
+                <dd class="col-sm-9">@Model.Asset?.AssetDescription</dd>
+
+                <dt class="col-sm-3"><i class="bi bi-calendar-event"></i> Disposal Date:</dt>
+                <dd class="col-sm-9">@Model.DisposalDate.ToShortDateString()</dd>
+
+                <dt class="col-sm-3"><i class="bi bi-tags-fill"></i> Type:</dt>
+                <dd class="col-sm-9">@Model.DisposalType</dd>
+
+                <dt class="col-sm-3"><i class="bi bi-currency-dollar"></i> Value:</dt>
+                <dd class="col-sm-9">@Model.SaleValue</dd>
+            </dl>
+
+            <form asp-action="Delete" method="post">
+                <input type="hidden" asp-for="Id" />
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary rounded-pill">
+                        <i class="bi bi-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger rounded-pill">
+                        <i class="bi bi-trash3"></i> Confirm Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

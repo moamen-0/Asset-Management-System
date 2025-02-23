@@ -1,0 +1,599 @@
+﻿@model IEnumerable<AssetManagementSystem.DAL.Entities.Asset>
+
+@{
+    ViewData["Title"] = "Assets";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+<div class="card shadow-lg p-4">
+    <!-- Bulk Tag Selection -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="text-primary mb-3">
+                <i class="bi bi-input-cursor-text"></i> Quick Asset Selection
+            </h5>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="bi bi-clipboard-data"></i> Paste Asset Tags
+                            <small class="text-muted">(one per line, comma-separated, or from Excel)</small>
+                        </label>
+                        <textarea id="bulkAssetTags" class="form-control font-monospace"
+                                  rows="4"
+                                  placeholder="Example:
+AST001
+AST002, AST003
+AST004&#9;AST005"></textarea>
+                        <div class="mt-2">
+                            <span id="tagCounter" class="text-muted small">
+                                <i class="bi bi-hash"></i> 0 tags detected
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex flex-column h-100 justify-content-end">
+                        <button id="processAssetTags" class="btn btn-primary mb-2">
+                            <i class="bi bi-check2-all"></i> Select These Assets
+                        </button>
+                        <button id="clearAssetTags" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg"></i> Clear Input
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="text-primary"><i class="bi bi-box-seam"></i> Assets Management</h2>
+        <a asp-action="Create" class="btn btn-success fw-bold">
+            <i class="bi bi-plus-circle"></i> Add Asset
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table id="assetsTable" class="table table-striped table-hover table-bordered align-middle">
+            <thead class="table-dark text-center">
+                <!-- Bulk Operations Controls -->
+                <div class="card shadow-lg p-4 mb-4">
+                    <h4 class="text-primary"><i class="bi bi-boxes"></i> Bulk Operations</h4>
+                    <div class="d-flex gap-3">
+                        <button id="bulkTransferBtn" class="btn btn-primary" disabled>
+                            <i class="bi bi-arrow-left-right"></i> Transfer Selected Assets
+                        </button>
+                        <button id="bulkDisposeBtn" class="btn btn-warning" disabled>
+                            <i class="bi bi-trash"></i> Dispose Selected Assets
+                        </button>
+                        <span id="selectedCount" class="ms-3 align-self-center text-muted">
+                            0 assets selected
+                        </span>
+                    </div>
+                </div>
+                <tr>
+                    <th><input type="checkbox" id="selectAll"></th>
+                    <th>Actions</th>
+                    <th>Asset Tag <i class="bi bi-tag"></i></th>
+                    <th>Cluster <i class="bi bi-collection"></i></th>
+                    <th>Facility <i class="bi bi-building"></i></th>
+                    <th>Building <i class="bi bi-house"></i></th>
+                    <th>Floor <i class="bi bi-stairs"></i></th>
+                    <th>Room <i class="bi bi-door-closed"></i></th>
+                    <th>Department <i class="bi bi-people"></i></th>
+                    <th>Asset Description <i class="bi bi-card-text"></i></th>
+                    <th>Brand <i class="bi bi-tag-fill"></i></th>
+                    <th>Model <i class="bi bi-cpu"></i></th>
+                    <th>User <i class="bi bi-person"></i></th>
+                    <th>Asset Type <i class="bi bi-box"></i></th>
+                    <th>Status <i class="bi bi-check-circle"></i></th>
+                    <th>Is Disposed <i class="bi bi-trash"></i></th>
+                    <th>Serial Number <i class="bi bi-upc-scan"></i></th>
+                    <th>Insert Date <i class="bi bi-calendar-date"></i></th>
+                    <th>Insert User <i class="bi bi-person-check"></i></th>
+                    <th>Details <i class="bi bi-info-circle"></i></th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data loads dynamically -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card shadow-lg p-4 mt-4">
+    <h4 class="text-primary mb-3"><i class="bi bi-file-earmark-arrow-up"></i> Import & Export Assets</h4>
+
+    <div class="row">
+        <!-- Upload Section -->
+        <div class="col-md-6">
+            <div class="card border-0 p-3 shadow-sm">
+                <h5 class="text-secondary"><i class="bi bi-upload"></i> Upload Excel File</h5>
+                @using (Html.BeginForm("ImportAssets", "Asset", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                {
+                    <div class="mb-3">
+                        <input type="file" name="file" class="form-control" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-file-earmark-arrow-up"></i> Upload & Import
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="col-md-6">
+            <div class="card border-0 p-3 shadow-sm">
+                <h5 class="text-secondary"><i class="bi bi-download"></i> Export Data</h5>
+                <div class="d-grid gap-2">
+                    <a href="@Url.Action("ExportAssets", "Asset")" class="btn btn-success">
+                        <i class="bi bi-file-earmark-excel"></i> Export to Excel
+                    </a>
+                    <a href="@Url.Action("ExportAssetsToPdf", "Asset")" class="btn btn-danger">
+                        <i class="bi bi-file-earmark-pdf"></i> Export to PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Bulk Transfer Modal -->
+<div class="modal fade" id="bulkTransferModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-arrow-left-right"></i> Bulk Transfer Assets
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="bulkTransferForm">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <span id="transferAssetCount">0</span> assets selected for transfer
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Target Department</label>
+                        <select id="targetDepartment" class="form-select" required>
+                            <option value="">Select Department</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Target User (Optional)</label>
+                        <select id="targetUser" class="form-select">
+                            <option value="">Select User</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check2"></i> Transfer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Disposal Modal -->
+<div class="modal fade" id="bulkDisposalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-trash"></i> Bulk Dispose Assets
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="bulkDisposalForm">
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <span id="disposeAssetCount">0</span> assets selected for disposal
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Disposal Type</label>
+                        <select id="disposalType" class="form-select" required>
+                            <option value="">Select Type</option>
+                            <option value="Sale">Sale</option>
+                            <option value="Scrapped">Scrapped</option>
+                            <option value="Donated">Donated</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sale Value</label>
+                        <input type="number" id="saleValue" class="form-control" value="0" min="0" step="0.01" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-check2"></i> Dispose
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap5.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable
+            let table = $('#assetsTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '@Url.Action("GetAssets", "Asset")',
+                    type: 'POST'
+                },
+                scrollX: true,
+                order: [[2, 'asc']], // Sort by Asset Tag by default
+                columns: [
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: function () {
+                            return `<input type="checkbox" class="row-checkbox">`;
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: function (data, type, row) {
+                            return `
+                                <div class="btn-group">
+                                    <a href="/Asset/Edit/${row.assetTag}" class="btn btn-sm btn-primary" title="Edit">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a href="/Asset/Delete/${row.assetTag}" class="btn btn-sm btn-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    <a href="/Asset/Dispose/${row.assetTag}" class="btn btn-sm btn-warning" title="Dispose">
+                                        <i class="bi bi-recycle"></i>
+                                    </a>
+                                </div>`;
+                        }
+                    },
+                    { data: 'assetTag' },
+                    { data: 'cluster' },
+                    { data: 'facility.name' },
+                    { data: 'building.name' },
+                    { data: 'floor.name' },
+                    { data: 'room.name' },
+                    { data: 'department.name' },
+                    { data: 'assetDescription' },
+                    { data: 'brand' },
+                    { data: 'model' },
+                    { data: 'user.fullName' },
+                    { data: 'assetType' },
+                    { data: 'status' },
+                    { data: 'isDisposed' },
+                    { data: 'serialNumber' },
+                    { data: 'insertDate' },
+                    { data: 'insertUser' },
+                    { data: 'details' }
+                ]
+            });
+
+            // Initialize clipboard handling
+            const bulkTagsTextarea = $('#bulkAssetTags');
+            const tagCounter = $('#tagCounter');
+            const processButton = $('#processAssetTags');
+            const clearButton = $('#clearAssetTags');
+            let selectedAssets = new Set();
+
+            // Function to process and clean asset tags
+            function processAssetTags(input) {
+                return input.split(/[\n,\t]+/)
+                    .map(tag => tag.trim())
+                    .filter(tag => tag.length > 0)
+                    .filter((tag, index, self) => self.indexOf(tag) === index); // Remove duplicates
+            }
+
+            // Update tag counter as user types/pastes
+            bulkTagsTextarea.on('input', function () {
+                const tags = processAssetTags($(this).val());
+                tagCounter.html(`
+                    <i class="bi bi-hash"></i> ${tags.length} unique tag${tags.length !== 1 ? 's' : ''} detected
+                `);
+            });
+
+            // Handle the process button click
+            processButton.click(function () {
+                const tags = processAssetTags(bulkTagsTextarea.val());
+
+                if (tags.length === 0) {
+                    alert('Please enter at least one asset tag');
+                    return;
+                }
+
+                // Clear existing selections
+                $('.row-checkbox').prop('checked', false);
+                selectedAssets.clear();
+
+                // Search and select matching rows
+                let found = 0;
+                table.rows().every(function () {
+                    const rowData = this.data();
+                    if (tags.includes(rowData.assetTag)) {
+                        found++;
+                        selectedAssets.add(rowData.assetTag);
+                        $(this.node()).find('.row-checkbox').prop('checked', true);
+                    }
+                });
+
+                // Show results feedback
+                const notFound = tags.length - found;
+                const message = [
+                    `✓ Found and selected ${found} asset${found !== 1 ? 's' : ''}`,
+                    notFound > 0 ? `\n⚠ ${notFound} tag${notFound !== 1 ? 's' : ''} not found in the current view` : ''
+                ].join('');
+
+                // Create and show toast notification
+                const toast = $(`
+                    <div class="toast position-fixed bottom-0 end-0 m-3" role="alert">
+                        <div class="toast-header ${notFound > 0 ? 'bg-warning' : 'bg-success'} text-white">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong class="me-auto">Asset Selection Results</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">
+                            ${message.replace('\n', '<br>')}
+                        </div>
+                    </div>
+                `);
+
+                $('body').append(toast);
+                const bsToast = new bootstrap.Toast(toast);
+                bsToast.show();
+
+                // Clean up toast after it's hidden
+                toast.on('hidden.bs.toast', function () {
+                    $(this).remove();
+                });
+
+                // Update bulk operation controls
+                updateBulkControls();
+
+                // Clear the textarea
+                bulkTagsTextarea.val('');
+                tagCounter.html('<i class="bi bi-hash"></i> 0 tags detected');
+            });
+
+            // Handle clear button
+            clearButton.click(function () {
+                bulkTagsTextarea.val('');
+                tagCounter.html('<i class="bi bi-hash"></i> 0 tags detected');
+            });
+
+            // Handle paste event for Excel data
+            bulkTagsTextarea.on('paste', function (e) {
+                setTimeout(() => {
+                    let input = $(this).val();
+                    if (input.includes('\t')) {
+                        input = input.replace(/\t/g, '\n');
+                        $(this).val(input);
+                        $(this).trigger('input');
+                    }
+                }, 0);
+            });
+
+            // Handle checkbox selection
+            $(document).on('change', '.row-checkbox', function () {
+                const row = $(this).closest('tr');
+                const assetTag = table.row(row).data().assetTag;
+
+                if (this.checked) {
+                    selectedAssets.add(assetTag);
+                } else {
+                    selectedAssets.delete(assetTag);
+                }
+
+                updateBulkControls();
+            });
+
+            // Handle "Select All" checkbox
+            $('#selectAll').on('change', function () {
+                $('.row-checkbox').prop('checked', this.checked);
+
+                if (this.checked) {
+                    table.rows().data().each(function (row) {
+                        selectedAssets.add(row.assetTag);
+                    });
+                } else {
+                    selectedAssets.clear();
+                }
+
+                updateBulkControls();
+            });
+
+            // Function to update bulk controls
+            function updateBulkControls() {
+                const count = selectedAssets.size;
+                $('#selectedCount').text(`${count} assets selected`);
+                $('#transferAssetCount').text(count);
+                $('#disposeAssetCount').text(count);
+
+                $('#bulkTransferBtn, #bulkDisposeBtn').prop('disabled', count === 0);
+            }
+
+            // Handle bulk transfer button click
+            $('#bulkTransferBtn').click(function () {
+                loadDepartmentsAndUsers();
+                $('#bulkTransferModal').modal('show');
+            });
+
+            // Handle bulk dispose button click
+            $('#bulkDisposeBtn').click(function () {
+                $('#bulkDisposalModal').modal('show');
+            });
+
+            // Function to load departments and users
+            function loadDepartmentsAndUsers() {
+                const departmentSelect = $('#targetDepartment');
+                const userSelect = $('#targetUser');
+
+                // Show loading indicators
+                departmentSelect.prop('disabled', true).html('<option>Loading departments...</option>');
+                userSelect.prop('disabled', true).html('<option>Loading users...</option>');
+
+                // Load departments
+                $.get('/Asset/GetDepartments')
+                    .done(function (departments) {
+                        departmentSelect.prop('disabled', false)
+                            .empty()
+                            .append('<option value="">Select Department</option>');
+
+                        departments.forEach(dept => {
+                            departmentSelect.append(
+                                `<option value="${dept.id}">${dept.name}</option>`
+                            );
+                        });
+                    })
+                    .fail(function (error) {
+                        console.error('Failed to load departments:', error);
+                        departmentSelect.prop('disabled', false)
+                            .empty()
+                            .append('<option value="">Error loading departments</option>');
+                    });
+
+                // Load users
+                           // Load users with enhanced error handling
+               $.get('/Asset/GetUsers')
+        .done(function(response) {
+            const userSelect = $('#targetUser');
+            userSelect.prop('disabled', false).empty();
+
+            // Add the default "Select User" option
+            userSelect.append(`
+                <option value="">
+                    Select User (Optional)
+                </option>
+            `);
+
+            if (response.success && Array.isArray(response.data)) {
+                if (response.data.length === 0) {
+                    // Handle case where no users are found
+                    userSelect.append(`
+                        <option disabled>
+                            No users available in the system
+                        </option>
+                    `);
+                } else {
+                    // Add each user to the dropdown
+                    response.data.forEach(user => {
+                        userSelect.append(`
+                            <option value="${user.id}">
+                                ${user.name}
+                            </option>
+                        `);
+                    });
+
+                    console.log(`Successfully loaded ${response.data.length} users`);
+                }
+            } else {
+                // Handle invalid response format
+                userSelect.append(`
+                    <option disabled>
+                        Error: Invalid data format received
+                    </option>
+                `);
+                console.error('Invalid response format:', response);
+            }
+        })
+        .fail(function(xhr) {
+            // Handle loading failure
+            const userSelect = $('#targetUser');
+            const errorMessage = xhr.responseJSON?.details || 'Failed to load users';
+
+            userSelect.prop('disabled', false)
+                     .empty()
+                     .append(`
+                         <option disabled>
+                             Error loading users: ${errorMessage}
+                         </option>
+                     `);
+
+            console.error('User loading failed:', xhr.responseJSON || xhr);
+        });
+            }
+
+            // Handle bulk transfer form submission
+            $('#bulkTransferForm').on('submit', function (e) {
+                e.preventDefault();
+
+                const targetDepartmentId = parseInt($('#targetDepartment').val());
+                const targetUserId = $('#targetUser').val();
+
+                if (!targetDepartmentId) {
+                    alert('Please select a target department');
+                    return;
+                }
+
+                const request = {
+                    assetTags: Array.from(selectedAssets),
+                    targetDepartmentId: targetDepartmentId,
+                    targetUserId: targetUserId || null
+                };
+
+                $.ajax({
+                    url: '/Asset/BulkTransfer',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(request),
+                    success: function (response) {
+                        console.log('Transfer success:', response);
+                        $('#bulkTransferModal').modal('hide');
+                        selectedAssets.clear();
+                        updateBulkControls();
+                        table.ajax.reload();
+                        alert('Assets transferred successfully!');
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Transfer error:', { xhr, status, error });
+                        alert('Failed to transfer assets: ' + (xhr.responseJSON?.error || 'Unknown error'));
+                    }
+                });
+            });
+
+            // Handle bulk disposal form submission
+            $('#bulkDisposalForm').on('submit', function (e) {
+                e.preventDefault();
+
+                const request = {
+                    assetTags: Array.from(selectedAssets),
+                    disposalType: $('#disposalType').val(),
+                    saleValue: parseFloat($('#saleValue').val()) || 0
+                };
+
+                $.ajax({
+                    url: '/Asset/BulkDispose',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(request),
+                    success: function () {
+                        $('#bulkDisposalModal').modal('hide');
+                        selectedAssets.clear();
+                        updateBulkControls();
+                        table.ajax.reload();
+                        toastr.success('Assets disposed successfully');
+                    },
+                    error: function (xhr) {
+                        toastr.error(xhr.responseJSON?.error || 'Error performing bulk disposal');
+                    }
+                });
+            });
+        });
+    </script>
+}

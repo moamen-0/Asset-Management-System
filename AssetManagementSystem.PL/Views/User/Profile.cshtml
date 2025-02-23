@@ -1,0 +1,61 @@
+﻿@model AssetManagementSystem.DAL.Entities.User
+@{
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+<div class="container mt-4">
+    <!-- Profile Card -->
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-primary text-white text-center">
+            <h2 class="mb-0"><i class="fas fa-user-circle me-2"></i> User Profile</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-3"><strong><i class="fas fa-user me-2"></i> Full Name:</strong> @Model.FullName</p>
+                    <p class="mb-3"><strong><i class="fas fa-envelope me-2"></i> Email:</strong> @Model.Email</p>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-3"><strong><i class="fas fa-id-card me-2"></i> National ID:</strong> @Model.NationalId</p>
+                    <p class="mb-3"><strong><i class="fas fa-folder-open me-2"></i> File Number:</strong> @Model.RecipientFileNumber</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Received Assets Section -->
+    <div class="mt-4">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-header bg-dark text-white">
+                <h3 class="mb-0"><i class="fas fa-box-open me-2"></i> Received Assets</h3>
+            </div>
+            <div class="card-body">
+                @if (Model.Assets != null && Model.Assets.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th><i class="fas fa-tag me-1"></i> Asset Tag</th>
+                                    <th><i class="fas fa-info-circle me-1"></i> Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var asset in Model.Assets)
+                                {
+                                    <tr>
+                                        <td>@asset.AssetTag</td>
+                                        <td>@asset.AssetDescription</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center"><i class="fas fa-exclamation-circle me-2"></i> No assets received yet.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,30 @@
+﻿@model AssetManagementSystem.DAL.Entities.Asset
+@{
+    ViewData["Title"] = "Dispose Asset";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+<h2>Dispose Asset</h2>
+
+<form asp-action="Dispose" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.AssetTag" />
+
+    <div class="mb-3">
+        <label for="disposalType" class="form-label">Disposal Type:</label>
+        <input type="text" id="disposalType" name="disposalType" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label for="saleValue" class="form-label">Sale Value (if applicable):</label>
+        <input type="number" id="saleValue" name="saleValue" class="form-control" step="0.01" required />
+    </div>
+
+    <div class="form-check mb-3">
+        <input type="checkbox" id="isDisposed" name="isDisposed" class="form-check-input" checked />
+        <label class="form-check-label" for="isDisposed">Mark as Disposed</label>
+    </div>
+
+    <button type="submit" class="btn btn-danger">Dispose Asset</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

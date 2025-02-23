@@ -1,0 +1,70 @@
+﻿@model AssetManagementSystem.DAL.Entities.Disposal
+
+@{
+    ViewData["Title"] = "Edit Disposal";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="bi bi-pencil-square me-2"></i> Edit Disposal</h2>
+    </div>
+
+    <div class="card shadow-lg border-0 rounded-4 mt-4">
+        <div class="card-body">
+            <form asp-action="Edit" method="post" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label asp-for="AssetTag" class="form-label"><i class="bi bi-upc-scan me-1"></i> Asset</label>
+                    <input asp-for="AssetTag" class="form-control" required />
+                    <div class="invalid-feedback">Please enter a valid Asset Tag.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="DisposalDate" class="form-label"><i class="bi bi-calendar-event me-1"></i> Disposal Date</label>
+                    <input asp-for="DisposalDate" class="form-control" type="date" required />
+                    <div class="invalid-feedback">Please select a disposal date.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="DisposalType" class="form-label"><i class="bi bi-tags-fill me-1"></i> Disposal Type</label>
+                    <textarea asp-for="DisposalType" class="form-control" required></textarea>
+                    <div class="invalid-feedback">Please enter the disposal type.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="SaleValue" class="form-label"><i class="bi bi-currency-dollar me-1"></i> Value</label>
+                    <input asp-for="SaleValue" class="form-control" required />
+                    <div class="invalid-feedback">Please enter the sale value.</div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary rounded-pill">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                    <button type="submit" class="btn btn-success rounded-pill">
+                        <i class="bi bi-check-circle"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Enable Bootstrap validation styles on form submission
+        (function () {
+            'use strict';
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+    </script>
+}

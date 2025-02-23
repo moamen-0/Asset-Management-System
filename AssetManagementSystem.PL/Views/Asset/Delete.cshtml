@@ -1,0 +1,58 @@
+﻿@model AssetManagementSystem.DAL.Entities.Asset
+@{
+    ViewData["Title"] = "Delete Asset";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+<h2>Delete Asset</h2>
+
+<p>Are you sure you want to delete this asset?</p>
+
+<table class="table">
+    <tr>
+        <th>Asset Tag</th>
+        <td>@Model.AssetTag</td>
+    </tr>
+    <tr>
+        <th>Cluster</th>
+        <td>@Model.Cluster</td>
+    </tr>
+    <tr>
+        <th>Facility</th>
+        <td>@Model.FacilityId</td>
+    </tr>
+    <tr>
+        <th>Building</th>
+        <td>@Model.BuildingId</td>
+    </tr>
+    <tr>
+        <th>Floor</th>
+        <td>@Model.FloorId</td>
+    </tr>
+    <tr>
+        <th>Department</th>
+        <td>@Model.DepartmentId</td>
+    </tr>
+    <tr>
+        <th>Asset Description</th>
+        <td>@Model.AssetDescription</td>
+    </tr>
+    <tr>
+        <th>Brand</th>
+        <td>@Model.Brand</td>
+    </tr>
+    <tr>
+        <th>Model</th>
+        <td>@Model.Model</td>
+    </tr>
+    <tr>
+        <th>Is Disposed</th>
+        <td>@(Model.IsDisposed ? "Yes" : "No")</td>
+    </tr>
+</table>
+
+<form asp-action="DeleteConfirmed" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.AssetTag" />
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

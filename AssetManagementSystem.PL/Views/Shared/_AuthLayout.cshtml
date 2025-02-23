@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Google Font: Poppins -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="~/plugins/fontawesome-free/css/all.min.css">
+    <link rel="stylesheet" href="~/css/adminlte.css" />
+
+    <!-- Bootstrap 5 -->
+    <link rel="stylesheet" href="~/plugins/bootstrap/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .h-custom {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 40px 0;
+        }
+
+        .img-container img {
+            max-width: 100%;
+            border-radius: 12px;
+        }
+
+        @@media (max-width: 768px) {
+            .h-custom
+
+        {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .img-container {
+            margin-top: 20px;
+        }
+
+        }
+    </style>
+</head>
+
+<body>
+    <section class="h-custom">
+        <div class="container">
+            <div class="row align-items-center justify-content-center">
+                <!-- Form Section -->
+                <div class="col-lg-6">
+                    @RenderBody()
+                </div>
+
+                <!-- Image Section -->
+                <div class="col-lg-6 img-container text-center">
+                    <img src="~/img/draw2.webp" alt="Asset Management">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scripts -->
+    <script src="~/plugins/jquery/jquery.min.js"></script>
+    <script src="~/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/adminlte.min.js"></script>
+    <script src="~/js/demo.js"></script>
+</body>
+
+</html>

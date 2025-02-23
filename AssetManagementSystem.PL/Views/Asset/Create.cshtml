@@ -1,0 +1,87 @@
+﻿@model AssetManagementSystem.DAL.Entities.Asset
+
+@{
+    ViewData["Title"] = "Create Asset";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+
+<form asp-action="Create" method="post" class="card p-4 shadow-sm">
+<h2 class="mb-4 text-primary"><i class="bi bi-box-seam"></i> Create Asset</h2>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="AssetTag" class="form-label"><i class="bi bi-tag"></i> Asset Tag</label>
+            <input asp-for="AssetTag" class="form-control form-control-lg" placeholder="Enter asset tag" required />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Cluster" class="form-label"><i class="bi bi-diagram-3"></i> Cluster</label>
+            <input asp-for="Cluster" class="form-control form-control-lg" placeholder="Enter cluster name" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="FacilityId" class="form-label"><i class="bi bi-buildings"></i> Facility ID</label>
+            <input asp-for="FacilityId" class="form-control form-control-lg" placeholder="Enter facility ID" required />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="BuildingId" class="form-label"><i class="bi bi-house"></i> Building ID</label>
+            <input asp-for="BuildingId" class="form-control form-control-lg" placeholder="Enter building ID" required />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="FloorId" class="form-label"><i class="bi bi-stairs"></i> Floor ID</label>
+            <input asp-for="FloorId" class="form-control form-control-lg" placeholder="Enter floor ID" required />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="RoomTag" class="form-label"><i class="bi bi-door-closed"></i> Room Tag</label>
+            <input asp-for="RoomTag" class="form-control form-control-lg" placeholder="Enter room tag" required />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="DepartmentId" class="form-label"><i class="bi bi-briefcase"></i> Department ID</label>
+            <input asp-for="DepartmentId" class="form-control form-control-lg" placeholder="Enter department ID" required />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="AssetDescription" class="form-label"><i class="bi bi-card-text"></i> Description</label>
+            <input asp-for="AssetDescription" class="form-control form-control-lg" placeholder="Enter asset description" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Brand" class="form-label"><i class="bi bi-tag"></i> Brand</label>
+            <input asp-for="Brand" class="form-control form-control-lg" placeholder="Enter brand name" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Model" class="form-label"><i class="bi bi-cpu"></i> Model</label>
+            <input asp-for="Model" class="form-control form-control-lg" placeholder="Enter model" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="AssetType" class="form-label"><i class="bi bi-box"></i> Asset Type</label>
+            <input asp-for="AssetType" class="form-control form-control-lg" placeholder="Enter asset type" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="Status" class="form-label"><i class="bi bi-info-circle"></i> Status</label>
+            <input asp-for="Status" class="form-control form-control-lg" placeholder="Enter asset status" />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="SerialNumber" class="form-label"><i class="bi bi-upc-scan"></i> Serial Number</label>
+            <input asp-for="SerialNumber" class="form-control form-control-lg" placeholder="Enter serial number" />
+        </div>
+    </div>
+
+    <div class="form-group form-check mb-3">
+        <input type="checkbox" asp-for="IsDisposed" class="form-check-input" />
+        <label class="form-check-label" asp-for="IsDisposed"><i class="bi bi-trash"></i> Is Disposed?</label>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <button type="submit" class="btn btn-success btn-lg"><i class="bi bi-plus-circle"></i> Create</button>
+        <a asp-action="Index" class="btn btn-secondary btn-lg"><i class="bi bi-arrow-left"></i> Cancel</a>
+    </div>
+</form>
