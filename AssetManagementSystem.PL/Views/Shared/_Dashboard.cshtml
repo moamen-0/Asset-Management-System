@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -16,6 +17,57 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
 
     <style>
+        .language-switcher {
+            display: flex;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 5px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .lang-btn {
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: black; /* Default text color is black */
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+            outline: none;
+        }
+
+            .lang-btn:hover {
+                background: rgba(255, 255, 255, 0.4);
+                transform: scale(1.05);
+            }
+
+            .lang-btn.active {
+                background: linear-gradient(135deg, #4e54c8, #8f94fb);
+                color: white; /* Text color is white when active */
+                box-shadow: 0 4px 10px rgba(79, 92, 255, 0.3);
+                transform: scale(1.1);
+            }
+        .dropdown-item {
+            cursor: pointer;
+        }
+
+            .dropdown-item:hover {
+                background-color: #f8f9fa;
+            }
+
+        .flag-icon {
+            margin-right: 8px;
+        }
+
+        [dir="rtl"] .flag-icon {
+            margin-right: 0;
+            margin-left: 8px;
+        }
+
         .nav-item .icon-badge {
             position: absolute;
             top: 5px;
@@ -27,6 +79,31 @@
             padding: 3px 6px;
         }
 
+        .dropdown-menu {
+            margin-top: 0.125rem;
+            position: absolute;
+            z-index: 1050;
+        }
+
+            .dropdown-menu.show {
+                display: block;
+            }
+
+        .nav-item.dropdown {
+            position: relative;
+        }
+
+        /* Ensure proper dropdown positioning */
+        .navbar-nav .dropdown-menu {
+            position: absolute;
+            float: none;
+        }
+
+        /* Fix RTL dropdown alignment */
+        [dir="rtl"] .dropdown-menu-end {
+            right: auto;
+            left: 0;
+        }
         /* Dark Mode Styles */
         .dark-mode {
             background-color: #343a40 !important;
@@ -105,26 +182,31 @@
             <ul class="navbar-nav ms-auto">
                 <!-- Notifications Icon -->
                 <li class="nav-item dropdown">
-                    <a class="nav-link" href="#" id="notificationIcon" data-bs-toggle="dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="notificationIcon" role="button"
+                       data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
                         <i class="fas fa-bell"></i>
                         <span class="icon-badge">3</span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationIcon">
+                        <h6 class="dropdown-header">Notifications</h6>
                         <a class="dropdown-item" href="#">New asset added</a>
                         <a class="dropdown-item" href="#">Approval pending</a>
                         <a class="dropdown-item" href="#">System update</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-center" href="#">View all notifications</a>
                     </div>
                 </li>
 
                 <!-- Language Switcher -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-globe"></i> Language
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
-                        <li><a class="dropdown-item" href="#" onclick="changeLanguage('en')">English 🇺🇸</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="changeLanguage('ar')">العربية 🇪🇬</a></li>
-                    </ul>
+                <li class="nav-item">
+                    <div class="language-switcher">
+                        <button type="button" class="lang-btn active" onclick="handleLanguageChange('en')" id="lang-en">
+                            🇺🇸 EN
+                        </button>
+                        <button type="button" class="lang-btn" onclick="handleLanguageChange('ar')" id="lang-ar">
+                            🇪🇬 AR
+                        </button>
+                    </div>
                 </li>
 
                 <!-- Dark Mode Toggle -->
@@ -134,19 +216,31 @@
                     </a>
                 </li>
 
-                <!-- User Profile Link -->
+                <!-- Profile Dropdown -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                       data-bs-toggle="dropdown" aria-expanded="false">
+                       data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
                         <i class="bi bi-person-circle"></i> Profile
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" asp-controller="User" asp-action="Profile">View Profile</a></li>
-                        <li><a class="dropdown-item" asp-controller="User" asp-action="EditProfile">Edit Profile</a></li>
-                        <li><a class="dropdown-item" asp-controller="User" asp-action="ChangePassword">Change Password</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" asp-controller="Auth" asp-action="Logout">Logout</a></li>
-                    </ul>
+                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <h6 class="dropdown-header">User Options</h6>
+                        <a class="dropdown-item" asp-controller="User" asp-action="Profile">
+                            <i class="fas fa-user-circle me-2"></i> View Profile
+                        </a>
+                        <a class="dropdown-item" asp-controller="User" asp-action="EditProfile">
+                            <i class="fas fa-edit me-2"></i> Edit Profile
+                        </a>
+                        <a class="dropdown-item" asp-controller="User" asp-action="ChangePassword">
+                            <i class="fas fa-key me-2"></i> Change Password
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <form asp-controller="Auth" asp-action="Logout" method="post" class="dropdown-item">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-link text-danger p-0">
+                                <i class="fas fa-sign-out-alt me-2"></i> Logout
+                            </button>
+                        </form>
+                    </div>
                 </li>
 
                 <!-- Logout Button -->
@@ -179,8 +273,10 @@
                                     <i class="fas fa-user-circle fa-2x text-white"></i>
                                 </div>
                                 <div class="info">
-                                    <a href="#" class="d-block">Admin</a>
-                                    <small class="text-white-50">System Administrator</small>
+                                    <a class="d-block" asp-controller="User" asp-action="Profile">
+                                        @User.Identity.Name
+                                    </a>
+                                    <small class="text-white-50">@User.FindFirstValue(ClaimTypes.Role)</small>
                                 </div>
                             </div>
                         </li>
@@ -278,7 +374,25 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
 
     <script>
+              function handleLanguageChange(lang) {
+            console.log("Language changed to:", lang);
+
+            // تحديث الزر النشط
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`lang-${lang}`).classList.add('active');
+        }
         $(document).ready(function () {
+                 // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+
+        // Initialize popovers
+        var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+        popoverTriggerList.map(function (popoverTriggerEl) {
+            return new bootstrap.Popover(popoverTriggerEl)
+        });
             // Sidebar toggle
             $('[data-widget="pushmenu"]').on('click', function () {
                 $('.main-sidebar').toggleClass('sidebar-collapse');
@@ -313,26 +427,30 @@
                 applyDarkMode(darkMode);
             });
 
-            // Language Switcher
-            function changeLanguage(lang) {
-                localStorage.setItem('selectedLanguage', lang);
-                location.reload(); // Reload to apply language change
-            }
 
-            let selectedLanguage = localStorage.getItem('selectedLanguage') || 'en';
-            if (selectedLanguage === 'ar') {
-                $('html').attr('lang', 'ar');
-                $('body').css('direction', 'rtl');
-            } else {
-                $('html').attr('lang', 'en');
-                $('body').css('direction', 'ltr');
-            }
 
-            $('.dropdown-item').on('click', function () {
-                let lang = $(this).attr('onclick').match(/'([^']+)'/)[1];
-                changeLanguage(lang);
+
+
+             // Bootstrap Dropdown Initialization
+            var dropdowns = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+        dropdowns.map(function (dropdownToggle) {
+            return new bootstrap.Dropdown(dropdownToggle, {
+                autoClose: true
             });
         });
+        });
+          // Language Switcher
+              function switchLanguage(lang) {
+            // Store the selected language
+            localStorage.setItem('selectedLanguage', lang);
+
+            // Update the document direction
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.lang = lang;
+
+            // Optionally reload the page
+            location.reload();
+        }
     </script>
 
     @RenderSection("Scripts", required: false)

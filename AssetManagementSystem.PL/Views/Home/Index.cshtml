@@ -218,8 +218,16 @@
     <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
     <script>
         $(document).ready(function () {
+            
+
+            // Initialize all tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
             $('#changeLogsTable').DataTable({
                 processing: true,
                 serverSide: true,
@@ -248,6 +256,23 @@
                     { data: 'changeDate', className: "text-center" },
                     { data: 'userFullName', className: "text-center" }
                 ]
+            });
+             $('#notificationIcon').on('click', function(e) {
+                e.preventDefault();
+                $(this).next('.dropdown-menu').toggleClass('show');
+            });
+
+            // Ensure profile dropdown works
+            $('#navbarDropdown').on('click', function(e) {
+                e.preventDefault();
+                $(this).next('.dropdown-menu').toggleClass('show');
+            });
+
+            // Close dropdowns when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.dropdown').length) {
+                    $('.dropdown-menu').removeClass('show');
+                }
             });
         });
 
