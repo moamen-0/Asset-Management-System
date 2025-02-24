@@ -16,8 +16,14 @@ namespace AssetManagementSystem.DAL.Entities
 		public required string Name { get; set; }
 
 	
+		// Relationship with Facility
+        public int FacilityId { get; set; }
+        public Facility Facility { get; set; }
 
-		// علاقة One-to-Many مع Room
-		public ICollection<Room> Rooms { get; set; } = new List<Room>();
+        // One-to-Many relationship with Room
+        public ICollection<Room> Rooms { get; set; } = new List<Room>();
+
+        // One-to-Many relationship with Users
+        public ICollection<User> Users { get; set; } = new List<User>();
 	}
 }

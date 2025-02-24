@@ -16,7 +16,11 @@ namespace AssetManagementSystem.DAL.Entities
 		[Column(TypeName = "nvarchar(255)")]
 		public string Name { get; set; }
 
-		// علاقة One-to-Many مع Building
+		// One-to-Many relationship with Building
 		public ICollection<Building> Buildings { get; set; } = new List<Building>();
+
+		// One-to-Many relationship with Department
+		public ICollection<Department> Departments { get; set; } = new List<Department>();
+
 	}
 }

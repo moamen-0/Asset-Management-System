@@ -71,7 +71,11 @@ namespace AssetManagementSystem.BLL.Repositories
 
 		public async Task<IEnumerable<Facility>> GetAllFacilitiesAsync()
 		{
-			return await _context.Facilities.ToListAsync();
+			return await _context.Facilities
+				.Include(f => f.Buildings)
+				.ThenInclude(b => b.Floors)
+				.ThenInclude(f => f.Rooms)
+				.ToListAsync();
 		}
 
 		public async Task<IEnumerable<Department>> GetAllDepartmentsAsync()

@@ -358,25 +358,85 @@ namespace AssetManagementSystem.PL.Controllers
 			return RedirectToAction(nameof(Index));
 		}
 
-
-		public async Task<JsonResult> GetBuildingsByFacility(int facilityId)
+		[HttpGet]
+		public async Task<JsonResult> GetAllFacilitiesAsync()
 		{
-			var buildings = await _assetService.GetBuildingsByFacilityAsync(facilityId);
-			return Json(buildings.Select(b => new { id = b.Id, name = b.Name }));
+			try
+			{
+				var facilities = await _assetService.GetAllFacilitiesAsync();
+				var result = facilities.Select(f => new { id = f.Id, name = f.Name }).ToList();
+				return Json(result);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error in GetAllFacilitiesAsync: {ex.Message}");
+				return Json(new List<object>());
+			}
 		}
 
-		public async Task<JsonResult> GetFloorsByBuilding(int buildingId)
+		[HttpGet]
+		public async Task<JsonResult> GetAllDepartmentsAsync()
 		{
-			var floors = await _assetService.GetFloorsByBuildingAsync(buildingId);
-			return Json(floors.Select(f => new { id = f.Id, name = f.Name }));
+			try
+			{
+				var departments = await _assetService.GetAllDepartmentsAsync();
+				var result = departments.Select(d => new { id = d.Id, name = d.Name }).ToList();
+				return Json(result);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error in GetAllDepartmentsAsync: {ex.Message}");
+				return Json(new List<object>());
+			}
 		}
 
-		public async Task<JsonResult> GetRoomsByFloor(int floorId)
+		[HttpGet]
+		public async Task<JsonResult> GetBuildingsByFacilityAsync(int facilityId)
 		{
-			var rooms = await _assetService.GetRoomsByFloorAsync(floorId);
-			return Json(rooms.Select(r => new { id = r.RoomTag, name = r.Name }));
+			try
+			{
+				var buildings = await _assetService.GetBuildingsByFacilityAsync(facilityId);
+				var result = buildings.Select(b => new { id = b.Id, name = b.Name }).ToList();
+				return Json(result);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error in GetBuildingsByFacilityAsync: {ex.Message}");
+				return Json(new List<object>());
+			}
 		}
 
+		[HttpGet]
+		public async Task<JsonResult> GetFloorsByBuildingAsync(int buildingId)
+		{
+			try
+			{
+				var floors = await _assetService.GetFloorsByBuildingAsync(buildingId);
+				var result = floors.Select(f => new { id = f.Id, name = f.Name }).ToList();
+				return Json(result);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error in GetFloorsByBuildingAsync: {ex.Message}");
+				return Json(new List<object>());
+			}
+		}
+
+		[HttpGet]
+		public async Task<JsonResult> GetRoomsByFloorAsync(int floorId)
+		{
+			try
+			{
+				var rooms = await _assetService.GetRoomsByFloorAsync(floorId);
+				var result = rooms.Select(r => new { roomTag = r.RoomTag, name = r.Name }).ToList();
+				return Json(result);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error in GetRoomsByFloorAsync: {ex.Message}");
+				return Json(new List<object>());
+			}
+		}
 
 		[HttpPost]
 		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
