@@ -1,4 +1,5 @@
-﻿using AssetManagementSystem.BLL.Interfaces.IRepository;
+﻿using AssetManagementSystem.BLL.Interfaces;
+using AssetManagementSystem.BLL.Interfaces.IRepository;
 using AssetManagementSystem.BLL.Interfaces.IService;
 using AssetManagementSystem.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -16,15 +17,17 @@ namespace AssetManagementSystem.BLL.Services
 		private readonly UserManager<User> _userManager;
 		private readonly IEmailSenderService _emailService;
 		private readonly IUserRepository _userRepository;
+		private readonly IUnitOfWork _unitOfWork;
 
 		public UserService(
 			UserManager<User> userManager,
 			IEmailSenderService emailService,
-			IUserRepository userRepository)
+			IUserRepository userRepository, IUnitOfWork unitOfWork)
 		{
 			_userManager = userManager;
 			_emailService = emailService;
 			_userRepository = userRepository;
+			_unitOfWork = unitOfWork;
 		}
 
 		public async Task<User?> GetUserByIdAsync(string id)
@@ -79,9 +82,21 @@ namespace AssetManagementSystem.BLL.Services
 			return result.Succeeded;
 		}
 
-		public async Task<bool> UpdateUserDepartmentAsync(string userId, int departmentId)
-		{
-			return await _userRepository.UpdateUserDepartmentAsync(userId, departmentId);
-		}
+		 public async Task<bool> UpdateUserDepartmentAsync(string userId, int departmentId)
+    {
+			// Verify department exists and belongs to a facility
+			var department = await _unitOfWork.DepartmentRepository.GetByIdAsync(departmentId);
+        if (department == null || department.FacilityId == 0)
+            return false;
+
+        return await _userRepository.UpdateUserDepartmentAsync(userId, departmentId);
+    }
+
+    public async Task<IEnumerable<User>> GetUsersByDepartmentAsync(int departmentId)
+    {
+        return await _userRepository.GetUsersByDepartmentAsync(departmentId);
+    }
+
+  
 	}
 }

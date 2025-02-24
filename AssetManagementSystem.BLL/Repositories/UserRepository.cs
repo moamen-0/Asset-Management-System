@@ -119,6 +119,11 @@ namespace AssetManagementSystem.BLL.Repositories
 			await _context.SaveChangesAsync();
 			return true;
 		}
+
+		public async Task<IEnumerable<User>> GetUsersByDepartmentAsync(int departmentId)
+		{
+			return 
+		}
 	}
 
 }

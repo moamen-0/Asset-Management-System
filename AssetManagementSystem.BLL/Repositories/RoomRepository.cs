@@ -35,7 +35,10 @@ namespace AssetManagementSystem.BLL.Repositories
 		{
 			return await _context.Rooms
 				.Include(r => r.Floor)
+					.ThenInclude(f => f.Building)
+						.ThenInclude(b => b.Facility)
 				.Include(r => r.Department)
+					.ThenInclude(d => d.Facility)
 				.ToListAsync();
 		}
 
@@ -43,6 +46,7 @@ namespace AssetManagementSystem.BLL.Repositories
 		{
 			return await _context.Rooms
 				.Include(r => r.Floor)
+					.ThenInclude(f => f.Building)
 				.Include(r => r.Department)
 				.FirstOrDefaultAsync(r => r.RoomTag == id);
 		}

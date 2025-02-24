@@ -69,6 +69,12 @@ namespace AssetManagementSystem.BLL.Services
 		{
 			return await _assetRepository.GetAllFacilitiesAsync();
 		}
+		public async Task<IEnumerable<Department>> GetDepartmentsByFacilityAsync(int facilityId)
+		{
+			var facility = (await _assetRepository.GetAllFacilitiesAsync())
+				.FirstOrDefault(f => f.Id == facilityId);
+			return facility?.Departments ?? Enumerable.Empty<Department>();
+		}
 
 		public async Task<IEnumerable<Department>> GetAllDepartmentsAsync()
 		{

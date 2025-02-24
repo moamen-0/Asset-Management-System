@@ -42,14 +42,18 @@ namespace AssetManagementSystem.BLL.Repositories
 		{
 			return await _context.Facilities
 				.Include(f => f.Buildings)
-				.ThenInclude(b => b.Floors)
-				.ThenInclude(f => f.Rooms)
+					.ThenInclude(b => b.Floors)
+						.ThenInclude(f => f.Rooms)
+				.Include(f => f.Departments) // Add Departments include
 				.ToListAsync();
 		}
 
 		public async Task<Facility?> GetByIdAsync(int id)
 		{
-			 return await _context.Facilities.FindAsync(id);
+			return await _context.Facilities
+				.Include(f => f.Buildings)
+				.Include(f => f.Departments)
+				.FirstOrDefaultAsync(f => f.Id == id);
 		}
 
 		public async Task UpdateAsync(Facility facility)

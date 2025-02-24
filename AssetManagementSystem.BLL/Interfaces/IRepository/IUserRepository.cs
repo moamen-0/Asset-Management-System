@@ -22,6 +22,7 @@ namespace AssetManagementSystem.BLL.Interfaces.IRepository
 		Task<bool> UpdateUserDepartmentAsync(string userId, int departmentId);
 		Task<bool> UserExistsAsync(string id);
 		Task<bool> EmailExistsAsync(string email);
+		Task<IEnumerable<User>> GetUsersByDepartmentAsync(int departmentId);
 
 
 	}

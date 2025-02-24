@@ -43,15 +43,21 @@ namespace AssetManagementSystem.BLL.Repositories
 
 		public async Task<IEnumerable<Department>> GetAllAsync()
 		{
-			return await _context.Departments.ToListAsync();
-
+			return await _context.Departments
+				.Include(d => d.Facility)
+				.Include(d => d.Rooms)
+				.Include(d => d.Users)
+				.ToListAsync();
 		}
 
 		public async Task<Department?> GetByIdAsync(int id)
 		{
-			return await _context.Departments.FindAsync(id);
+			return await _context.Departments
+				.Include(d => d.Facility)
+				.Include(d => d.Rooms)
+				.Include(d => d.Users)
+				.FirstOrDefaultAsync(d => d.Id == id);
 		}
-
 		public async Task UpdateAsync(Department department)
 		{
 			if (department == null)
