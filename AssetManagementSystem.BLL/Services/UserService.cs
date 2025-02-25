@@ -97,6 +97,6 @@ namespace AssetManagementSystem.BLL.Services
         return await _userRepository.GetUsersByDepartmentAsync(departmentId);
     }
 
-  
+	
 	}
 }

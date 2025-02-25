@@ -18,6 +18,8 @@ namespace AssetManagementSystem.BLL.Services
 	public class ChangeLogService : IChangeLogService
 	{
 		private readonly IChangeLogRepository _changeLogRepository;
+		private readonly IDepartmentRepository _departmentRepository;
+		private readonly IBuildingRepository _buildingRepository;
 		private readonly IMemoryCache _cache;
 		private readonly ILogger<ChangeLogService> _logger;
 		private const string CacheKeyPrefix = "ChangeLogs_";
@@ -25,18 +27,42 @@ namespace AssetManagementSystem.BLL.Services
 		public ChangeLogService(
 	  IChangeLogRepository changeLogRepository,
 	  IMemoryCache cache,
-	  ILogger<ChangeLogService> logger)
+	  ILogger<ChangeLogService> logger,
+	  IDepartmentRepository departmentRepository,
+	  IBuildingRepository buildingRepository)
 		{
 			_changeLogRepository = changeLogRepository;
 			_cache = cache;
 			_logger = logger;
+			_departmentRepository = departmentRepository;
+			_buildingRepository = buildingRepository;
 		}
 
 		public async Task AddChangeLogAsync(ChangeLog changeLog)
 		{
+			// Add facility information to change logs where relevant
+			if (changeLog.EntityName == "Department" || changeLog.EntityName == "Building")
+			{
+				var facilityInfo = await GetFacilityInfo(changeLog.EntityId, changeLog.EntityName);
+				changeLog.NewValues = $"Facility: {facilityInfo}, " + changeLog.NewValues;
+			}
+
 			await _changeLogRepository.AddAsync(changeLog);
 		}
-
+		private async Task<string> GetFacilityInfo(string entityId, string entityType)
+		{
+			if (entityType == "Department")
+			{
+				var department = await _departmentRepository.GetByIdAsync(int.Parse(entityId));
+				return department?.Facility?.Name ?? "Unknown Facility";
+			}
+			else if (entityType == "Building")
+			{
+				var building = await _buildingRepository.GetByIdAsync(int.Parse(entityId));
+				return building?.Facility?.Name ?? "Unknown Facility";
+			}
+			return "Unknown Facility";
+		}
 		public async Task DeleteChangeLogAsync(int id)
 		{
 			await _changeLogRepository.DeleteAsync(id);
