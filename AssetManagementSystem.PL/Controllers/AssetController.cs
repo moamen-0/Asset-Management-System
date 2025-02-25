@@ -24,7 +24,8 @@ namespace AssetManagementSystem.PL.Controllers
 	public class AssetController : Controller
 	{
 		private readonly IAssetService _assetService;
-		
+		private readonly IFacilityService _facilityService;
+
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IAssetRepository _assetRepository;
 
@@ -36,13 +37,15 @@ namespace AssetManagementSystem.PL.Controllers
 			IUnitOfWork unitOfWork,
 			IAssetRepository assetRepository,
 			UserManager<User> userManager,
-			SignInManager<User> signInManager)
+			SignInManager<User> signInManager,
+			IFacilityService facilityService)
 		{
 			_assetService = assetService;
 			_unitOfWork = unitOfWork;
 			_assetRepository = assetRepository;
 			_userManager = userManager;
 			_signInManager = signInManager;
+			_facilityService = facilityService;
 		}
 
 		public async Task<IActionResult> Index()
@@ -1023,7 +1026,21 @@ namespace AssetManagementSystem.PL.Controllers
 				});
 			}
 		}
-
+		[HttpGet]
+		public async Task<JsonResult> GetDepartmentsByFacilityAsync(int facilityId)
+		{
+			try
+			{
+				var departments = await _facilityService.GetDepartmentsAsync(facilityId);
+				var result = departments.Select(d => new { id = d.Id, name = d.Name }).ToList();
+				return Json(result);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error in GetDepartmentsByFacilityAsync: {ex.Message}");
+				return Json(new List<object>());
+			}
+		}
 		// Helper method to build a consistent user display name
 		private string BuildUserDisplayName(User user)
 		{
