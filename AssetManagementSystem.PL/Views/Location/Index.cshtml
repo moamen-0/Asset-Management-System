@@ -1,0 +1,337 @@
+﻿@model IEnumerable<AssetManagementSystem.DAL.Entities.Facility>
+@{
+    ViewData["Title"] = "Location Management";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h2 class="mb-0"><i class="bi bi-geo-alt-fill me-2"></i> Location Management</h2>
+            <a asp-action="CreateFacility" class="btn btn-light rounded-pill" >
+                <i class="bi bi-plus-circle-fill"></i> Add New Facility
+            </a>
+        </div>
+        <div class="card-body">
+            <!-- Location Explorer -->
+            <div class="row">
+                <div class="col-md-3">
+                    <!-- Navigation Tree -->
+                    <div class="card mb-4 border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Location Hierarchy</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div id="location-tree" class="location-tree p-3">
+                                <ul class="list-unstyled">
+                                    @foreach (var facility in Model)
+                                    {
+                                        <li class="mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-building me-2 text-primary"></i>
+                                                <a href="#" class="facility-item" data-id="@facility.Id">@facility.Name</a>
+                                                <div class="ms-auto">
+                                                    <a asp-action="EditFacility" asp-route-id="@facility.Id" class="btn btn-sm btn-outline-primary me-1">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <a asp-action="DeleteFacility" asp-route-id="@facility.Id" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                    <a asp-action="CreateBuilding" asp-route-facilityId="@facility.Id" class="btn btn-sm btn-outline-success">
+                                                        <i class="bi bi-plus"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                            <ul class="list-unstyled ms-4 mt-2 building-list" id="facility-@facility.Id" style="display: none;">
+                                                @if (facility.Buildings != null && facility.Buildings.Any())
+                                                {
+                                                    foreach (var building in facility.Buildings)
+                                                    {
+                                                        <li class="mb-2">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="bi bi-house me-2 text-success"></i>
+                                                                <a href="#" class="building-item" data-id="@building.Id">@building.Name</a>
+                                                                <div class="ms-auto">
+                                                                    <a asp-action="EditBuilding" asp-route-id="@building.Id" class="btn btn-sm btn-outline-primary me-1">
+                                                                        <i class="bi bi-pencil"></i>
+                                                                    </a>
+                                                                    <a asp-action="DeleteBuilding" asp-route-id="@building.Id" class="btn btn-sm btn-outline-danger">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </a>
+                                                                    <a asp-action="CreateFloor" asp-route-buildingId="@building.Id" class="btn btn-sm btn-outline-success">
+                                                                        <i class="bi bi-plus"></i>
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+
+                                                            <ul class="list-unstyled ms-4 mt-2 floor-list" id="building-@building.Id" style="display: none;">
+                                                                @if (building.Floors != null && building.Floors.Any())
+                                                                {
+                                                                    foreach (var floor in building.Floors)
+                                                                    {
+                                                                        <li class="mb-2">
+                                                                            <div class="d-flex align-items-center">
+                                                                                <i class="bi bi-layers me-2 text-warning"></i>
+                                                                                <a href="#" class="floor-item" data-id="@floor.Id">@floor.Name</a>
+                                                                                <div class="ms-auto">
+                                                                                    <a asp-action="EditFloor" asp-route-id="@floor.Id" class="btn btn-sm btn-outline-primary me-1">
+                                                                                        <i class="bi bi-pencil"></i>
+                                                                                    </a>
+                                                                                    <a asp-action="DeleteFloor" asp-route-id="@floor.Id" class="btn btn-sm btn-outline-danger">
+                                                                                        <i class="bi bi-trash"></i>
+                                                                                    </a>
+                                                                                    <a asp-action="CreateRoom" asp-route-floorId="@floor.Id" class="btn btn-sm btn-outline-success">
+                                                                                        <i class="bi bi-plus"></i>
+                                                                                    </a>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <ul class="list-unstyled ms-4 mt-2 room-list" id="floor-@floor.Id" style="display: none;">
+                                                                                @if (floor.Rooms != null && floor.Rooms.Any())
+                                                                                {
+                                                                                    foreach (var room in floor.Rooms)
+                                                                                    {
+                                                                                        <li class="mb-2">
+                                                                                            <div class="d-flex align-items-center">
+                                                                                                <i class="bi bi-door-closed me-2 text-danger"></i>
+                                                                                                <span>@room.Name (@room.RoomTag)</span>
+                                                                                                <div class="ms-auto">
+                                                                                                    <a asp-action="EditRoom" asp-route-id="@room.RoomTag" class="btn btn-sm btn-outline-primary me-1">
+                                                                                                        <i class="bi bi-pencil"></i>
+                                                                                                    </a>
+                                                                                                    <a asp-action="DeleteRoom" asp-route-id="@room.RoomTag" class="btn btn-sm btn-outline-danger">
+                                                                                                        <i class="bi bi-trash"></i>
+                                                                                                    </a>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </li>
+                                                                                    }
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    <li class="text-muted"><small>No rooms available</small></li>
+                                                                                }
+                                                                            </ul>
+                                                                        </li>
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    <li class="text-muted"><small>No floors available</small></li>
+                                                                }
+                                                            </ul>
+                                                        </li>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <li class="text-muted"><small>No buildings available</small></li>
+                                                }
+                                            </ul>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-9">
+                    <!-- Details View -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0" id="detail-title"><i class="bi bi-info-circle"></i> Location Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="location-details">
+                                <div class="text-center py-5">
+                                    <i class="bi bi-arrow-left-circle display-1 text-muted"></i>
+                                    <h3 class="mt-3 text-muted">Select an item from the hierarchy to view details</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white shadow border-0">
+                                <div class="card-body">
+                                    <h5><i class="bi bi-building"></i> Facilities</h5>
+                                    <h2 class="mb-0">@Model.Count()</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-success text-white shadow border-0">
+                                <div class="card-body">
+                                    <h5><i class="bi bi-house"></i> Buildings</h5>
+                                    <h2 class="mb-0">@Model.Sum(f => f.Buildings.Count())</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-info text-white shadow border-0">
+                                <div class="card-body">
+                                    <h5><i class="bi bi-door-closed"></i> Rooms</h5>
+                                    <h2 class="mb-0">@Model.Sum(f => f.Buildings.Sum(b => b.Floors.Sum(fl => fl.Rooms.Count())))</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Department Overview</h5>
+                            <a asp-action="Departments" class="btn btn-sm btn-light">
+                                <i class="bi bi-eye"></i> View All
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                                @foreach (var facility in Model)
+                                {
+                                    if (facility.Departments != null && facility.Departments.Any())
+                                    {
+                                        <div class="list-group-item">
+                                            <h6 class="mb-2 text-primary"><i class="bi bi-building"></i> @facility.Name</h6>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                @foreach (var dept in facility.Departments.Take(3))
+                                                {
+                                                    <span class="badge bg-info text-white p-2">
+                                                        <i class="bi bi-people"></i> @dept.Name
+                                                    </span>
+                                                }
+                                                @if (facility.Departments.Count() > 3)
+                                                {
+                                                    <span class="badge bg-secondary text-white p-2">
+                                                        +@(facility.Departments.Count() - 3) more
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Toggle facility buildings
+            $(".facility-item").click(function(e) {
+                e.preventDefault();
+                const facilityId = $(this).data('id');
+                $("#facility-" + facilityId).slideToggle();
+
+                // Load facility details
+                loadFacilityDetails(facilityId);
+            });
+
+            // Toggle building floors
+            $(document).on('click', '.building-item', function(e) {
+                e.preventDefault();
+                const buildingId = $(this).data('id');
+                $("#building-" + buildingId).slideToggle();
+
+                // Load building details
+                loadBuildingDetails(buildingId);
+            });
+
+            // Toggle floor rooms
+            $(document).on('click', '.floor-item', function(e) {
+                e.preventDefault();
+                const floorId = $(this).data('id');
+                $("#floor-" + floorId).slideToggle();
+
+                // Load floor details
+                loadFloorDetails(floorId);
+            });
+
+            function loadFacilityDetails(facilityId) {
+                $.ajax({
+                    url: '/Location/GetFacilityDetails',
+                    type: 'GET',
+                    data: { id: facilityId },
+                    success: function(data) {
+                        $("#detail-title").html('<i class="bi bi-building"></i> Facility Details');
+                        $("#location-details").html(data);
+                    },
+                    error: function() {
+                        $("#location-details").html('<div class="alert alert-danger">Failed to load facility details</div>');
+                    }
+                });
+            }
+
+            function loadBuildingDetails(buildingId) {
+                $.ajax({
+                    url: '/Location/GetBuildingDetails',
+                    type: 'GET',
+                    data: { id: buildingId },
+                    success: function(data) {
+                        $("#detail-title").html('<i class="bi bi-house"></i> Building Details');
+                        $("#location-details").html(data);
+                    },
+                    error: function() {
+                        $("#location-details").html('<div class="alert alert-danger">Failed to load building details</div>');
+                    }
+                });
+            }
+
+            function loadFloorDetails(floorId) {
+                $.ajax({
+                    url: '/Location/GetFloorDetails',
+                    type: 'GET',
+                    data: { id: floorId },
+                    success: function(data) {
+                        $("#detail-title").html('<i class="bi bi-layers"></i> Floor Details');
+                        $("#location-details").html(data);
+                    },
+                    error: function() {
+                        $("#location-details").html('<div class="alert alert-danger">Failed to load floor details</div>');
+                    }
+                });
+            }
+        });
+    </script>
+
+    <style>
+        a.btn-light {
+            background-color: white !important; /* Primary blue */
+            color: #0d6efd !important; /* White text on hover */
+        }
+        .location-tree {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .location-tree a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .location-tree a:hover {
+            color: #0d6efd;
+        }
+
+        .location-tree .btn {
+            padding: 0.2rem 0.5rem;
+        }
+
+        .location-tree ul li {
+            padding: 5px 0;
+            border-radius: 5px;
+        }
+
+        .location-tree ul li:hover {
+            background-color: rgba(0,0,0,0.03);
+        }
+    </style>
+}

@@ -54,6 +54,7 @@ namespace AssetManagementSystem.BLL.Repositories
 			return await _context.Buildings
 				.Include(b => b.Facility)
 				.Include(b => b.Floors)
+				.ThenInclude(f => f.Rooms)
 				.FirstOrDefaultAsync(b => b.Id == id);
 		}
 
@@ -64,10 +65,15 @@ namespace AssetManagementSystem.BLL.Repositories
 			{
 				throw new Exception("Building not found");
 			}
-			building.Id = buildingToUpdate.Id;
-			 _context.Buildings.Update(building);
-			await _context.SaveChangesAsync();
 
+			_context.Entry(buildingToUpdate).State = EntityState.Detached;
+
+			
+			_context.Attach(building);
+			_context.Entry(building).State = EntityState.Modified;
+
+			await _context.SaveChangesAsync();
 		}
+
 	}
 }

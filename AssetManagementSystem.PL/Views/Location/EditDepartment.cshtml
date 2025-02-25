@@ -1,0 +1,42 @@
+﻿@model AssetManagementSystem.DAL.Entities.Department
+@{
+    ViewData["Title"] = "Edit Department";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0"><i class="bi bi-diagram-3-fill me-2"></i> Edit Department</h2>
+        </div>
+        <div class="card-body">
+            <form asp-action="EditDepartment" method="post">
+                <input type="hidden" asp-for="Id" />
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label">Department Name</label>
+                    <input asp-for="Name" class="form-control" required />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="FacilityId" class="form-label">Facility</label>
+                    <select asp-for="FacilityId" class="form-select" required
+                            asp-items="@(new SelectList(ViewBag.Facilities, "Id", "Name"))">
+                        <option value="">-- Select Facility --</option>
+                    </select>
+                    <span asp-validation-for="FacilityId" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Departments" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-check-circle"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

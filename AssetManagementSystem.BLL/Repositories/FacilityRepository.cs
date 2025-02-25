@@ -51,9 +51,11 @@ namespace AssetManagementSystem.BLL.Repositories
 		public async Task<Facility?> GetByIdAsync(int id)
 		{
 			return await _context.Facilities
-				.Include(f => f.Buildings)
-				.Include(f => f.Departments)
-				.FirstOrDefaultAsync(f => f.Id == id);
+		.Include(f => f.Buildings)
+			.ThenInclude(b => b.Floors)
+			.ThenInclude(f => f.Rooms)
+		.Include(f => f.Departments)
+		.FirstOrDefaultAsync(f => f.Id == id);
 		}
 
 		public async Task UpdateAsync(Facility facility)

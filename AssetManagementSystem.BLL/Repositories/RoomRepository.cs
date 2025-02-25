@@ -25,9 +25,9 @@ namespace AssetManagementSystem.BLL.Repositories
 
 		}
 
-		public async Task DeleteAsync(int id)
+		public async Task DeleteAsync(string id)
 		{
-			await _context.Rooms.FindAsync(id);
+			_context.Rooms.Remove(await _context.Rooms.FindAsync(id));
 			await _context.SaveChangesAsync();
 		}
 

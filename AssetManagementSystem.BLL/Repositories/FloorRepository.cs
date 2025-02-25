@@ -42,12 +42,22 @@ namespace AssetManagementSystem.BLL.Repositories
 
 		public async Task<IEnumerable<Floor>> GetAllAsync()
 		{
-			return await _context.Floors.ToListAsync();
+			return await _context.Floors
+				.Include(f => f.Building)
+					.ThenInclude(b => b.Facility)
+				.Include(f => f.Rooms)
+					.ThenInclude(r => r.Department).
+					ToListAsync();
 		}
 
 		public async Task<Floor?> GetByIdAsync(int id)
 		{
-			return await _context.Floors.FindAsync(id);
+			return await _context.Floors
+				.Include(f => f.Building)
+					.ThenInclude(b => b.Facility)
+				.Include(f => f.Rooms)
+					.ThenInclude(r => r.Department)
+				.FirstOrDefaultAsync(f => f.Id == id);
 		}
 
 		public async Task UpdateAsync(Floor floor)

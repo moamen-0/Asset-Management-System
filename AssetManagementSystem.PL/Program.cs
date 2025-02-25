@@ -53,6 +53,15 @@ namespace AssetManagementSystem.PL
 			builder.Services.AddScoped<IChangeLogRepository, ChangeLogRepository>();
 			builder.Services.AddScoped<IUserRepository, UserRepository>();
 			builder.Services.AddScoped<IUserService, UserService>();
+			builder.Services.AddScoped<IFacilityRepository, FacilityRepository>();
+			builder.Services.AddScoped<IFacilityService, FacilityService>();
+			builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+			builder.Services.AddScoped<IFloorRepository, FloorRepository>();
+			builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+			builder.Services.AddScoped<IBuildingRepository, BuildingRepository>();
+
+			
+
 			builder.Services.AddDbContextPool<AssetManagementDbContext>(options =>
 	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 

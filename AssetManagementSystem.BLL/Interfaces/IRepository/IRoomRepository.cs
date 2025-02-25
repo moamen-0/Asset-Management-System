@@ -13,6 +13,6 @@ namespace AssetManagementSystem.BLL.Interfaces.IRepository
 		Task<Room?> GetByIdAsync(string id);
 		Task AddAsync(Room room);
 		Task UpdateAsync(Room room);
-		Task DeleteAsync(int id);
+		Task DeleteAsync(string id);
 	}
 }
