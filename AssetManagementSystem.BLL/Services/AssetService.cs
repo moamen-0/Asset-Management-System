@@ -1,6 +1,8 @@
 ﻿using AssetManagementSystem.BLL.Interfaces.IRepository;
 using AssetManagementSystem.BLL.Interfaces.IService;
+using AssetManagementSystem.BLL.Repositories;
 using AssetManagementSystem.DAL.Entities;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -11,6 +13,8 @@ namespace AssetManagementSystem.BLL.Services
 	{
 		private readonly IAssetRepository _assetRepository;
 		private readonly IDisposalRepository _disposalRepository; // إضافة مستودع التكهين
+		private readonly ILogger<AssetService> _logger;
+		private readonly IBuildingRepository _buildingRepository;
 
 		public AssetService(IAssetRepository assetRepository, IDisposalRepository disposalRepository)
 		{
@@ -83,7 +87,16 @@ namespace AssetManagementSystem.BLL.Services
 
 		public async Task<IEnumerable<Building>> GetBuildingsByFacilityAsync(int facilityId)
 		{
-			return await _assetRepository.GetBuildingsByFacilityAsync(facilityId);
+			try
+			{
+				var buildings = await _buildingRepository.GetAllAsync();
+				return buildings.Where(b => b.FacilityId == facilityId);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error in GetBuildingsByFacilityAsync for facilityId {FacilityId}", facilityId);
+				return new List<Building>();
+			}
 		}
 
 		public async Task<IEnumerable<Floor>> GetFloorsByBuildingAsync(int buildingId)
@@ -96,7 +109,7 @@ namespace AssetManagementSystem.BLL.Services
 			return await _assetRepository.GetRoomsByFloorAsync(floorId);
 		}
 
-		
+
 		public async Task<IEnumerable<User>> GetAllUsersAsync()
 		{
 		

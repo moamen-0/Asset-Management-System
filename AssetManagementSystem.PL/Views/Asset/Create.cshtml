@@ -1,346 +1,313 @@
 ﻿@model AssetManagementSystem.DAL.Entities.Asset
-
 @{
     ViewData["Title"] = "Create Asset";
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
 
-
-
-<div class="card p-4 shadow-sm">
-    <form asp-action="Create" method="post" id="createAssetForm" class="needs-validation" novalidate>
-        <h2 class="mb-4 text-primary"><i class="bi bi-box-seam"></i> Create Asset</h2>
-
-        <!-- Basic Information -->
-        <div class="card mb-4">
-            <div class="card-header bg-light">
-                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Basic Information</h5>
-            </div>
-            <div class="card-body row">
-                <div class="col-md-6 mb-3">
-                    <label asp-for="AssetTag" class="form-label">
-                        <i class="bi bi-tag"></i> Asset Tag
-                        <i class="bi bi-question-circle" data-bs-toggle="tooltip" title="Unique identifier for the asset"></i>
-                    </label>
-                    <input asp-for="AssetTag" class="form-control" required
-                           data-val="true" data-val-required="Asset Tag is required"
-                           placeholder="Enter asset tag" />
-                    <div class="invalid-feedback">Please enter an asset tag.</div>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label asp-for="AssetDescription" class="form-label">
-                        <i class="bi bi-card-text"></i> Description
-                    </label>
-                    <input asp-for="AssetDescription" class="form-control" placeholder="Enter asset description" />
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="AssetClass1" class="form-label">
-                        <i class="bi bi-diagram-3"></i> Asset Class 1
-                    </label>
-                    <input asp-for="AssetClass1" class="form-control" placeholder="Enter Asset Class 1" />
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="AssetClass2" class="form-label">
-                        <i class="bi bi-diagram-3"></i> Asset Class 2
-                    </label>
-                    <input asp-for="AssetClass2" class="form-control" placeholder="Enter Asset Class 2" />
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="AssetClass3" class="form-label">
-                        <i class="bi bi-diagram-3"></i> Asset Class 3
-                    </label>
-                    <input asp-for="AssetClass3" class="form-control" placeholder="Enter Asset Class 3" />
-                </div>
-            </div>
+<div class="container mt-4">
+    <div class="card shadow-lg rounded-4 border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0"><i class="bi bi-box-seam me-2"></i> Create New Asset</h3>
         </div>
 
-        <!-- Location Information -->
-        <div class="card mb-4">
-            <div class="card-header bg-light">
-                <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Location Information</h5>
-            </div>
-            <div class="card-body row">
-                <div class="col-md-6 mb-3">
-                    <label asp-for="FacilityId" class="form-label">
-                        <i class="bi bi-building"></i> Facility
-                    </label>
-                    <select asp-for="FacilityId" class="form-select" id="facilitySelect" required>
-                        <option value="">Select Facility</option>
-                    </select>
-                    <div class="invalid-feedback">Please select a facility.</div>
+        <div class="card-body">
+            <form asp-action="Create" method="post" id="createAssetForm" class="needs-validation" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <!-- Asset Identification Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-tag me-2"></i> Asset Identification</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="AssetTag" class="form-label">Asset Tag <span class="text-danger">*</span></label>
+                                <input asp-for="AssetTag" class="form-control" required />
+                                <span asp-validation-for="AssetTag" class="text-danger"></span>
+                                <div class="form-text">Unique identifier for this asset</div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="AssetDescription" class="form-label">Description</label>
+                                <input asp-for="AssetDescription" class="form-control" />
+                                <span asp-validation-for="AssetDescription" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="AssetClass1" class="form-label">Asset Class 1</label>
+                                <input asp-for="AssetClass1" class="form-control" />
+                                <span asp-validation-for="AssetClass1" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="AssetClass2" class="form-label">Asset Class 2</label>
+                                <input asp-for="AssetClass2" class="form-control" />
+                                <span asp-validation-for="AssetClass2" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="AssetClass3" class="form-label">Asset Class 3</label>
+                                <input asp-for="AssetClass3" class="form-control" />
+                                <span asp-validation-for="AssetClass3" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="col-md-6 mb-3">
-                    <label asp-for="DepartmentId" class="form-label">
-                        <i class="bi bi-briefcase"></i> Department
-                    </label>
-                    <select asp-for="DepartmentId" class="form-select" id="departmentSelect" required>
-                        <option value="">Select Department</option>
-                    </select>
-                    <div class="invalid-feedback">Please select a department.</div>
+                <!-- Location Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i> Location Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FacilityId" class="form-label">Facility <span class="text-danger">*</span></label>
+                                <select asp-for="FacilityId" class="form-select" asp-items="ViewBag.Facilities" required id="facilitySelect">
+                                    <option value="">-- Select Facility --</option>
+                                </select>
+                                <span asp-validation-for="FacilityId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DepartmentId" class="form-label">Department <span class="text-danger">*</span></label>
+                                <select asp-for="DepartmentId" class="form-select" asp-items="ViewBag.Departments" required>
+                                    <option value="">-- Select Department --</option>
+                                </select>
+                                <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="BuildingId" class="form-label">Building <span class="text-danger">*</span></label>
+                                <select asp-for="BuildingId" class="form-select" required id="buildingSelect">
+                                    <option value="">-- Select Building --</option>
+                                </select>
+                                <span asp-validation-for="BuildingId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="FloorId" class="form-label">Floor <span class="text-danger">*</span></label>
+                                <select asp-for="FloorId" class="form-select" required id="floorSelect">
+                                    <option value="">-- Select Floor --</option>
+                                </select>
+                                <span asp-validation-for="FloorId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="RoomTag" class="form-label">Room</label>
+                                <select asp-for="RoomTag" class="form-select" id="roomSelect">
+                                    <option value="">-- Select Room --</option>
+                                </select>
+                                <span asp-validation-for="RoomTag" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="col-md-4 mb-3">
-                    <label asp-for="BuildingId" class="form-label">
-                        <i class="bi bi-house"></i> Building
-                    </label>
-                    <select asp-for="BuildingId" class="form-select" id="buildingSelect" required disabled>
-                        <option value="">Select Building</option>
-                    </select>
-                    <div class="invalid-feedback">Please select a building.</div>
+                <!-- Technical Details Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-gear me-2"></i> Technical Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Brand" class="form-label">Brand</label>
+                                <input asp-for="Brand" class="form-control" />
+                                <span asp-validation-for="Brand" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Model" class="form-label">Model</label>
+                                <input asp-for="Model" class="form-control" />
+                                <span asp-validation-for="Model" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="SerialNumber" class="form-label">Serial Number</label>
+                                <input asp-for="SerialNumber" class="form-control" />
+                                <span asp-validation-for="SerialNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="AssetType" class="form-label">Asset Type</label>
+                                <select asp-for="AssetType" class="form-select" asp-items="ViewBag.AssetTypes">
+                                    <option value="">-- Select Asset Type --</option>
+                                </select>
+                                <span asp-validation-for="AssetType" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Status" class="form-label">Status</label>
+                                <select asp-for="Status" class="form-select" asp-items="ViewBag.StatusOptions">
+                                    <option value="">-- Select Status --</option>
+                                </select>
+                                <span asp-validation-for="Status" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="Details" class="form-label">Additional Details</label>
+                                <textarea asp-for="Details" class="form-control" rows="3"></textarea>
+                                <span asp-validation-for="Details" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="col-md-4 mb-3">
-                    <label asp-for="FloorId" class="form-label">
-                        <i class="bi bi-layers"></i> Floor
-                    </label>
-                    <select asp-for="FloorId" class="form-select" id="floorSelect" required disabled>
-                        <option value="">Select Floor</option>
-                    </select>
-                    <div class="invalid-feedback">Please select a floor.</div>
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Create Asset
+                    </button>
                 </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="RoomTag" class="form-label">
-                        <i class="bi bi-door-closed"></i> Room
-                    </label>
-                    <select asp-for="RoomTag" class="form-select" id="roomSelect" required disabled>
-                        <option value="">Select Room</option>
-                    </select>
-                    <div class="invalid-feedback">Please select a room.</div>
-                </div>
-            </div>
+            </form>
         </div>
-
-        <!-- Asset Details -->
-        <div class="card mb-4">
-            <div class="card-header bg-light">
-                <h5 class="mb-0"><i class="bi bi-card-list"></i> Asset Details</h5>
-            </div>
-            <div class="card-body row">
-                <div class="col-md-4 mb-3">
-                    <label asp-for="Brand" class="form-label">
-                        <i class="bi bi-tag"></i> Brand
-                    </label>
-                    <input asp-for="Brand" class="form-control" placeholder="Enter brand name" />
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="Model" class="form-label">
-                        <i class="bi bi-cpu"></i> Model
-                    </label>
-                    <input asp-for="Model" class="form-control" placeholder="Enter model" />
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="SerialNumber" class="form-label">
-                        <i class="bi bi-upc-scan"></i> Serial Number
-                    </label>
-                    <input asp-for="SerialNumber" class="form-control" placeholder="Enter serial number" />
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label asp-for="AssetType" class="form-label">
-                        <i class="bi bi-box"></i> Asset Type
-                    </label>
-                    <select asp-for="AssetType" class="form-select">
-                        <option value="">Select Asset Type</option>
-                        <option value="Hardware">Hardware</option>
-                        <option value="Software">Software</option>
-                        <option value="Furniture">Furniture</option>
-                        <option value="Equipment">Equipment</option>
-                    </select>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label asp-for="Status" class="form-label">
-                        <i class="bi bi-info-circle"></i> Status
-                    </label>
-                    <select asp-for="Status" class="form-select">
-                        <option value="">Select Status</option>
-                        <option value="Available">Available</option>
-                        <option value="In Use">In Use</option>
-                        <option value="Under Maintenance">Under Maintenance</option>
-                        <option value="Reserved">Reserved</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <div class="d-flex justify-content-between">
-            <button type="submit" class="btn btn-success btn-lg">
-                <i class="bi bi-plus-circle"></i> Create Asset
-            </button>
-            <a asp-action="Index" class="btn btn-secondary btn-lg">
-                <i class="bi bi-arrow-left"></i> Back to List
-            </a>
-        </div>
-    </form>
+    </div>
 </div>
 
 @section Scripts {
-
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-            $(document).ready(function() {
-            // Initialize Select2 for all select elements
-               $('.form-select').select2();
+                 $(document).ready(function() {
+            console.log("Document ready - initializing asset creation form");
 
-            // Initialize tooltips
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl)
-            });
+            // Initialize form validation
+            (() => {
+                'use strict'
+                const forms = document.querySelectorAll('.needs-validation')
+                Array.from(forms).forEach(form => {
+                    form.addEventListener('submit', event => {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+            })()
 
-            // Load initial data
-            loadFacilities();
-            loadDepartments();
-
-            // Facility change event
+            // Handle facility change
             $('#facilitySelect').change(function() {
-                var facilityId = $(this).val();
+                const facilityId = $(this).val();
+                console.log("Facility selected:", facilityId);
+
                 if (facilityId) {
-                    loadBuildings(facilityId);
-                    $('#buildingSelect').prop('disabled', false);
-                } else {
-                    resetDropdowns(['buildingSelect', 'floorSelect', 'roomSelect']);
+                    // Clear dependent dropdowns
+                    $('#buildingSelect').empty().append('<option value="">-- Select Building --</option>').prop('disabled', true);
+                    $('#floorSelect').empty().append('<option value="">-- Select Floor --</option>').prop('disabled', true);
+                    $('#roomSelect').empty().append('<option value="">-- Select Room --</option>').prop('disabled', true);
+
+                    // Load buildings
+                    $.ajax({
+                           url: "/Asset/GetBuildingsByFacilityAsync",
+        data: { facilityId: facilityId },
+        type: 'GET',
+        dataType: 'json',
+                        success: function(data) {
+                            console.log("Buildings data received:", data);
+                            if (data && data.length > 0) {
+                                $('#buildingSelect').prop('disabled', false);
+                                $.each(data, function(index, item) {
+                                    $('#buildingSelect').append(
+                                        `<option value="${item.id}">${item.name}</option>`
+                                    );
+                                });
+                            } else {
+                                console.log("No buildings found for facility:", facilityId);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error loading buildings:", error);
+                            console.error("Status:", xhr.status);
+                            console.error("Response text:", xhr.responseText);
+                        }
+                    });
                 }
             });
 
-            // Building change event
+            // Handle building change
             $('#buildingSelect').change(function() {
-                var buildingId = $(this).val();
+                const buildingId = $(this).val();
+                console.log("Building selected:", buildingId);
+
                 if (buildingId) {
-                    loadFloors(buildingId);
-                    $('#floorSelect').prop('disabled', false);
-                } else {
-                    resetDropdowns(['floorSelect', 'roomSelect']);
+                    // Clear floor and room dropdowns
+                    $('#floorSelect').empty().append('<option value="">-- Select Floor --</option>').prop('disabled', true);
+                    $('#roomSelect').empty().append('<option value="">-- Select Room --</option>').prop('disabled', true);
+
+                    $.ajax({
+                        url: "/Asset/GetFloorsByBuildingAsync",
+                        data: { buildingId: buildingId },
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function(data) {
+                            console.log("Floors data received:", data);
+                            if (data && data.length > 0) {
+                                $('#floorSelect').prop('disabled', false);
+                                $.each(data, function(index, item) {
+                                    $('#floorSelect').append(
+                                        `<option value="${item.id}">${item.name}</option>`
+                                    );
+                                });
+                            } else {
+                                console.log("No floors found for building:", buildingId);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error loading floors:", error);
+                            console.error("Status:", xhr.status);
+                            console.error("Response text:", xhr.responseText);
+                        }
+                    });
                 }
             });
 
-            // Floor change event
+            // Handle floor change
             $('#floorSelect').change(function() {
-                var floorId = $(this).val();
-                if (floorId) {
-                    loadRooms(floorId);
-                    $('#roomSelect').prop('disabled', false);
-                } else {
-                    resetDropdowns(['roomSelect']);
-                }
-            });
+                const floorId = $(this).val();
+                console.log("Floor selected:", floorId);
 
-            // Form validation
-            $('#createAssetForm').submit(function(event) {
-                if (!this.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
+                if (floorId) {
+                    // Clear room dropdown
+                    $('#roomSelect').empty().append('<option value="">-- Select Room --</option>').prop('disabled', true);
+
+                    $.ajax({
+                        url: "/Asset/GetRoomsByFloorAsync",
+                        data: { floorId: floorId },
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function(data) {
+                            console.log("Rooms data received:", data);
+                            if (data && data.length > 0) {
+                                $('#roomSelect').prop('disabled', false);
+                                $.each(data, function(index, item) {
+                                    $('#roomSelect').append(
+                                        `<option value="${item.roomTag}">${item.name}</option>`
+                                    );
+                                });
+                            } else {
+                                console.log("No rooms found for floor:", floorId);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error loading rooms:", error);
+                            console.error("Status:", xhr.status);
+                            console.error("Response text:", xhr.responseText);
+                        }
+                    });
                 }
-                $(this).addClass('was-validated');
             });
         });
-
-        // Reset dropdowns helper function
-        function resetDropdowns(dropdownIds) {
-            dropdownIds.forEach(function(id) {
-                $('#' + id)
-                    .empty()
-                    .append('<option value="">Select an option</option>')
-                    .prop('disabled', true)
-                    .trigger('change');
-            });
-        }
-
-        // AJAX functions
-        function loadFacilities() {
-            $.get('/Asset/GetAllFacilitiesAsync', function(data) {
-                if (data && Array.isArray(data)) {
-                    var dropdown = $('#facilitySelect');
-                    dropdown.empty();
-                    dropdown.append('<option value="">Select Facility</option>');
-                    data.forEach(function(facility) {
-                        dropdown.append($('<option></option>')
-                            .attr('value', facility.id)
-                            .text(facility.name));
-                    });
-                }
-            });
-        }
-
-        function loadDepartments() {
-            $.get('/Asset/GetAllDepartmentsAsync', function(data) {
-                if (data && Array.isArray(data)) {
-                    var dropdown = $('#departmentSelect');
-                    dropdown.empty();
-                    dropdown.append('<option value="">Select Department</option>');
-                    data.forEach(function(department) {
-                        dropdown.append($('<option></option>')
-                            .attr('value', department.id)
-                            .text(department.name));
-                    });
-                }
-            });
-        }
-
-        function loadBuildings(facilityId) {
-            $.get('/Asset/GetBuildingsByFacilityAsync/' + facilityId, function(data) {
-                if (data && Array.isArray(data)) {
-                    var dropdown = $('#buildingSelect');
-                    dropdown.empty();
-                    dropdown.append('<option value="">Select Building</option>');
-                    data.forEach(function(building) {
-                        dropdown.append($('<option></option>')
-                            .attr('value', building.id)
-                            .text(building.name));
-                    });
-                }
-            });
-        }
-
-        function loadFloors(buildingId) {
-            $.get('/Asset/GetFloorsByBuildingAsync/' + buildingId, function(data) {
-                if (data && Array.isArray(data)) {
-                    var dropdown = $('#floorSelect');
-                    dropdown.empty();
-                    dropdown.append('<option value="">Select Floor</option>');
-                    data.forEach(function(floor) {
-                        dropdown.append($('<option></option>')
-                            .attr('value', floor.id)
-                            .text(floor.name));
-                    });
-                }
-            });
-        }
-
-        function loadRooms(floorId) {
-            $.get('/Asset/GetRoomsByFloorAsync/' + floorId, function(data) {
-                if (data && Array.isArray(data)) {
-                    var dropdown = $('#roomSelect');
-                    dropdown.empty();
-                    dropdown.append('<option value="">Select Room</option>');
-                    data.forEach(function(room) {
-                        dropdown.append($('<option></option>')
-                            .attr('value', room.roomTag)
-                            .text(room.name));
-                    });
-                }
-            
-
-        function populateDropdown(selector, data) {
-            var dropdown = $(selector);
-            dropdown.empty();
-            dropdown.append('<option value="">Select an option</option>');
-            $.each(data, function(index, item) {
-                dropdown.append($('<option></option>')
-                    .attr('value', item.id)
-                    .text(item.name));
-            });
-        }
-        
     </script>
 }

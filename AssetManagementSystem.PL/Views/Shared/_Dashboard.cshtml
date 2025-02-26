@@ -170,13 +170,20 @@
                         <i class="fas fa-expand"></i>
                     </a>
                 </li>
-            </ul>
+           
 
-            <!-- Live Search Bar -->
-            <form class="form-inline mx-auto">
-                <input class="form-control" id="liveSearch" type="text" placeholder="Search...">
-                <button type="button" id="resetSearch" class="btn btn-secondary ml-2">Reset</button>
-            </form>
+            <!-- Language Switcher -->
+            <li class="nav-item">
+                <div class="language-switcher">
+                    <button type="button" class="lang-btn active" onclick="handleLanguageChange('en')" id="lang-en">
+                        🇺🇸 EN
+                    </button>
+                    <button type="button" class="lang-btn" onclick="handleLanguageChange('ar')" id="lang-ar">
+                        🇪🇬 AR
+                    </button>
+                </div>
+            </li>
+			</ul>
 
             <!-- Right navbar links -->
             <ul class="navbar-nav ms-auto">
@@ -197,17 +204,7 @@
                     </div>
                 </li>
 
-                <!-- Language Switcher -->
-                <li class="nav-item">
-                    <div class="language-switcher">
-                        <button type="button" class="lang-btn active" onclick="handleLanguageChange('en')" id="lang-en">
-                            🇺🇸 EN
-                        </button>
-                        <button type="button" class="lang-btn" onclick="handleLanguageChange('ar')" id="lang-ar">
-                            🇪🇬 AR
-                        </button>
-                    </div>
-                </li>
+               
 
                 <!-- Dark Mode Toggle -->
                 <li class="nav-item">
