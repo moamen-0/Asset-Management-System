@@ -17,6 +17,7 @@ using OfficeOpenXml.Style;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace AssetManagementSystem.PL.Controllers
@@ -75,13 +76,27 @@ namespace AssetManagementSystem.PL.Controllers
 				var sortColumn = HttpContext.Request.Form["order[0][column]"].FirstOrDefault();
 				var sortDirection = HttpContext.Request.Form["order[0][dir]"].FirstOrDefault();
 
+				List<string> assetTagsFilter = null;
+				if (HttpContext.Session.TryGetValue("AssetTagsFilter", out byte[] filterData))
+				{
+					string filterJson = Encoding.UTF8.GetString(filterData);
+					assetTagsFilter = System.Text.Json.JsonSerializer.Deserialize<List<string>>(filterJson);
+				}
+
 				int pageSize = length != null ? Convert.ToInt32(length) : 0;
 				int skip = start != null ? Convert.ToInt32(start) : 0;
 				int recordsTotal = 0;
 
-				// Fetch all assets with related data
+
+				// Get all assets
 				var assets = await _assetService.GetAllAssetsAsync();
 				var assetList = assets.ToList();
+
+				// Apply the asset tags filter if it exists
+				if (assetTagsFilter != null && assetTagsFilter.Any())
+				{
+					assetList = assetList.Where(a => assetTagsFilter.Contains(a.AssetTag)).ToList();
+				}
 
 				// Apply search filter
 				if (!string.IsNullOrEmpty(searchValue))
@@ -1177,6 +1192,116 @@ namespace AssetManagementSystem.PL.Controllers
 			{
 				Console.WriteLine($"Error in GetRoomsByFloorAsync: {ex.Message}");
 				return Json(new List<object>());
+			}
+		}
+		[HttpPost]
+		public async Task<IActionResult> FilteredAssets(List<string> assetTags)
+		{
+			if (assetTags == null || !assetTags.Any())
+			{
+				return RedirectToAction("Index");
+			}
+
+			// Remove duplicates from the asset tags
+			assetTags = assetTags.Distinct().ToList();
+
+			// Store the deduplicated filter in ViewBag
+			ViewBag.FilteredTags = assetTags;
+
+			// Get filtered assets
+			var assets = await _assetService.GetAllAssetsAsync();
+			var filteredAssets = assets.Where(a => assetTags.Contains(a.AssetTag)).ToList();
+
+			// Return the dedicated view with the filtered assets
+			return View(filteredAssets);
+		}
+		[HttpPost]
+		public async Task<IActionResult> FilterByTags([FromBody] List<string> assetTags)
+		{
+			if (assetTags == null || !assetTags.Any())
+			{
+				return BadRequest(new { success = false, error = "No asset tags provided" });
+			}
+
+			try
+			{
+				// Store the filter in session
+				HttpContext.Session.SetString("AssetTagsFilter",
+					System.Text.Json.JsonSerializer.Serialize(assetTags));
+
+				// Count the matching assets
+				var assets = await _assetService.GetAllAssetsAsync();
+				var filteredCount = assets.Count(a => assetTags.Contains(a.AssetTag));
+
+				return Ok(new
+				{
+					success = true,
+					count = filteredCount,
+					message = $"Filter applied with {filteredCount} matching assets"
+				});
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error filtering assets by tags");
+				return StatusCode(500, new { success = false, error = "Internal server error" });
+			}
+		}
+
+		[HttpPost]
+		public IActionResult ClearFilter()
+		{
+			try
+			{
+				// Remove the filter from session
+				HttpContext.Session.Remove("AssetTagsFilter");
+				return Ok(new { success = true });
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error clearing asset filter");
+				return StatusCode(500, new { success = false, error = "Internal server error" });
+			}
+		}
+		[HttpPost]
+		public async Task<IActionResult> GetFilteredAssets([FromBody] List<string> assetTags)
+		{
+			if (assetTags == null || !assetTags.Any())
+			{
+				return BadRequest(new { success = false, error = "No asset tags provided" });
+			}
+
+			try
+			{
+				// Remove duplicates
+				assetTags = assetTags.Distinct().ToList();
+
+				// Get filtered assets
+				var assets = await _assetService.GetAllAssetsAsync();
+				var filteredAssets = assets.Where(a => assetTags.Contains(a.AssetTag)).ToList();
+
+				// Format the response data
+				var responseData = filteredAssets.Select(a => new {
+					assetTag = a.AssetTag,
+					assetDescription = a.AssetDescription,
+					department = a.Department != null ? new { name = a.Department.Name } : null,
+					brand = a.Brand,
+					model = a.Model,
+					status = a.Status,
+					isDisposed = a.IsDisposed,
+					serialNumber = a.SerialNumber
+				}).ToList();
+
+				return Json(new
+				{
+					success = true,
+					data = responseData,
+					message = $"Found {filteredAssets.Count} matching assets"
+				});
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error getting filtered assets");
+				return StatusCode(500, new { success = false, error = "Internal server error" });
 			}
 		}
 	}

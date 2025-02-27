@@ -4,7 +4,97 @@
     ViewData["Title"] = "Assets";
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
+<div class="card shadow-lg p-4">
+    <!-- Bulk Tag Selection -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="text-primary mb-3">
+                <i class="bi bi-input-cursor-text"></i> Filter by Asset Tags
+            </h5>
 
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="bi bi-clipboard-data"></i> Enter Asset Tags
+                            <small class="text-muted">(one per line, comma-separated, or from Excel)</small>
+                        </label>
+                        <textarea id="assetTagsInput" class="form-control font-monospace"
+                                  rows="4"
+                                  placeholder="Example:
+AST001
+AST002, AST003
+AST004&#9;AST005"></textarea>
+                        <div class="mt-2">
+                            <span id="tagCounter" class="text-muted small">
+                                <i class="bi bi-hash"></i> 0 tags detected
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex flex-column h-100 justify-content-end">
+                        <button id="filterAssets" class="btn btn-primary mb-2">
+                            <i class="bi bi-filter"></i> Filter Assets
+                        </button>
+                        <button id="clearFilter" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg"></i> Clear Filter
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Results Section - Initially Hidden -->
+    <div id="filterResultsSection" class="mb-4" style="display: none;">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-filter-circle-fill me-2"></i> Filtered Assets</h5>
+                <button type="button" id="closeFilterResults" class="btn btn-sm btn-light">
+                    <i class="bi bi-x-lg"></i> Close
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="filterStats" class="alert alert-info">
+                    <span>Showing filtered assets</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="filteredAssetsTable" class="table table-striped table-hover table-bordered align-middle">
+                        <thead class="table-dark text-center">
+                            <tr>
+                                <th>Asset Tag</th>
+                                <th>Description</th>
+                                <th>Department</th>
+                                <th>Brand</th>
+                                <th>Model</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Filtered results will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="filterTags" class="mt-3">
+                    <h6>Filtered by these asset tags:</h6>
+                    <div id="matchedTags" class="d-flex flex-wrap gap-2 mb-2">
+                        <!-- Matched tags will be inserted here -->
+                    </div>
+                    <div id="missingTagsAlert" class="alert alert-warning mt-2" style="display: none;">
+                        <strong><i class="bi bi-exclamation-triangle"></i> Note:</strong>
+                        The following tags were not found in the database:
+                        <div id="missingTags" class="d-flex flex-wrap gap-2 mt-1">
+                            <!-- Missing tags will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 <div class="card shadow-lg p-4">
     <!-- Bulk Tag Selection -->
     <div class="card shadow-sm mb-4">
@@ -232,468 +322,581 @@ AST004&#9;AST005"></textarea>
         </div>
     </div>
 </div>
-@section Scripts {
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap5.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.min.js"></script>
-    <style>
-        .downloading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
+    @section Scripts {
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap5.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.bootstrap5.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 
-        .downloading-content {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .spinner-border {
-            width: 3rem;
-            height: 3rem;
-        }
-    </style>
-    <script>
-                function showDownloadingOverlay() {
-            const overlay = $(`
-                <div class="downloading-overlay">
-                    <div class="downloading-content">
-                        <div class="spinner-border text-primary mb-3" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <h5>Generating Disposal Document</h5>
-                        <p class="text-muted">Please wait while we prepare your document...</p>
-                    </div>
-                </div>
-            `);
-            $('body').append(overlay);
-            return overlay;
-        }
-        $(document).ready(function () {
-            // Initialize DataTable
-            let table = $('#assetsTable').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: '@Url.Action("GetAssets", "Asset")',
-                    type: 'POST'
-                },
-                scrollX: true,
-                order: [[2, 'asc']], // Sort by Asset Tag by default
-                columns: [
-                    {
-                        data: null,
-                        orderable: false,
-                        className: "text-center",
-                        render: function () {
-                            return `<input type="checkbox" class="row-checkbox">`;
-                        }
-                    },
-                    {
-                        data: null,
-                        orderable: false,
-                        className: "text-center",
-                        render: function (data, type, row) {
-                            return `
-                                <div class="btn-group">
-                                    <a href="/Asset/Edit/${row.assetTag}" class="btn btn-sm btn-primary" title="Edit">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                    <a href="/Asset/Delete/${row.assetTag}" class="btn btn-sm btn-danger" title="Delete">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                    <button class="btn btn-sm btn-warning dispose-btn" title="Dispose" data-asset-tag="${row.assetTag}">
-                                        <i class="bi bi-recycle"></i>
-                                    </button>
-                                </div>`;
-                        }
-                    },
-                    { data: 'assetTag' },
-                    { data: 'cluster' },
-                    { data: 'facility.name' },
-                    { data: 'building.name' },
-                    { data: 'floor.name' },
-                    { data: 'room.name' },
-                    { data: 'department.name' },
-                    { data: 'assetDescription' },
-                    { data: 'brand' },
-                    { data: 'model' },
-                    { data: 'user.fullName' },
-                    { data: 'assetType' },
-                    { data: 'status' },
-                    { data: 'isDisposed' },
-                    { data: 'serialNumber' },
-                    { data: 'insertDate' },
-                    { data: 'insertUser' },
-                    { data: 'details' }
-                ]
-            });
-
-            // Initialize clipboard handling
-            const bulkTagsTextarea = $('#bulkAssetTags');
-            const tagCounter = $('#tagCounter');
-            const processButton = $('#processAssetTags');
-            const clearButton = $('#clearAssetTags');
-            let selectedAssets = new Set();
-
-            // Function to process and clean asset tags
-            function processAssetTags(input) {
-                return input.split(/[\n,\t]+/)
-                    .map(tag => tag.trim())
-                    .filter(tag => tag.length > 0)
-                    .filter((tag, index, self) => self.indexOf(tag) === index); // Remove duplicates
+        <style>
+            .downloading-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
             }
 
-            // Update tag counter as user types/pastes
-            bulkTagsTextarea.on('input', function () {
-                const tags = processAssetTags($(this).val());
-                tagCounter.html(`
-                    <i class="bi bi-hash"></i> ${tags.length} unique tag${tags.length !== 1 ? 's' : ''} detected
-                `);
-            });
-
-            // Handle the process button click
-            processButton.click(function () {
-                const tags = processAssetTags(bulkTagsTextarea.val());
-
-                if (tags.length === 0) {
-                    alert('Please enter at least one asset tag');
-                    return;
-                }
-
-                // Clear existing selections
-                $('.row-checkbox').prop('checked', false);
-                selectedAssets.clear();
-
-                // Search and select matching rows
-                let found = 0;
-                table.rows().every(function () {
-                    const rowData = this.data();
-                    if (tags.includes(rowData.assetTag)) {
-                        found++;
-                        selectedAssets.add(rowData.assetTag);
-                        $(this.node()).find('.row-checkbox').prop('checked', true);
-                    }
-                });
-
-                // Show results feedback
-                const notFound = tags.length - found;
-                const message = [
-                    `✓ Found and selected ${found} asset${found !== 1 ? 's' : ''}`,
-                    notFound > 0 ? `\n⚠ ${notFound} tag${notFound !== 1 ? 's' : ''} not found in the current view` : ''
-                ].join('');
-
-                // Create and show toast notification
-                const toast = $(`
-                    <div class="toast position-fixed bottom-0 end-0 m-3" role="alert">
-                        <div class="toast-header ${notFound > 0 ? 'bg-warning' : 'bg-success'} text-white">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <strong class="me-auto">Asset Selection Results</strong>
-                            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-                        </div>
-                        <div class="toast-body">
-                            ${message.replace('\n', '<br>')}
-                        </div>
-                    </div>
-                `);
-
-                $('body').append(toast);
-                const bsToast = new bootstrap.Toast(toast);
-                bsToast.show();
-
-                // Clean up toast after it's hidden
-                toast.on('hidden.bs.toast', function () {
-                    $(this).remove();
-                });
-
-                // Update bulk operation controls
-                updateBulkControls();
-
-                // Clear the textarea
-                bulkTagsTextarea.val('');
-                tagCounter.html('<i class="bi bi-hash"></i> 0 tags detected');
-            });
-
-            // Handle clear button
-            clearButton.click(function () {
-                bulkTagsTextarea.val('');
-                tagCounter.html('<i class="bi bi-hash"></i> 0 tags detected');
-            });
-
-            // Handle paste event for Excel data
-            bulkTagsTextarea.on('paste', function (e) {
-                setTimeout(() => {
-                    let input = $(this).val();
-                    if (input.includes('\t')) {
-                        input = input.replace(/\t/g, '\n');
-                        $(this).val(input);
-                        $(this).trigger('input');
-                    }
-                }, 0);
-            });
-
-            // Handle checkbox selection
-            $(document).on('change', '.row-checkbox', function () {
-                const row = $(this).closest('tr');
-                const assetTag = table.row(row).data().assetTag;
-
-                if (this.checked) {
-                    selectedAssets.add(assetTag);
-                } else {
-                    selectedAssets.delete(assetTag);
-                }
-
-                updateBulkControls();
-            });
-
-            // Handle "Select All" checkbox
-            $('#selectAll').on('change', function () {
-                $('.row-checkbox').prop('checked', this.checked);
-
-                if (this.checked) {
-                    table.rows().data().each(function (row) {
-                        selectedAssets.add(row.assetTag);
-                    });
-                } else {
-                    selectedAssets.clear();
-                }
-
-                updateBulkControls();
-            });
-
-            // Function to update bulk controls
-            function updateBulkControls() {
-                const count = selectedAssets.size;
-                $('#selectedCount').text(`${count} assets selected`);
-                $('#transferAssetCount').text(count);
-                $('#disposeAssetCount').text(count);
-
-                $('#bulkTransferBtn, #bulkDisposeBtn').prop('disabled', count === 0);
+            .downloading-content {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                text-align: center;
             }
 
-            // Handle bulk transfer button click
-            $('#bulkTransferBtn').click(function () {
-                loadDepartmentsAndUsers();
-                $('#bulkTransferModal').modal('show');
-            });
+            .spinner-border {
+                width: 3rem;
+                height: 3rem;
+            }
+        </style>
 
-            // Handle bulk dispose button click
-            $('#bulkDisposeBtn').click(function () {
-                $('#bulkDisposalModal').modal('show');
-            });
+        <script>
+            $(document).ready(function () {
+                // Initialize the main assets DataTable
+                let table = $('#assetsTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: '@Url.Action("GetAssets", "Asset")',
+                        type: 'POST'
+                    },
+                    scrollX: true,
+                    order: [[2, 'asc']], // Sort by Asset Tag by default
+                    columns: [
+                        {
+                            data: null,
+                            orderable: false,
+                            className: "text-center",
+                            render: function () {
+                                return `<input type="checkbox" class="row-checkbox">`;
+                            }
+                        },
+                        {
+                            data: null,
+                            orderable: false,
+                            className: "text-center",
+                            render: function (data, type, row) {
+                                return `
+                                    <div class="btn-group">
+                                        <a href="/Asset/Edit/${row.assetTag}" class="btn btn-sm btn-primary" title="Edit">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a href="/Asset/Delete/${row.assetTag}" class="btn btn-sm btn-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-warning dispose-btn" title="Dispose" data-asset-tag="${row.assetTag}">
+                                            <i class="bi bi-recycle"></i>
+                                        </button>
+                                    </div>`;
+                            }
+                        },
+                        { data: 'assetTag' },
+                        { data: 'cluster' },
+                        { data: 'facility.name' },
+                        { data: 'building.name' },
+                        { data: 'floor.name' },
+                        { data: 'room.name' },
+                        { data: 'department.name' },
+                        { data: 'assetDescription' },
+                        { data: 'brand' },
+                        { data: 'model' },
+                        { data: 'user.fullName' },
+                        { data: 'assetType' },
+                        { data: 'status' },
+                        { data: 'isDisposed' },
+                        { data: 'serialNumber' },
+                        { data: 'insertDate' },
+                        { data: 'insertUser' },
+                        { data: 'details' }
+                    ]
+                });
 
-            // Function to load departments and users
-            function loadDepartmentsAndUsers() {
-                const departmentSelect = $('#targetDepartment');
-                const userSelect = $('#targetUser');
+                // Initialize the filtered assets table with no data
+                let filteredTable = $('#filteredAssetsTable').DataTable({
+                    responsive: true,
+                    dom: 'Bfrtip',
+                    buttons: [
+                        'copyHtml5',
+                        'excelHtml5',
+                        'csvHtml5',
+                        'pdfHtml5',
+                        'print'
+                    ]
+                });
 
-                // Show loading indicators
-                departmentSelect.prop('disabled', true).html('<option>Loading departments...</option>');
-                userSelect.prop('disabled', true).html('<option>Loading users...</option>');
-
-                // Load departments
-                $.get('/Asset/GetDepartments')
-                    .done(function (departments) {
-                        departmentSelect.prop('disabled', false)
-                            .empty()
-                            .append('<option value="">Select Department</option>');
-
-                        departments.forEach(dept => {
-                            departmentSelect.append(
-                                `<option value="${dept.id}">${dept.name}</option>`
-                            );
-                        });
-                    })
-                    .fail(function (error) {
-                        console.error('Failed to load departments:', error);
-                        departmentSelect.prop('disabled', false)
-                            .empty()
-                            .append('<option value="">Error loading departments</option>');
-                    });
-
-                // Load users
-                           // Load users with enhanced error handling
-               $.get('/Asset/GetUsers')
-        .done(function(response) {
-            const userSelect = $('#targetUser');
-            userSelect.prop('disabled', false).empty();
-
-            // Add the default "Select User" option
-            userSelect.append(`
-                <option value="">
-                    Select User (Optional)
-                </option>
-            `);
-
-            if (response.success && Array.isArray(response.data)) {
-                if (response.data.length === 0) {
-                    // Handle case where no users are found
-                    userSelect.append(`
-                        <option disabled>
-                            No users available in the system
-                        </option>
+                // Update tag counter as user types
+                $('#assetTagsInput').on('input', function () {
+                    const tags = processAssetTags($(this).val());
+                    $('#tagCounter').html(`
+                        <i class="bi bi-hash"></i> ${tags.length} tag${tags.length !== 1 ? 's' : ''} detected
                     `);
-                } else {
-                    // Add each user to the dropdown
-                    response.data.forEach(user => {
-                        userSelect.append(`
-                            <option value="${user.id}">
-                                ${user.name}
-                            </option>
-                        `);
+                });
+
+                // Handle the filter button click
+                $('#filterAssets').click(function () {
+                    const tagsInput = $('#assetTagsInput').val();
+                    const tags = processAssetTags(tagsInput);
+
+                    if (tags.length === 0) {
+                        alert('Please enter at least one asset tag');
+                        return;
+                    }
+
+                    // Show loading indicator
+                    const loadingOverlay = showLoadingOverlay("Filtering Assets");
+
+                    // Call the API to get filtered assets
+                    $.ajax({
+                        url: '/Asset/GetFilteredAssets',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(tags),
+                        success: function (response) {
+                            loadingOverlay.remove();
+
+                            if (response.success) {
+                                // Show the filter results section
+                                $('#filterResultsSection').show();
+                                $('#mainAssetsSection').hide();
+
+                                // Update filter stats
+                                $('#filterStats').html(`
+                                    <i class="bi bi-filter-circle-fill me-2"></i>
+                                    Showing ${response.data.length} asset${response.data.length !== 1 ? 's' : ''}
+                                    filtered by ${tags.length} tag${tags.length !== 1 ? 's' : ''}
+                                `);
+
+                                // Clear and reload the filtered table
+                                filteredTable.clear().draw();
+                                filteredTable.rows.add(response.data.map(asset => [
+                                    asset.assetTag,
+                                    asset.assetDescription || 'N/A',
+                                    asset.department?.name || 'N/A',
+                                    asset.brand || 'N/A',
+                                    asset.model || 'N/A',
+                                    asset.status || 'N/A',
+                                    `<div class="btn-group">
+                                        <a href="/Asset/Edit/${asset.assetTag}" class="btn btn-sm btn-primary" title="Edit">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a href="/Asset/Details/${asset.assetTag}" class="btn btn-sm btn-info" title="Details">
+                                            <i class="bi bi-info-circle"></i>
+                                        </a>
+                                        <a href="/Asset/Delete/${asset.assetTag}" class="btn btn-sm btn-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>`
+                                ])).draw();
+
+                                // Display matched and missing tags
+                                $('#matchedTags').empty();
+                                $('#missingTags').empty();
+
+                                // Get the list of found asset tags
+                                const foundTags = response.data.map(a => a.assetTag);
+
+                                // Display matched tags
+                                foundTags.forEach(tag => {
+                                    $('#matchedTags').append(`
+                                        <span class="badge bg-primary p-2 me-1">${tag}</span>
+                                    `);
+                                });
+
+                                // Check for missing tags
+                                const missingTags = tags.filter(tag => !foundTags.includes(tag));
+                                if (missingTags.length > 0) {
+                                    $('#missingTagsAlert').show();
+                                    $('#missingTags').empty();
+                                    missingTags.forEach(tag => {
+                                        $('#missingTags').append(`
+                                            <span class="badge bg-warning text-dark p-2 me-1">${tag}</span>
+                                        `);
+                                    });
+                                } else {
+                                    $('#missingTagsAlert').hide();
+                                }
+                            } else {
+                                alert(response.error || 'Error filtering assets');
+                            }
+                        },
+                        error: function (xhr) {
+                            loadingOverlay.remove();
+                            alert('Error filtering assets: ' + (xhr.responseJSON?.error || 'Unknown error'));
+                        }
+                    });
+                });
+
+                // Handle the clear filter button
+                $('#clearFilter').click(function () {
+                    $('#assetTagsInput').val('');
+                    $('#tagCounter').html('<i class="bi bi-hash"></i> 0 tags detected');
+                    $('#filterResultsSection').hide();
+                    $('#mainAssetsSection').show();
+                });
+
+                // Handle the close filter results button
+                $('#closeFilterResults').click(function () {
+                    $('#filterResultsSection').hide();
+                    $('#mainAssetsSection').show();
+                });
+
+                // Handle clipboard paste for Excel data
+                $('#assetTagsInput').on('paste', function (e) {
+                    setTimeout(() => {
+                        let input = $(this).val();
+                        if (input.includes('\t')) {
+                            input = input.replace(/\t/g, '\n');
+                            $(this).val(input);
+                            $(this).trigger('input');
+                        }
+                    }, 0);
+                });
+
+                // Process and clean asset tags from input
+                function processAssetTags(input) {
+                    if (!input || input.trim() === '') return [];
+
+                    // Split by newlines, commas, or tabs
+                    const rawTags = input.split(/[\n,\t]+/);
+
+                    // Clean and filter the tags
+                    const processedTags = rawTags
+                        .map(tag => tag.trim())         // Remove whitespace
+                        .filter(tag => tag.length > 0); // Remove empty entries
+
+                    // Return only unique values
+                    return [...new Set(processedTags)];
+                }
+
+                // Show loading overlay
+                function showLoadingOverlay(message) {
+                    const overlay = $(`
+                        <div class="position-fixed top-0 start-0 w-100 h-100"
+                             style="background-color: rgba(0,0,0,0.3); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+                            <div class="card p-4 shadow">
+                                <div class="d-flex align-items-center">
+                                    <div class="spinner-border text-primary me-3" role="status"></div>
+                                    <div>
+                                        <h5 class="mb-0">${message}</h5>
+                                        <p class="mb-0 text-muted">Please wait...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                    $('body').append(overlay);
+                    return overlay;
+                }
+
+                // Initialize clipboard handling for quick asset selection
+                const bulkTagsTextarea = $('#bulkAssetTags');
+                const tagCounter = $('#tagCounter');
+                const processButton = $('#processAssetTags');
+                const clearButton = $('#clearAssetTags');
+                let selectedAssets = new Set();
+
+                // Handle the process button click for quick asset selection
+                processButton.click(function () {
+                    const tags = processAssetTags(bulkTagsTextarea.val());
+
+                    if (tags.length === 0) {
+                        alert('Please enter at least one asset tag');
+                        return;
+                    }
+
+                    // Clear existing selections
+                    $('.row-checkbox').prop('checked', false);
+                    selectedAssets.clear();
+
+                    // Search and select matching rows
+                    let found = 0;
+                    table.rows().every(function () {
+                        const rowData = this.data();
+                        if (tags.includes(rowData.assetTag)) {
+                            found++;
+                            selectedAssets.add(rowData.assetTag);
+                            $(this.node()).find('.row-checkbox').prop('checked', true);
+                        }
                     });
 
-                    console.log(`Successfully loaded ${response.data.length} users`);
+                    // Show results feedback
+                    const notFound = tags.length - found;
+                    const message = [
+                        `✓ Found and selected ${found} asset${found !== 1 ? 's' : ''}`,
+                        notFound > 0 ? `\n⚠ ${notFound} tag${notFound !== 1 ? 's' : ''} not found in the current view` : ''
+                    ].join('');
+
+                    // Create and show toast notification
+                    const toast = $(`
+                        <div class="toast position-fixed bottom-0 end-0 m-3" role="alert">
+                            <div class="toast-header ${notFound > 0 ? 'bg-warning' : 'bg-success'} text-white">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong class="me-auto">Asset Selection Results</strong>
+                                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                            </div>
+                            <div class="toast-body">
+                                ${message.replace('\n', '<br>')}
+                            </div>
+                        </div>
+                    `);
+
+                    $('body').append(toast);
+                    const bsToast = new bootstrap.Toast(toast);
+                    bsToast.show();
+
+                    // Clean up toast after it's hidden
+                    toast.on('hidden.bs.toast', function () {
+                        $(this).remove();
+                    });
+
+                    // Update bulk operation controls
+                    updateBulkControls();
+
+                    // Clear the textarea
+                    bulkTagsTextarea.val('');
+                    tagCounter.html('<i class="bi bi-hash"></i> 0 tags detected');
+                });
+
+                // Handle clear button for quick asset selection
+                clearButton.click(function () {
+                    bulkTagsTextarea.val('');
+                    tagCounter.html('<i class="bi bi-hash"></i> 0 tags detected');
+                });
+
+                // Function to update bulk controls
+                function updateBulkControls() {
+                    const count = selectedAssets.size;
+                    $('#selectedCount').text(`${count} assets selected`);
+                    $('#transferAssetCount').text(count);
+                    $('#disposeAssetCount').text(count);
+
+                    $('#bulkTransferBtn, #bulkDisposeBtn').prop('disabled', count === 0);
                 }
-            } else {
-                // Handle invalid response format
-                userSelect.append(`
-                    <option disabled>
-                        Error: Invalid data format received
-                    </option>
-                `);
-                console.error('Invalid response format:', response);
-            }
-        })
-        .fail(function(xhr) {
-            // Handle loading failure
-            const userSelect = $('#targetUser');
-            const errorMessage = xhr.responseJSON?.details || 'Failed to load users';
 
-            userSelect.prop('disabled', false)
-                     .empty()
-                     .append(`
-                         <option disabled>
-                             Error loading users: ${errorMessage}
-                         </option>
-                     `);
+                // Handle bulk transfer button click
+                $('#bulkTransferBtn').click(function () {
+                    loadDepartmentsAndUsers();
+                    $('#bulkTransferModal').modal('show');
+                });
 
-            console.error('User loading failed:', xhr.responseJSON || xhr);
-        });
-            }
+                // Handle bulk dispose button click
+                $('#bulkDisposeBtn').click(function () {
+                    $('#bulkDisposalModal').modal('show');
+                });
 
-            // Handle bulk transfer form submission
-            $('#bulkTransferForm').on('submit', function (e) {
-                e.preventDefault();
+                // Function to load departments and users
+                function loadDepartmentsAndUsers() {
+                    const departmentSelect = $('#targetDepartment');
+                    const userSelect = $('#targetUser');
 
-                const targetDepartmentId = parseInt($('#targetDepartment').val());
-                const targetUserId = $('#targetUser').val();
+                    // Show loading indicators
+                    departmentSelect.prop('disabled', true).html('<option>Loading departments...</option>');
+                    userSelect.prop('disabled', true).html('<option>Loading users...</option>');
 
-                if (!targetDepartmentId) {
-                    alert('Please select a target department');
-                    return;
+                    // Load departments
+                    $.get('/Asset/GetDepartments')
+                        .done(function (departments) {
+                            departmentSelect.prop('disabled', false)
+                                .empty()
+                                .append('<option value="">Select Department</option>');
+
+                            departments.forEach(dept => {
+                                departmentSelect.append(
+                                    `<option value="${dept.id}">${dept.name}</option>`
+                                );
+                            });
+                        })
+                        .fail(function (error) {
+                            console.error('Failed to load departments:', error);
+                            departmentSelect.prop('disabled', false)
+                                .empty()
+                                .append('<option value="">Error loading departments</option>');
+                        });
+
+                    // Load users with enhanced error handling
+                    $.get('/Asset/GetUsers')
+                        .done(function (response) {
+                            const userSelect = $('#targetUser');
+                            userSelect.prop('disabled', false).empty();
+
+                            // Add the default "Select User" option
+                            userSelect.append(`
+                                <option value="">
+                                    Select User (Optional)
+                                </option>
+                            `);
+
+                            if (response.success && Array.isArray(response.data)) {
+                                if (response.data.length === 0) {
+                                    // Handle case where no users are found
+                                    userSelect.append(`
+                                        <option disabled>
+                                            No users available in the system
+                                        </option>
+                                    `);
+                                } else {
+                                    // Add each user to the dropdown
+                                    response.data.forEach(user => {
+                                        userSelect.append(`
+                                            <option value="${user.id}">
+                                                ${user.name}
+                                            </option>
+                                        `);
+                                    });
+
+                                    console.log(`Successfully loaded ${response.data.length} users`);
+                                }
+                            } else {
+                                // Handle invalid response format
+                                userSelect.append(`
+                                    <option disabled>
+                                        Error: Invalid data format received
+                                    </option>
+                                `);
+                                console.error('Invalid response format:', response);
+                            }
+                        })
+                        .fail(function (xhr) {
+                            // Handle loading failure
+                            const userSelect = $('#targetUser');
+                            const errorMessage = xhr.responseJSON?.details || 'Failed to load users';
+
+                            userSelect.prop('disabled', false)
+                                .empty()
+                                .append(`
+                                    <option disabled>
+                                        Error loading users: ${errorMessage}
+                                    </option>
+                                `);
+
+                            console.error('User loading failed:', xhr.responseJSON || xhr);
+                        });
                 }
 
-                const request = {
-                    assetTags: Array.from(selectedAssets),
-                    targetDepartmentId: targetDepartmentId,
-                    targetUserId: targetUserId || null
-                };
+                // Handle bulk transfer form submission
+                $('#bulkTransferForm').on('submit', function (e) {
+                    e.preventDefault();
 
-                $.ajax({
-                    url: '/Asset/BulkTransfer',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(request),
-                    success: function (response) {
-                        console.log('Transfer success:', response);
-                        $('#bulkTransferModal').modal('hide');
-                        selectedAssets.clear();
-                        updateBulkControls();
-                        table.ajax.reload();
-                        alert('Assets transferred successfully!');
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Transfer error:', { xhr, status, error });
-                        alert('Failed to transfer assets: ' + (xhr.responseJSON?.error || 'Unknown error'));
+                    const targetDepartmentId = parseInt($('#targetDepartment').val());
+                    const targetUserId = $('#targetUser').val();
+
+                    if (!targetDepartmentId) {
+                        alert('Please select a target department');
+                        return;
                     }
+
+                    const request = {
+                        assetTags: Array.from(selectedAssets),
+                        targetDepartmentId: targetDepartmentId,
+                        targetUserId: targetUserId || null
+                    };
+
+                    $.ajax({
+                        url: '/Asset/BulkTransfer',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(request),
+                        success: function (response) {
+                            console.log('Transfer success:', response);
+                            $('#bulkTransferModal').modal('hide');
+                            selectedAssets.clear();
+                            updateBulkControls();
+                            table.ajax.reload();
+                            alert('Assets transferred successfully!');
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Transfer error:', { xhr, status, error });
+                            alert('Failed to transfer assets: ' + (xhr.responseJSON?.error || 'Unknown error'));
+                        }
+                    });
+                });
+
+                // Handle bulk disposal form submission
+                $('#bulkDisposalForm').on('submit', function (e) {
+                    e.preventDefault();
+
+                    const request = {
+                        assetTags: Array.from(selectedAssets),
+                        disposalType: $('#disposalType').val(),
+                        saleValue: parseFloat($('#saleValue').val()) || 0
+                    };
+
+                    if (!request.disposalType) {
+                        alert('Please select a disposal type');
+                        return;
+                    }
+
+                    // Show confirmation dialog
+                    if (!confirm(`Are you sure you want to dispose of ${request.assetTags.length} assets?`)) {
+                        return;
+                    }
+
+                    // Send the request
+                    $.ajax({
+                        url: '/Asset/BulkDispose',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(request),
+                        xhrFields: {
+                            responseType: 'blob' // Expect binary data (PDF) in response
+                        },
+                        success: function (blob) {
+                            // Handle PDF download
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `Disposal_Document_${new Date().toISOString().slice(0, 10)}.pdf`;
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+
+                            // Clean up and update UI
+                            $('#bulkDisposalModal').modal('hide');
+                            selectedAssets.clear();
+                            updateBulkControls();
+                            table.ajax.reload();
+
+                            // Show success message
+                            toastr.success('Assets disposed successfully. Downloading disposal document...');
+                        },
+                        error: function (xhr) {
+                            // Try to parse error message
+                            let errorMessage = 'Error performing bulk disposal';
+                            if (xhr.responseType !== 'blob') {
+                                try {
+                                    const errorResponse = JSON.parse(xhr.responseText);
+                                    errorMessage = errorResponse.error || errorMessage;
+                                } catch (e) {
+                                    console.error('Error parsing error response:', e);
+                                }
+                            }
+                            toastr.error(errorMessage);
+                        }
+                    });
+                });
+
+                // Handle individual dispose button click
+                $(document).on('click', '.dispose-btn', function () {
+                    const assetTag = $(this).data('asset-tag');
+                    selectedAssets.clear();
+                    selectedAssets.add(assetTag);
+
+                    // Trigger the bulk disposal modal
+                    $('#bulkDisposalModal').modal('show');
                 });
             });
-
-            // Handle bulk disposal form submission
-                    // Replace the existing bulk disposal form submission with this:
-        $('#bulkDisposalForm').on('submit', function (e) {
-            e.preventDefault();
-
-            const request = {
-                assetTags: Array.from(selectedAssets),
-                disposalType: $('#disposalType').val(),
-                saleValue: parseFloat($('#saleValue').val()) || 0
-            };
-
-            if (!request.disposalType) {
-                alert('Please select a disposal type');
-                return;
-            }
-
-            // Show confirmation dialog
-            if (!confirm(`Are you sure you want to dispose of ${request.assetTags.length} assets?`)) {
-                return;
-            }
-
-            // Send the request
-            $.ajax({
-                url: '/Asset/BulkDispose',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(request),
-                xhrFields: {
-                    responseType: 'blob' // Expect binary data (PDF) in response
-                },
-                success: function (blob) {
-                    // Handle PDF download
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `Disposal_Document_${new Date().toISOString().slice(0,10)}.pdf`;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-
-                    // Clean up and update UI
-                    $('#bulkDisposalModal').modal('hide');
-                    selectedAssets.clear();
-                    updateBulkControls();
-                    table.ajax.reload();
-
-                    // Show success message
-                    toastr.success('Assets disposed successfully. Downloading disposal document...');
-                },
-                error: function (xhr) {
-                    // Try to parse error message
-                    let errorMessage = 'Error performing bulk disposal';
-                    if (xhr.responseType !== 'blob') {
-                        try {
-                            const errorResponse = JSON.parse(xhr.responseText);
-                            errorMessage = errorResponse.error || errorMessage;
-                        } catch (e) {
-                            console.error('Error parsing error response:', e);
-                        }
-                    }
-                    toastr.error(errorMessage);
-                }
-            });
-        });
-
-        // Handle individual dispose button click
-        $(document).on('click', '.dispose-btn', function () {
-            const assetTag = $(this).data('asset-tag');
-            selectedAssets.clear();
-            selectedAssets.add(assetTag);
-
-            // Trigger the bulk disposal modal
-            $('#bulkDisposalModal').modal('show');
-        });
-        });
-    </script>
-}
+        </script>
+    }

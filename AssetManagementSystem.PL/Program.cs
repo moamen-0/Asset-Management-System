@@ -22,6 +22,8 @@ namespace AssetManagementSystem.PL
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+
 			builder.Services.AddMailKit(optionBuilder =>
 			{
 				optionBuilder.UseMailKit(new MailKitOptions()
@@ -156,9 +158,18 @@ namespace AssetManagementSystem.PL
 	{
 		options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 	});
+			// Add this near the top of your service configuration
+			builder.Services.AddSession(options =>
+			{
+				options.IdleTimeout = TimeSpan.FromMinutes(30);
+				options.Cookie.HttpOnly = true;
+				options.Cookie.IsEssential = true;
+			});
 
+			// Add this before app.UseAuthorization()
 			var app = builder.Build();
 
+			app.UseSession();
 
 
             // Configure the HTTP request pipeline.

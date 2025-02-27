@@ -1,0 +1,79 @@
+﻿@model IEnumerable<AssetManagementSystem.DAL.Entities.Asset>
+@{
+    ViewData["Title"] = "Filtered Assets";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+<div class="card shadow-lg p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="text-primary"><i class="bi bi-box-seam"></i> Filtered Assets</h2>
+          
+        </div>
+        <a asp-action="Index" class="btn btn-secondary fw-bold">
+            <i class="bi bi-arrow-left"></i> Back to All Assets
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table id="filteredAssetsTable" class="table table-striped table-hover table-bordered align-middle">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>Asset Tag <i class="bi bi-tag"></i></th>
+                    <th>Description <i class="bi bi-card-text"></i></th>
+                    <th>Department <i class="bi bi-people"></i></th>
+                    <th>Brand <i class="bi bi-tag-fill"></i></th>
+                    <th>Model <i class="bi bi-cpu"></i></th>
+                    <th>Status <i class="bi bi-check-circle"></i></th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var asset in Model)
+                {
+                    <tr>
+                        <td>@asset.AssetTag</td>
+                        <td>@asset.AssetDescription</td>
+                        <td>@(asset.Department?.Name ?? "N/A")</td>
+                        <td>@asset.Brand</td>
+                        <td>@asset.Model</td>
+                        <td>@asset.Status</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="@Url.Action("Edit", "Asset", new { id = asset.AssetTag })" class="btn btn-sm btn-primary" title="Edit">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a href="@Url.Action("Details", "Asset", new { id = asset.AssetTag })" class="btn btn-sm btn-info" title="Details">
+                                    <i class="bi bi-info-circle"></i>
+                                </a>
+                                <a href="@Url.Action("Delete", "Asset", new { id = asset.AssetTag })" class="btn btn-sm btn-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+ 
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#filteredAssetsTable').DataTable({
+                responsive: true,
+                dom: 'Bfrtip',
+                buttons: [
+                    'copyHtml5',
+                    'excelHtml5',
+                    'csvHtml5',
+                    'pdfHtml5',
+                    'print'
+                ]
+            });
+        });
+    </script>
+}
