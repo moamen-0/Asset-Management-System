@@ -238,108 +238,133 @@ namespace AssetManagementSystem.PL.Controllers
 			return View(asset);
 		}
 
-		// AssetController.cs - GET: Create action
+		// GET: Asset/Create
 		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
 		public async Task<IActionResult> Create()
 		{
-			// Load necessary data for dropdowns
-			await PopulateCreateFormDropdownsAsync();
-
-			// Initialize with a required AssetTag field
-			// Instead of using: new Asset { InsertDate = DateTime.UtcNow }
-			var asset = new Asset
+			try
 			{
-				AssetTag = "TEMP-" + Guid.NewGuid().ToString("N").Substring(0, 8),
-				InsertDate = DateTime.UtcNow
-			};
+				// Load all dropdown data needed for the form
+				await PopulateDropdownsAsync();
+				// Fetch all data needed for dropdowns
+				var facilities = await _facilityService.GetAllAsync();
+				var departments = await _unitOfWork.DepartmentRepository.GetAllAsync();
+				var buildings = await _unitOfWork.buildingRepository.GetAllAsync();
+				var floors = await _unitOfWork.floorRepository.GetAllAsync();
+				var rooms = await _unitOfWork.RoomRepository.GetAllAsync();
 
-			return View(asset);
+				// Add data to ViewBag
+				ViewBag.Facilities = facilities;
+				ViewBag.Departments = departments;
+				ViewBag.Buildings = buildings;
+				ViewBag.Floors = floors;
+				ViewBag.Rooms = rooms;
+
+				return View();
+			}
+			catch (Exception ex)
+			{
+				TempData["ErrorMessage"] = $"Error preparing create form: {ex.Message}";
+				return RedirectToAction(nameof(Index));
+			}
 		}
 
-		// AssetController.cs - Helper method to populate dropdowns
-		private async Task PopulateCreateFormDropdownsAsync()
-		{
-			var facilities = await _facilityService.GetAllAsync();
-			var departments = await _unitOfWork.DepartmentRepository.GetAllAsync();
-
-			var assetTypes = new List<SelectListItem>
-	{
-		new SelectListItem { Value = "Hardware", Text = "Hardware" },
-		new SelectListItem { Value = "Software", Text = "Software" },
-		new SelectListItem { Value = "Furniture", Text = "Furniture" },
-		new SelectListItem { Value = "Equipment", Text = "Equipment" }
-	};
-			var statusOptions = new List<SelectListItem>
-	{
-		new SelectListItem { Value = "Available", Text = "Available" },
-		new SelectListItem { Value = "In Use", Text = "In Use" },
-		new SelectListItem { Value = "Under Maintenance", Text = "Under Maintenance" },
-		new SelectListItem { Value = "Reserved", Text = "Reserved" }
-	};
-
-			ViewBag.Facilities = new SelectList(facilities, "Id", "Name");
-			ViewBag.Departments = new SelectList(departments, "Id", "Name");
-			ViewBag.AssetTypes = assetTypes;
-			ViewBag.StatusOptions = statusOptions;
-		}
-
-		// AssetController.cs - POST: Create action
+		// POST: Asset/Create
 		[HttpPost]
 		[ValidateAntiForgeryToken]
 		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
 		public async Task<IActionResult> Create(Asset asset)
 		{
-			ModelState.Remove("AssetTag");
-			if (!ModelState.IsValid)
-			{
-				await PopulateCreateFormDropdownsAsync();
-				return View(asset);
-			}
-
 			try
 			{
-				// Get current user
+				// Remove navigation properties to avoid validation errors
+				ModelState.Remove("Facility");
+				ModelState.Remove("Building");
+				ModelState.Remove("Floor");
+				ModelState.Remove("Room");
+				ModelState.Remove("Department");
+				ModelState.Remove("User");
+
+				if (!ModelState.IsValid)
+				{
+					await PopulateDropdownsAsync();
+					return View(asset);
+				}
+
+				// Get the current logged-in user
 				var currentUser = await GetCurrentUserAsync();
 				if (currentUser == null)
+				{
+					TempData["ErrorMessage"] = "User authentication required";
 					return RedirectToAction("Login", "Auth");
+				}
 
-				// Set audit fields
+				// Set creation metadata
 				asset.InsertDate = DateTime.UtcNow;
 				asset.InsertUser = currentUser.UserName;
 
-				// Handle empty fields that might cause validation issues
-				if (string.IsNullOrEmpty(asset.RoomTag))
-					asset.RoomTag = null;
+				// Perform validation before saving
+				if (string.IsNullOrEmpty(asset.AssetTag))
+				{
+					ModelState.AddModelError("AssetTag", "Asset Tag is required");
+					await PopulateDropdownsAsync();
+					return View(asset);
+				}
 
-				if (string.IsNullOrEmpty(asset.UserId))
-					asset.UserId = null;
+				// Check if asset with same tag already exists
+				var existingAsset = await _assetService.GetAssetByIdAsync(asset.AssetTag);
+				if (existingAsset != null)
+				{
+					ModelState.AddModelError("AssetTag", "An asset with this tag already exists");
+					await PopulateDropdownsAsync();
+					return View(asset);
+				}
 
 				// Save the asset
 				await _assetService.AddAssetAsync(asset);
 
-				// Create audit log
-				await _unitOfWork.ChangeLogRepository.AddAsync(new ChangeLog
-				{
-					EntityName = "Asset",
-					EntityId = asset.AssetTag,
-					ActionType = "Added",
-					NewValues = JsonConvert.SerializeObject(asset),
-					ChangeDate = DateTime.UtcNow,
-					UserId = currentUser.Id
-				});
-
-				TempData["Success"] = "Asset created successfully!";
+				TempData["SuccessMessage"] = $"Asset {asset.AssetTag} created successfully";
 				return RedirectToAction(nameof(Index));
 			}
 			catch (Exception ex)
 			{
-				ModelState.AddModelError("", $"Error creating asset: {ex.Message}");
-				await PopulateCreateFormDropdownsAsync();
+				ModelState.AddModelError("", $"An error occurred: {ex.Message}");
+				await PopulateDropdownsAsync();
 				return View(asset);
 			}
 		}
 
+		private async Task PopulateDropdownsAsync()
+		{
+			// Load all users for the User dropdown
+			var users = await _assetService.GetAllUsersAsync();
+			ViewBag.Users = new SelectList(users, "Id", "FullName");
 
+			// Define status options
+			ViewBag.StatusOptions = new SelectList(new[]
+			{
+				"Available",
+				"In Use",
+				"Under Maintenance",
+				"Reserved",
+				"Decommissioned"
+			});
+
+			// Define asset types
+			ViewBag.AssetTypes = new SelectList(new[]
+			{
+				"Hardware",
+				"Software",
+				"Furniture",
+				"Equipment",
+				"Vehicle",
+				"Building",
+				"Land",
+				"Intangible"
+			});
+
+			
+		}
 		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.Supervisor}")]
 		public async Task<IActionResult> Edit(string id)
 		{
@@ -1059,25 +1084,6 @@ namespace AssetManagementSystem.PL.Controllers
 		}
 		
 
-		
-
-		
-
-		[HttpGet("GetDepartmentsByFacilityAsync/{facilityId}")]
-		public async Task<JsonResult> GetDepartmentsByFacilityAsync(int facilityId)
-		{
-			try
-			{
-				var departments = await _facilityService.GetDepartmentsAsync(facilityId);
-				var result = departments.Select(d => new { id = d.Id, name = d.Name }).ToList();
-				return Json(result);
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, "Error retrieving departments for facility {FacilityId}", facilityId);
-				return Json(new List<object>());
-			}
-		}
 
 		[HttpGet("GetFacilities")]
 		public async Task<JsonResult> GetFacilities()
@@ -1104,23 +1110,43 @@ namespace AssetManagementSystem.PL.Controllers
 			return $"{name} ({email}) - {department}";
 		}
 		[HttpGet]
+		[Route("Asset/GetBuildingsByFacilityAsync/{facilityId}")]
 		public async Task<JsonResult> GetBuildingsByFacilityAsync(int facilityId)
 		{
 			try
 			{
-				// Important: Make sure you're using the right service method here
 				var buildings = await _assetService.GetBuildingsByFacilityAsync(facilityId);
 				var result = buildings.Select(b => new { id = b.Id, name = b.Name }).ToList();
 				return Json(result);
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "Error retrieving buildings for facility {FacilityId}", facilityId);
+				Console.WriteLine($"Error in GetBuildingsByFacilityAsync: {ex.Message}");
 				return Json(new List<object>());
 			}
 		}
 
+		// GET: /Asset/GetDepartmentsByFacilityAsync/{id}
 		[HttpGet]
+		[Route("Asset/GetDepartmentsByFacilityAsync/{facilityId}")]
+		public async Task<JsonResult> GetDepartmentsByFacilityAsync(int facilityId)
+		{
+			try
+			{
+				var departments = await _facilityService.GetDepartmentsAsync(facilityId);
+				var result = departments.Select(d => new { id = d.Id, name = d.Name }).ToList();
+				return Json(result);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error in GetDepartmentsByFacilityAsync: {ex.Message}");
+				return Json(new List<object>());
+			}
+		}
+
+		// GET: /Asset/GetFloorsByBuildingAsync/{id}
+		[HttpGet]
+		[Route("Asset/GetFloorsByBuildingAsync/{buildingId}")]
 		public async Task<JsonResult> GetFloorsByBuildingAsync(int buildingId)
 		{
 			try
@@ -1131,12 +1157,14 @@ namespace AssetManagementSystem.PL.Controllers
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "Error retrieving floors for building {BuildingId}", buildingId);
+				Console.WriteLine($"Error in GetFloorsByBuildingAsync: {ex.Message}");
 				return Json(new List<object>());
 			}
 		}
 
+		// GET: /Asset/GetRoomsByFloorAsync/{id}
 		[HttpGet]
+		[Route("Asset/GetRoomsByFloorAsync/{floorId}")]
 		public async Task<JsonResult> GetRoomsByFloorAsync(int floorId)
 		{
 			try
@@ -1147,7 +1175,7 @@ namespace AssetManagementSystem.PL.Controllers
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "Error retrieving rooms for floor {FloorId}", floorId);
+				Console.WriteLine($"Error in GetRoomsByFloorAsync: {ex.Message}");
 				return Json(new List<object>());
 			}
 		}

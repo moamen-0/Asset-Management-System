@@ -87,6 +87,7 @@ namespace AssetManagementSystem.BLL.Repositories
 		{
 			return await _context.Buildings
 				.Where(b => b.FacilityId == facilityId)
+				.OrderBy(b => b.Name)
 				.ToListAsync();
 		}
 
@@ -94,13 +95,14 @@ namespace AssetManagementSystem.BLL.Repositories
 		{
 			return await _context.Floors
 				.Where(f => f.BuildingId == buildingId)
+				.OrderBy(f => f.Name)
 				.ToListAsync();
 		}
-
 		public async Task<IEnumerable<Room>> GetRoomsByFloorAsync(int floorId)
 		{
 			return await _context.Rooms
 				.Where(r => r.FloorId == floorId)
+				.OrderBy(r => r.Name)
 				.ToListAsync();
 		}
 

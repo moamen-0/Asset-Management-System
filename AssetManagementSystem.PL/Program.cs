@@ -183,12 +183,13 @@ namespace AssetManagementSystem.PL
 			app.UseRouting();
 			app.UseAuthentication();
 			app.UseAuthorization();
+			app.MapControllers();
 
-            app.MapStaticAssets();
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Auth}/{action=Login}/{id?}")
-                .WithStaticAssets();
+			app.MapStaticAssets();
+			app.MapControllerRoute(
+				name: "default",
+				pattern: "{controller=Auth}/{action=Login}/{id?}");
+                
 
             app.Run();
         }
