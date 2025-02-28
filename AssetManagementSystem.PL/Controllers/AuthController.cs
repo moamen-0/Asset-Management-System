@@ -129,21 +129,38 @@ namespace AssetManagementSystem.Controllers
 		{
 			return View();
 		}
+
 		[HttpPost]
 		public async Task<IActionResult> ForgotPassword(string email)
 		{
 			if (string.IsNullOrEmpty(email))
-				return BadRequest("Email is required");
+			{
+				ModelState.AddModelError("", "Email is required");
+				return View();
+			}
 
+			// Attempt to send a reset link regardless of whether the email exists
+			// This prevents email enumeration attacks
 			await _userService.InitiatePasswordResetAsync(email);
 
-			// Always return success to prevent email enumeration
+			// Always redirect to confirmation page to maintain privacy
 			return RedirectToAction("ForgotPasswordConfirmation");
+		}
+
+		[HttpGet]
+		public IActionResult ForgotPasswordConfirmation()
+		{
+			return View();
 		}
 
 		[HttpGet]
 		public IActionResult ResetPassword(string email, string token)
 		{
+			if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+			{
+				return RedirectToAction("Error", "Home");
+			}
+
 			var model = new ResetPasswordViewModel { Email = email, Token = token };
 			return View(model);
 		}
@@ -158,8 +175,14 @@ namespace AssetManagementSystem.Controllers
 			if (result)
 				return RedirectToAction("ResetPasswordConfirmation");
 
-			ModelState.AddModelError("", "Invalid reset attempt");
+			ModelState.AddModelError("", "Invalid reset attempt. The token may have expired.");
 			return View(model);
+		}
+
+		[HttpGet]
+		public IActionResult ResetPasswordConfirmation()
+		{
+			return View();
 		}
 	}
 }
