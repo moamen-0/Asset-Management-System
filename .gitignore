@@ -401,3 +401,4 @@ wwwroot/
 
 appsettings.json
 appsettings.Development.json
+/AssetManagementSystem.PL/appsettings.json
