@@ -4,47 +4,49 @@
     ViewData["Title"] = "Assets";
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
-<div class="card shadow-lg p-4">
-    <!-- Bulk Tag Selection -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <h5 class="text-primary mb-3">
-                <i class="bi bi-input-cursor-text"></i> Filter by Asset Tags
-            </h5>
+<!-- Consolidated Asset Tags Filter Section -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="text-primary mb-3">
+            <i class="bi bi-input-cursor-text"></i> Filter by Asset Tags
+        </h5>
 
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="bi bi-clipboard-data"></i> Enter Asset Tags
-                            <small class="text-muted">(one per line, comma-separated, or from Excel)</small>
-                        </label>
-                        <textarea id="assetTagsInput" class="form-control font-monospace"
-                                  rows="4"
-                                  placeholder="Example:
+        <div class="row">
+            <div class="col-md-8">
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="bi bi-clipboard-data"></i> Enter Asset Tags
+                        <small class="text-muted">(one per line, comma-separated, or from Excel)</small>
+                    </label>
+                    <textarea id="assetTagsInput" class="form-control font-monospace"
+                              rows="4"
+                              placeholder="Example:
 AST001
 AST002, AST003
 AST004&#9;AST005"></textarea>
-                        <div class="mt-2">
-                            <span id="tagCounter" class="text-muted small">
-                                <i class="bi bi-hash"></i> 0 tags detected
-                            </span>
-                        </div>
+                    <div class="mt-2">
+                        <span id="tagCounter" class="text-muted small">
+                            <i class="bi bi-hash"></i> 0 tags detected
+                        </span>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="d-flex flex-column h-100 justify-content-end">
-                        <button id="filterAssets" class="btn btn-primary mb-2">
-                            <i class="bi bi-filter"></i> Filter Assets
-                        </button>
-                        <button id="clearFilter" class="btn btn-outline-secondary">
-                            <i class="bi bi-x-lg"></i> Clear Filter
-                        </button>
-                    </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex flex-column h-100 justify-content-end">
+                    <button id="filterAssets" class="btn btn-primary mb-2">
+                        <i class="bi bi-filter"></i> Filter in Same Page
+                    </button>
+                    <button id="filterNewPage" class="btn btn-success mb-2">
+                        <i class="bi bi-box-arrow-up-right"></i> Open in New Page
+                    </button>
+                    <button id="clearFilter" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg"></i> Clear Filter
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
     <!-- Filter Results Section - Initially Hidden -->
     <div id="filterResultsSection" class="mb-4" style="display: none;">
@@ -444,6 +446,8 @@ AST004&#9;AST005"></textarea>
                         <i class="bi bi-hash"></i> ${tags.length} tag${tags.length !== 1 ? 's' : ''} detected
                     `);
                 });
+                // Create a form to submit to the new page
+            $('body').append('<form id="newPageForm" action="/Asset/FilteredAssets" method="post"></form>');
 
                 // Handle the filter button click
                 $('#filterAssets').click(function () {
@@ -887,15 +891,28 @@ AST004&#9;AST005"></textarea>
                         }
                     });
                 });
+                        $('body').append('<form id="newPageForm" action="/Asset/FilteredAssets" method="post"></form>');
 
-                // Handle individual dispose button click
-                $(document).on('click', '.dispose-btn', function () {
-                    const assetTag = $(this).data('asset-tag');
-                    selectedAssets.clear();
-                    selectedAssets.add(assetTag);
+        // Handle the Open in New Page button
+        $('#filterNewPage').click(function() {
+            const tagsInput = $('#assetTagsInput').val();
+            const tags = processAssetTags(tagsInput);
 
-                    // Trigger the bulk disposal modal
-                    $('#bulkDisposalModal').modal('show');
+            if (tags.length === 0) {
+                alert('Please enter at least one asset tag');
+                return;
+            }
+
+            // Clear previous inputs
+            $('#newPageForm').empty();
+
+            // Add inputs for each tag
+            tags.forEach(tag => {
+                $('#newPageForm').append(`<input type="hidden" name="assetTags" value="${tag}">`);
+            });
+
+            // Submit the form to open in a new page
+            $('#newPageForm').submit();
                 });
             });
         </script>
