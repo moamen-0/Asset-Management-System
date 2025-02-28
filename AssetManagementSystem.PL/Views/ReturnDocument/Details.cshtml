@@ -1,0 +1,103 @@
+﻿@model AssetManagementSystem.DAL.Entities.ReturnDocument
+@{
+    ViewData["Title"] = "Return Document Details";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h2 class="mb-0"><i class="bi bi-file-text me-2"></i> تفاصيل مستند الإرجاع</h2>
+            <div>
+                <a asp-action="GetPdf" asp-route-id="@Model.Id" class="btn btn-light me-2">
+                    <i class="bi bi-file-pdf"></i> تنزيل PDF
+                </a>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> العودة للقائمة
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">رقم المستند:</dt>
+                        <dd class="col-sm-8">@Model.DocumentNumber</dd>
+
+                        <dt class="col-sm-4">تاريخ الإرجاع:</dt>
+                        <dd class="col-sm-8">@Model.ReturnDate.ToString("yyyy-MM-dd")</dd>
+
+                        <dt class="col-sm-4">الجهة المرجعة:</dt>
+                        <dd class="col-sm-8">@Model.ReturningDepartment</dd>
+
+                        <dt class="col-sm-4">المسؤول:</dt>
+                        <dd class="col-sm-8">@Model.ResponsiblePerson</dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">أمين المستودع:</dt>
+                        <dd class="col-sm-8">@Model.StoreKeeper</dd>
+
+                        <dt class="col-sm-4">لجنة الفحص:</dt>
+                        <dd class="col-sm-8">@Model.ReturnCommittee</dd>
+
+                        <dt class="col-sm-4">سبب الإرجاع:</dt>
+                        <dd class="col-sm-8">@Model.ReturnReason</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <h4 class="mt-4 mb-3"><i class="bi bi-list-check"></i> الأصول المرجعة</h4>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>رقم الصنف</th>
+                            <th>وصف الصنف</th>
+                            <th>الكمية</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Items != null && Model.Items.Any())
+                        {
+                            @for (int i = 0; i < Model.Items.Count; i++)
+                            {
+                                var item = Model.Items.ElementAt(i);
+                                <tr>
+                                    <td>@(i + 1)</td>
+                                    <td>@item.AssetTag</td>
+                                    <td>@item.AssetDescription</td>
+                                    <td>@item.Quantity</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center">لا توجد أصول في هذا المستند</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

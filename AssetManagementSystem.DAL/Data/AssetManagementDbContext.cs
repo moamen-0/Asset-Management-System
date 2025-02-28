@@ -35,6 +35,8 @@ namespace AssetManagementSystem.DAL.Data
 		public DbSet<DisbursementRequest> DisbursementRequests { get; set; }
 		public DbSet<DisbursementItem> DisbursementItems { get; set; }
 		public DbSet<StoreKeeper> StoreKeepers { get; set; }
+		public DbSet<ReturnDocument> ReturnDocuments { get; set; }
+		public DbSet<ReturnDocumentItem> ReturnDocumentItems { get; set; }
 		private string GetCurrentUserId()
 		{
 			var httpContext = _httpContextAccessor.HttpContext;
@@ -290,6 +292,14 @@ namespace AssetManagementSystem.DAL.Data
 	  .WithMany(d => d.Items)
 	  .HasForeignKey(di => di.DisbursementRequestId)
 	  .OnDelete(DeleteBehavior.Cascade);
+
+
+			// ReturnDocument relationships
+			modelBuilder.Entity<ReturnDocumentItem>()
+				.HasOne(i => i.ReturnDocument)
+				.WithMany(d => d.Items)
+				.HasForeignKey(i => i.ReturnDocumentId)
+				.OnDelete(DeleteBehavior.Cascade);
 
 		}
 	}

@@ -1308,6 +1308,22 @@ namespace AssetManagementSystem.PL.Controllers
 				return StatusCode(500, new { success = false, error = "Internal server error" });
 			}
 		}
+
+
+		[HttpPost]
+		public async Task<IActionResult> CreateReturnDocument(List<string> assetTags)
+		{
+			if (assetTags == null || !assetTags.Any())
+			{
+				return BadRequest("No assets selected");
+			}
+
+			// Store selected asset tags in TempData to pass to the Return Document creation page
+			TempData["SelectedAssetTags"] = System.Text.Json.JsonSerializer.Serialize(assetTags);
+
+			// Redirect to the Return Document creation page
+			return RedirectToAction("Create", "ReturnDocument");
+		}
 	}
 
 	public class BulkOperationRequest

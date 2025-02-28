@@ -158,6 +158,9 @@ AST004&#9;AST005"></textarea>
                         <button id="bulkDisposeBtn" class="btn btn-warning" disabled>
                             <i class="bi bi-trash"></i> Dispose Selected Assets
                         </button>
+                        <button id="bulkReturnBtn" class="btn btn-info" disabled>
+                            <i class="bi bi-arrow-return-left"></i> Create Return Document
+                        </button>
                         <span id="selectedCount" class="ms-3 align-self-center text-muted">
                             0 assets selected
                         </span>
@@ -381,8 +384,8 @@ AST004&#9;AST005"></textarea>
             $('body').append(overlay);
             return overlay;
         }
-
-        $(document).ready(function () {
+              
+               $(document).ready(function () {
             // Initialize the main assets DataTable
             let table = $('#assetsTable').DataTable({
                 processing: true,
@@ -737,7 +740,7 @@ AST004&#9;AST005"></textarea>
                 $('#transferAssetCount').text(count);
                 $('#disposeAssetCount').text(count);
 
-                $('#bulkTransferBtn, #bulkDisposeBtn').prop('disabled', count === 0);
+                $('#bulkTransferBtn, #bulkDisposeBtn,#bulkReturnBtn').prop('disabled', count === 0);
             }
 
             // Handle bulk transfer button click
@@ -972,6 +975,45 @@ AST004&#9;AST005"></textarea>
                 // Submit the form to open in a new page
                 $('#newPageForm').submit();
             });
+
+             $('#bulkReturnBtn').on('click', function() {
+            if (selectedAssets.size === 0) {
+                alert('Please select assets first');
+                return;
+            }
+
+            // Redirect to the return document creation page with selected assets
+            const assetTags = Array.from(selectedAssets);
+
+            // Create a form to submit
+            const form = $('<form></form>').attr({
+                method: 'post',
+                action: '@Url.Action("Create", "ReturnDocument")'
+            });
+
+            // Add asset tags as hidden inputs
+            assetTags.forEach(tag => {
+                form.append($('<input>').attr({
+                    type: 'hidden',
+                    name: 'AssetTags',
+                    value: tag
+                }));
+            });
+
+            // Add CSRF token
+            form.append($('<input>').attr({
+                type: 'hidden',
+                name: '__RequestVerificationToken',
+                value: $('input[name="__RequestVerificationToken"]').val()
+            }));
+
+            // Append form to body and submit
+            $('body').append(form);
+            form.submit();
+        });
+
         }); // Close the $(document).ready function
+
+
     </script>
     }
