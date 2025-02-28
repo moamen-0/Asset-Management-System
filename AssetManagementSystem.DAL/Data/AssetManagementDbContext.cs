@@ -32,7 +32,9 @@ namespace AssetManagementSystem.DAL.Data
 		public DbSet<AssetTransfer> Transfers { get; set; }
 		public DbSet<Disposal> Disposals { get; set; }
 		public DbSet<ChangeLog> changeLogs { get; set; }
-
+		public DbSet<DisbursementRequest> DisbursementRequests { get; set; }
+		public DbSet<DisbursementItem> DisbursementItems { get; set; }
+		public DbSet<StoreKeeper> StoreKeepers { get; set; }
 		private string GetCurrentUserId()
 		{
 			var httpContext = _httpContextAccessor.HttpContext;
@@ -283,7 +285,11 @@ namespace AssetManagementSystem.DAL.Data
 
 			modelBuilder.Entity<ChangeLog>()
 				.HasIndex(c => new { c.EntityName, c.EntityId });
-
+			modelBuilder.Entity<DisbursementItem>()
+	  .HasOne<DisbursementRequest>()
+	  .WithMany(d => d.Items)
+	  .HasForeignKey(di => di.DisbursementRequestId)
+	  .OnDelete(DeleteBehavior.Cascade);
 
 		}
 	}

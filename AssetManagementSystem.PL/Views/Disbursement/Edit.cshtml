@@ -1,0 +1,493 @@
+﻿@model AssetManagementSystem.PL.Models.DisbursementViewModel
+@{
+    ViewData["Title"] = "تعديل طلب صرف";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-warning text-dark">
+            <h2 class="mb-0"><i class="bi bi-pencil-square me-2"></i> تعديل طلب صرف مواد</h2>
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit" method="post" id="editDisbursementForm">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                <input type="hidden" asp-for="Id" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Department" class="form-label fw-bold">الجهة الطالبة</label>
+                        <select asp-for="Department" class="form-select" asp-items="ViewBag.DepartmentList" required>
+                            <option value="">-- إختر الجهة الطالبة --</option>
+                        </select>
+                        <span asp-validation-for="Department" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">أمين المستودع</label>
+                        <input type="text" id="storeKeeper" class="form-control" readonly placeholder="سيتم تحديده تلقائياً بناء على المواد المختارة" />
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-search"></i> البحث عن المواد وإختيارها</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Tabs for different input methods -->
+                        <ul class="nav nav-tabs mb-3" id="assetSelectionTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-pane" type="button" role="tab">
+                                    <i class="bi bi-search"></i> البحث
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="bulk-tab" data-bs-toggle="tab" data-bs-target="#bulk-pane" type="button" role="tab">
+                                    <i class="bi bi-list-task"></i> إدخال متعدد
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="assetSelectionTabContent">
+                            <!-- Search Tab -->
+                            <div class="tab-pane fade show active" id="search-pane" role="tabpanel">
+                                <div class="row mb-3">
+                                    <div class="col-md-8">
+                                        <div class="input-group">
+                                            <input type="text" id="assetSearch" class="form-control" placeholder="أدخل جزء من رقم المادة أو الوصف..." />
+                                            <button type="button" id="searchButton" class="btn btn-primary">
+                                                <i class="bi bi-search"></i> بحث
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" id="clearSelectedButton" class="btn btn-outline-secondary w-100">
+                                            <i class="bi bi-x-circle"></i> مسح المواد المختارة
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card">
+                                            <div class="card-header bg-light">
+                                                <h6 class="mb-0">نتائج البحث</h6>
+                                            </div>
+                                            <div class="card-body p-0" style="max-height: 300px; overflow-y: auto;">
+                                                <ul id="searchResults" class="list-group list-group-flush">
+                                                    <li class="list-group-item text-center text-muted">
+                                                        أدخل كلمات البحث للعثور على المواد
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bulk Input Tab -->
+                            <div class="tab-pane fade" id="bulk-pane" role="tabpanel">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="bi bi-clipboard-data"></i> إدخال متعدد لرموز المواد
+                                                <small class="text-muted">(كل رمز في سطر أو مفصولة بفواصل أو مسافات)</small>
+                                            </label>
+                                            <textarea id="bulkAssetTags" class="form-control font-monospace"
+                                                      rows="5"
+                                                      placeholder="مثال:
+C3-101-0111899
+C3-101-0111900, C3-101-0111901
+C3-101-0111902 C3-101-0111903"></textarea>
+                                        </div>
+                                        <div class="d-flex justify-content-end mb-3">
+                                            <button type="button" id="addBulkTags" class="btn btn-primary">
+                                                <i class="bi bi-plus-lg"></i> إضافة المواد
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Selected Assets Section (Common for both tabs) -->
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">المواد المختارة (<span id="selectedCount">0</span>)</h6>
+                                        <button type="button" id="clearAllSelectedButton" class="btn btn-sm btn-outline-light">
+                                            <i class="bi bi-trash"></i> مسح الكل
+                                        </button>
+                                    </div>
+                                    <div class="card-body p-0" style="max-height: 300px; overflow-y: auto;">
+                                        <ul id="selectedAssets" class="list-group list-group-flush">
+                                            <li class="list-group-item text-center text-muted">
+                                                لم يتم إختيار أي مواد بعد
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden input for selected asset tags -->
+                <div id="assetTagsContainer"></div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> العودة للتفاصيل
+                    </a>
+                    <button type="submit" class="btn btn-warning btn-lg">
+                        <i class="bi bi-check-circle"></i> حفظ التعديلات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            let selectedAssets = [];
+
+            // Initialize with existing assets
+        @if (Model.AssetTags != null && Model.AssetTags.Any())
+        {
+            <text>
+                    // Fetch details for existing assets
+                    const initialTags = @Html.Raw(Json.Serialize(Model.AssetTags));
+
+                    // For each tag, add to selected assets with placeholders
+                    initialTags.forEach(tag => {
+                        selectedAssets.push({
+                            assetTag: tag,
+                            description: "جاري التحميل..."
+                        });
+                    });
+
+                    // Update UI
+                    updateSelectedAssets();
+
+                    // Fetch full details for the assets
+                    $.ajax({
+                        url: '@Url.Action("GetAssetsByTags", "Asset")',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(initialTags),
+                        success: function(response) {
+                            if (response.success) {
+                                // Replace placeholders with actual data
+                                selectedAssets = [];
+                                response.data.forEach(asset => {
+                                    selectedAssets.push({
+                                        assetTag: asset.assetTag,
+                                        description: asset.description || 'بدون وصف'
+                                    });
+                                });
+                                updateSelectedAssets();
+                                updateStoreKeeper();
+                            }
+                        }
+                    });
+            </text>
+        }
+
+            // Search for assets
+            $('#searchButton').click(function() {
+                const searchTerm = $('#assetSearch').val();
+                if (searchTerm.length < 2) {
+                    alert('الرجاء إدخال كلمة بحث أطول');
+                    return;
+                }
+
+                $('#searchResults').html('<li class="list-group-item text-center"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> جاري البحث...</li>');
+
+                $.ajax({
+                    url: '@Url.Action("GetAssetsByFilter", "Disbursement")',
+                    type: 'GET',
+                    data: { filter: searchTerm },
+                    success: function(response) {
+                        if (response.success) {
+                            displaySearchResults(response.data);
+                        } else {
+                            $('#searchResults').html(`<li class="list-group-item text-danger">خطأ: ${response.error}</li>`);
+                        }
+                    },
+                    error: function() {
+                        $('#searchResults').html('<li class="list-group-item text-danger">حدث خطأ أثناء البحث</li>');
+                    }
+                });
+            });
+
+            // Also trigger search when pressing Enter in search box
+            $('#assetSearch').keypress(function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    $('#searchButton').click();
+                }
+            });
+
+            // Display search results
+            function displaySearchResults(assets) {
+                if (!assets || assets.length === 0) {
+                    $('#searchResults').html('<li class="list-group-item text-center text-muted">لا توجد نتائج للبحث</li>');
+                    return;
+                }
+
+                const $list = $('#searchResults').empty();
+
+                assets.forEach(asset => {
+                    // Check if already selected
+                    const isSelected = selectedAssets.some(a => a.assetTag === asset.assetTag);
+                    const $item = $(`
+                        <li class="list-group-item ${isSelected ? 'list-group-item-success' : ''}" data-asset-tag="${asset.assetTag}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>${asset.assetTag}</strong><br>
+                                    <small>${asset.description || 'بدون وصف'}</small>
+                                </div>
+                                <button type="button" class="btn btn-sm ${isSelected ? 'btn-secondary disabled' : 'btn-primary'} add-asset-btn">
+                                    ${isSelected ? '<i class="bi bi-check-lg"></i> تم الإختيار' : '<i class="bi bi-plus-lg"></i> إختيار'}
+                                </button>
+                            </div>
+                        </li>
+                    `);
+
+                    $list.append($item);
+                });
+
+                // Add click handler for add buttons
+                $('.add-asset-btn').click(function() {
+                    const $li = $(this).closest('li');
+                    const assetTag = $li.data('asset-tag');
+                    const description = $li.find('small').text();
+
+                    // Check if already selected
+                    if (selectedAssets.some(a => a.assetTag === assetTag)) {
+                        return;
+                    }
+
+                    // Add to selected assets
+                    const asset = {
+                        assetTag: assetTag,
+                        description: description
+                    };
+
+                    selectedAssets.push(asset);
+                    updateSelectedAssets();
+                    updateStoreKeeper();
+
+                    // Update UI
+                    $li.addClass('list-group-item-success');
+                    $(this).removeClass('btn-primary').addClass('btn-secondary disabled')
+                           .html('<i class="bi bi-check-lg"></i> تم الإختيار');
+                });
+            }
+
+            // Update the selected assets list
+            function updateSelectedAssets() {
+                const $list = $('#selectedAssets').empty();
+
+                if (selectedAssets.length === 0) {
+                    $list.html('<li class="list-group-item text-center text-muted">لم يتم إختيار أي مواد بعد</li>');
+                } else {
+                    selectedAssets.forEach((asset, index) => {
+                        const $item = $(`
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>${asset.assetTag}</strong><br>
+                                        <small>${asset.description || 'بدون وصف'}</small>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-danger remove-asset-btn" data-index="${index}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </li>
+                        `);
+
+                        $list.append($item);
+                    });
+
+                    // Add click handler for remove buttons
+                    $('.remove-asset-btn').click(function() {
+                        const index = $(this).data('index');
+                        selectedAssets.splice(index, 1);
+                        updateSelectedAssets();
+                        updateStoreKeeper();
+
+                        // Update search results UI if visible
+                        const removedTag = $(this).closest('li').find('strong').text();
+                        const $searchItem = $(`#searchResults li[data-asset-tag="${removedTag}"]`);
+                        if ($searchItem.length) {
+                            $searchItem.removeClass('list-group-item-success');
+                            $searchItem.find('button')
+                                .removeClass('btn-secondary disabled')
+                                .addClass('btn-primary')
+                                .html('<i class="bi bi-plus-lg"></i> إختيار');
+                        }
+                    });
+                }
+
+                // Update counter
+                $('#selectedCount').text(selectedAssets.length);
+
+                // Update hidden inputs for form submission
+                updateHiddenInputs();
+            }
+
+            // Update hidden inputs for form submission
+            function updateHiddenInputs() {
+                const $container = $('#assetTagsContainer').empty();
+
+                selectedAssets.forEach((asset, index) => {
+                    $container.append(`<input type="hidden" name="AssetTags[${index}]" value="${asset.assetTag}" />`);
+                });
+            }
+
+            // Update store keeper based on selected assets
+            function updateStoreKeeper() {
+                if (selectedAssets.length === 0) {
+                    $('#storeKeeper').val('');
+                    return;
+                }
+
+                const assetTags = selectedAssets.map(a => a.assetTag);
+
+                $.ajax({
+                    url: '@Url.Action("GetStoreKeeper", "Disbursement")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(assetTags),
+                    success: function(response) {
+                        if (response.success) {
+                            $('#storeKeeper').val(response.storeKeeper);
+                        }
+                    },
+                    error: function() {
+                        $('#storeKeeper').val('خطأ في تحديد أمين المستودع');
+                    }
+                });
+            }
+
+            // Clear selected assets
+            $('#clearSelectedButton').click(function() {
+                selectedAssets = [];
+                updateSelectedAssets();
+                updateStoreKeeper();
+
+                // Update search results UI
+                $('#searchResults li').removeClass('list-group-item-success')
+                    .find('button')
+                    .removeClass('btn-secondary disabled')
+                    .addClass('btn-primary')
+                    .html('<i class="bi bi-plus-lg"></i> إختيار');
+            });
+
+            // Form submission validation
+            $('#editDisbursementForm').submit(function(e) {
+                if (selectedAssets.length === 0) {
+                    e.preventDefault();
+                    alert('الرجاء إختيار مادة واحدة على الأقل للصرف');
+                    return false;
+                }
+                return true;
+            });
+
+             function processBulkAssetTags(input) {
+            if (!input || input.trim() === '') return [];
+
+            // Split by newlines, commas, or spaces
+            const rawTags = input.split(/[\n,\s]+/);
+
+            // Clean and filter the tags
+            const processedTags = rawTags
+                .map(tag => tag.trim())        // Remove whitespace
+                .filter(tag => tag.length > 0); // Remove empty entries
+
+            // Return only unique values
+            return [...new Set(processedTags)];
+        }
+
+                    // Add this button click handler after your existing handlers
+        $('#addBulkTags').click(function() {
+            const bulkInput = $('#bulkAssetTags').val();
+            const newTags = processBulkAssetTags(bulkInput);
+
+            if (newTags.length === 0) {
+                alert('الرجاء إدخال رموز المواد بشكل صحيح');
+                return;
+            }
+
+            // Show loading indicator
+            $('#selectedAssets').html('<li class="list-group-item text-center"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> جاري التحقق من المواد...</li>');
+
+            // Verify tags with server and get details
+            $.ajax({
+                url: '@Url.Action("VerifyAssetTags", "Disbursement")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(newTags),
+                success: function(response) {
+                    if (response.success) {
+                        // Clear the bulk input
+                        $('#bulkAssetTags').val('');
+
+                        // Handle found and not found assets
+                        if (response.foundAssets && response.foundAssets.length > 0) {
+                            // Add found assets to the selected list
+                            response.foundAssets.forEach(asset => {
+                                // Check if already in the list
+                                if (!selectedAssets.some(a => a.assetTag === asset.assetTag)) {
+                                    selectedAssets.push({
+                                        assetTag: asset.assetTag,
+                                        description: asset.description || 'بدون وصف'
+                                    });
+                                }
+                            });
+
+                            // Update UI
+                            updateSelectedAssets();
+                            updateStoreKeeper();
+                        }
+
+                        // Show feedback about not found assets
+                        if (response.notFoundTags && response.notFoundTags.length > 0) {
+                            const notFoundMessage = `
+                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                    <strong><i class="bi bi-exclamation-triangle"></i> تنبيه:</strong>
+                                    لم يتم العثور على ${response.notFoundTags.length} مادة:
+                                    <strong>${response.notFoundTags.join(', ')}</strong>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `;
+
+                            // Insert alert before the tabs
+                            $('#assetSelectionTabs').before(notFoundMessage);
+                        }
+
+                        // Switch to the selected assets tab
+                        $('#bulk-tab').removeClass('active');
+                        $('#bulk-pane').removeClass('show active');
+                        $('#search-tab').addClass('active');
+                        $('#search-pane').addClass('show active');
+                    } else {
+                        alert(`خطأ: ${response.error}`);
+                        updateSelectedAssets(); // Restore the original list
+                    }
+                },
+                error: function() {
+                    alert('حدث خطأ أثناء التحقق من رموز المواد');
+                    updateSelectedAssets(); // Restore the original list
+                }
+            });
+        });
+
+        });
+    </script>
+}

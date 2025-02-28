@@ -462,12 +462,11 @@ namespace AssetManagementSystem.PL.Controllers
 		{
 			var success = await _assetService.DisposeAssetAsync(id, disposalType, saleValue);
 			if (!success)
-				return BadRequest();
-			
-			await _assetService.DisposeAssetAsync(id, disposalType, saleValue);
+				return BadRequest("Failed to dispose asset");
 
 			return RedirectToAction(nameof(Index));
 		}
+
 
 		[HttpGet]
 		public async Task<JsonResult> GetAllFacilitiesAsync()
@@ -864,7 +863,6 @@ namespace AssetManagementSystem.PL.Controllers
 		}
 
 		[HttpPost]
-		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
 		public async Task<IActionResult> BulkDispose([FromBody] BulkOperationRequest request)
 		{
 			try
@@ -884,7 +882,12 @@ namespace AssetManagementSystem.PL.Controllers
 				// Get the assets being disposed
 				var assets = await _assetService.GetAssetsByTags(request.AssetTags);
 
-				
+				// Check if all assets are from same department
+				var departments = assets.Select(a => a.DepartmentId).Distinct();
+				if (departments.Count() > 1)
+				{
+					return BadRequest("Assets must be from the same department");
+				}
 
 				// Perform bulk disposal
 				await _assetService.BulkDisposeAssetsAsync(
@@ -1060,6 +1063,7 @@ namespace AssetManagementSystem.PL.Controllers
 			return string.Join(" / ", locations.Where(l => !string.IsNullOrEmpty(l)));
 		}
 
+		
 		[HttpGet]
 		public async Task<IActionResult> GetUsers()
 		{

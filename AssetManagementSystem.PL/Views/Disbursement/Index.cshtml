@@ -1,0 +1,108 @@
+﻿@model IEnumerable<AssetManagementSystem.DAL.Entities.DisbursementRequest>
+@{
+    ViewData["Title"] = "طلبات الصرف";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h2 class="mb-0"><i class="bi bi-clipboard-check me-2"></i> إدارة طلبات الصرف</h2>
+            <a asp-action="Create" class="btn btn-light">
+                <i class="bi bi-plus-circle-fill"></i> طلب صرف جديد
+            </a>
+        </div>
+        <div class="card-body">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle-fill me-2"></i> لا توجد طلبات صرف في النظام حتى الآن.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table id="disbursementsTable" class="table table-striped table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>رقم الطلب</th>
+                                <th>التاريخ</th>
+                                <th>الجهة الطالبة</th>
+                                <th>عدد المواد</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.Id</td>
+                                    <td>@item.RequestNumber</td>
+                                    <td>@item.RequestDate.ToString("yyyy-MM-dd")</td>
+                                    <td>@item.Department</td>
+                                    <td>@item.Items.Count</td>
+                                    <td>
+                                        @switch (item.Status)
+                                        {
+                                            case "Pending":
+                                                <span class="badge bg-warning">قيد الإنتظار</span>
+                                                break;
+                                            case "Approved":
+                                                <span class="badge bg-success">تمت الموافقة</span>
+                                                break;
+                                            case "Rejected":
+                                                <span class="badge bg-danger">مرفوض</span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-secondary">@item.Status</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">
+                                                <i class="bi bi-eye"></i> تفاصيل
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">
+                                                <i class="bi bi-pencil"></i> تعديل
+                                            </a>
+                                            <a asp-action="GetPdf" asp-route-id="@item.Id" class="btn btn-sm btn-secondary">
+                                                <i class="bi bi-file-pdf"></i> PDF
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">
+                                                <i class="bi bi-trash"></i> حذف
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#disbursementsTable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json"
+                },
+                "order": [[0, "desc"]]
+            });
+        });
+    </script>
+}

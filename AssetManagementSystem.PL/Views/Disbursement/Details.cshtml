@@ -1,0 +1,154 @@
+﻿@model AssetManagementSystem.DAL.Entities.DisbursementRequest
+@{
+    ViewData["Title"] = "تفاصيل طلب الصرف";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h2 class="mb-0"><i class="bi bi-file-text me-2"></i> تفاصيل طلب صرف رقم (@Model.RequestNumber)</h2>
+            <div>
+                <a asp-action="GetPdf" asp-route-id="@Model.Id" class="btn btn-light me-2">
+                    <i class="bi bi-file-pdf"></i> تنزيل PDF
+                </a>
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning me-2">
+                    <i class="bi bi-pencil"></i> تعديل
+                </a>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> العودة للقائمة
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">رقم الطلب:</dt>
+                        <dd class="col-sm-8">@Model.RequestNumber</dd>
+
+                        <dt class="col-sm-4">تاريخ الطلب:</dt>
+                        <dd class="col-sm-8">@Model.RequestDate.ToString("yyyy-MM-dd")</dd>
+
+                        <dt class="col-sm-4">الجهة الطالبة:</dt>
+                        <dd class="col-sm-8">@Model.Department</dd>
+
+                        <dt class="col-sm-4">مقدم الطلب:</dt>
+                        <dd class="col-sm-8">@Model.Requester (@Model.RequesterContact)</dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">أمين المستودع:</dt>
+                        <dd class="col-sm-8">@Model.StoreKeeper</dd>
+
+                        <dt class="col-sm-4">مدير المستودعات:</dt>
+                        <dd class="col-sm-8">@Model.WarehouseManager</dd>
+
+                        <dt class="col-sm-4">الحالة:</dt>
+                        <dd class="col-sm-8">
+                            @switch (Model.Status)
+                            {
+                                case "Pending":
+                                    <span class="badge bg-warning">قيد الإنتظار</span>
+                                    break;
+                                case "Approved":
+                                    <span class="badge bg-success">تمت الموافقة</span>
+                                    break;
+                                case "Rejected":
+                                    <span class="badge bg-danger">مرفوض</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-secondary">@Model.Status</span>
+                                    break;
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <h4 class="mt-4 mb-3"><i class="bi bi-list-check"></i> المواد المطلوبة</h4>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>رقم الصنف</th>
+                            <th>وصف الصنف</th>
+                            <th>نوع الصرف</th>
+                            <th>الكمية</th>
+                            <th>الماركة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Items != null && Model.Items.Any())
+                        {
+                            @for (int i = 0; i < Model.Items.Count; i++)
+                            {
+                                var item = Model.Items.ElementAt(i);
+                                <tr>
+                                    <td>@(i + 1)</td>
+                                    <td>@item.AssetTag</td>
+                                    <td>@item.AssetDescription</td>
+                                    <td>@item.DisbursementType</td>
+                                    <td>@item.Quantity</td>
+                                    <td>@item.Brand</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center">لا توجد مواد في هذا الطلب</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-people"></i> التوقيعات</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-3">
+                            <h6>مقدم الطلب</h6>
+                            <p class="border-bottom pb-2">@Model.Requester</p>
+                            <p>@Model.RequesterContact</p>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <h6>أمين المستودع</h6>
+                            <p class="border-bottom pb-2">@Model.StoreKeeper</p>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <h6>إدارة المستودعات</h6>
+                            <p class="border-bottom pb-2">@Model.WarehouseManager</p>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <h6>صاحب الصلاحية</h6>
+                            <p class="border-bottom pb-2">@Model.AuthorityPerson</p>
+                            <small>@Model.AuthorityName</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

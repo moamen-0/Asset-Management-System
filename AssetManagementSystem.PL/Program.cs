@@ -8,6 +8,7 @@ using AssetManagementSystem.DAL.Data;
 using AssetManagementSystem.DAL.Entities;
 using AssetManagementSystem.DAL.Utilities;
 using AssetManagementSystem.PL.Mapping;
+using DocumentFormat.OpenXml.InkML;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -61,8 +62,10 @@ namespace AssetManagementSystem.PL
 			builder.Services.AddScoped<IFloorRepository, FloorRepository>();
 			builder.Services.AddScoped<IRoomRepository, RoomRepository>();
 			builder.Services.AddScoped<IBuildingRepository, BuildingRepository>();
+			builder.Services.AddScoped<IDisbursementRepository, DisbursementRepository>();
+			builder.Services.AddScoped<IStoreKeeperRepository, StoreKeeperRepository>();
+			builder.Services.AddScoped<IDisbursementService, DisbursementService>();
 
-			
 
 			builder.Services.AddDbContextPool<AssetManagementDbContext>(options =>
 	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -185,8 +188,10 @@ namespace AssetManagementSystem.PL
 				var services = scope.ServiceProvider;
 				var userManager = services.GetRequiredService<UserManager<User>>();
 				var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+				var context = services.GetRequiredService<AssetManagementDbContext>();
 
 				await IdentitySeeder.SeedRolesAndAdmin(userManager, roleManager);
+				await StoreKeeperSeeder.SeedStoreKeepersAsync(context);
 			}
 
 			app.UseStaticFiles();

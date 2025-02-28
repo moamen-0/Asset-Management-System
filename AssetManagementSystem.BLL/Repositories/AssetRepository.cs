@@ -119,124 +119,132 @@ namespace AssetManagementSystem.BLL.Repositories
 		}
 		public async Task BulkTransferAsync(IEnumerable<string> assetTags, int targetDepartmentId, string? targetUserId)
 		{
-			using var transaction = await _context.Database.BeginTransactionAsync();
-			try
+			// Create a strategy for executing the operations
+			var strategy = _context.Database.CreateExecutionStrategy();
+
+			await strategy.ExecuteAsync(async () =>
 			{
-				// Get target department
-				var targetDepartment = await _context.Departments
-					.FirstOrDefaultAsync(d => d.Id == targetDepartmentId);
-				if (targetDepartment == null)
+				// Start the transaction within the execution strategy
+				using var transaction = await _context.Database.BeginTransactionAsync();
+				try
 				{
-					throw new InvalidOperationException($"Department with ID {targetDepartmentId} not found");
-				}
-
-				// Get all affected assets in a single query
-				var assets = await _context.Assets
-					.Include(a => a.Department)
-					.Where(a => assetTags.Contains(a.AssetTag))
-					.ToListAsync();
-
-				if (!assets.Any())
-				{
-					throw new InvalidOperationException("No assets found for transfer");
-				}
-
-				var transfers = new List<AssetTransfer>();
-				var changeLogs = new List<ChangeLog>();
-				var currentTime = DateTime.UtcNow;
-
-				foreach (var asset in assets)
-				{
-					var oldDepartmentName = asset.Department?.Name ?? "None";
-
-					// Create transfer record
-					transfers.Add(new AssetTransfer
+					// Get target department
+					var targetDepartment = await _context.Departments.FindAsync(targetDepartmentId);
+					if (targetDepartment == null)
 					{
-						AssetTag = asset.AssetTag,
-						FromDepartment = oldDepartmentName,
-						ToDepartment = targetDepartment.Name,
-						TransferDate = currentTime,
-						TransferType = "internal"
-					});
+						throw new InvalidOperationException($"Department with ID {targetDepartmentId} not found");
+					}
 
-					// Update asset
-					asset.DepartmentId = targetDepartmentId;
-					asset.UserId = targetUserId;
+					// Instead of directly using Contains, get all assets and filter in memory
+					var allAssets = await _context.Assets.ToListAsync();
+					var assets = allAssets.Where(a => assetTags.Contains(a.AssetTag)).ToList();
 
-					// Create changelog
-					changeLogs.Add(new ChangeLog
+					if (!assets.Any())
 					{
-						EntityName = "Asset",
-						EntityId = asset.AssetTag,
-						ActionType = "BulkTransfer",
-						ChangeDate = currentTime,
-						OldValues = $"DepartmentId: {oldDepartmentName}, UserId: {asset.UserId}",
-						NewValues = $"DepartmentId: {targetDepartment.Name}, UserId: {targetUserId ?? "None"}",
-						UserId = targetUserId
-					});
+						throw new InvalidOperationException("No assets found for transfer");
+					}
+
+					// Get department names for all relevant departments at once
+					var departmentIds = assets.Select(a => a.DepartmentId).Distinct().ToList();
+					var departments = await _context.Departments
+						.Where(d => departmentIds.Contains(d.Id))
+						.ToDictionaryAsync(d => d.Id, d => d.Name);
+
+					var transfers = new List<AssetTransfer>();
+					var currentTime = DateTime.UtcNow;
+
+					foreach (var asset in assets)
+					{
+						// Get the original department name from our cached dictionary
+						string oldDepartmentName = "None";
+						if (departments.TryGetValue(asset.DepartmentId, out var name))
+						{
+							oldDepartmentName = name;
+						}
+
+						// Create transfer record
+						transfers.Add(new AssetTransfer
+						{
+							AssetTag = asset.AssetTag,
+							FromDepartment = oldDepartmentName,
+							ToDepartment = targetDepartment.Name,
+							TransferDate = currentTime,
+							TransferType = "internal"
+						});
+
+						// Update asset
+						asset.DepartmentId = targetDepartmentId;
+						asset.UserId = targetUserId;
+					}
+
+					// Execute all database operations
+					await _context.Transfers.AddRangeAsync(transfers);
+					await _context.SaveChangesAsync();
+
+					// Commit the transaction
+					await transaction.CommitAsync();
 				}
-
-				// Execute all database operations
-				await _context.Transfers.AddRangeAsync(transfers);
-				await _context.changeLogs.AddRangeAsync(changeLogs);
-				_context.Assets.UpdateRange(assets);
-
-				// Save changes and commit transaction
-				await _context.SaveChangesAsync();
-				await transaction.CommitAsync();
-			}
-			catch (Exception ex)
-			{
-				await transaction.RollbackAsync();
-				throw new Exception($"Bulk transfer failed: {ex.Message}", ex);
-			}
+				catch (Exception ex)
+				{
+					// Rollback on failure
+					await transaction.RollbackAsync();
+					throw new Exception($"Bulk transfer failed: {ex.Message}", ex);
+				}
+			});
 		}
 		public async Task BulkDisposeAsync(IEnumerable<string> assetTags, string disposalType, decimal saleValue)
 		{
-			using var transaction = await _context.Database.BeginTransactionAsync();
-			try
+			// Create a strategy for executing the operations
+			var strategy = _context.Database.CreateExecutionStrategy();
+
+			await strategy.ExecuteAsync(async () =>
 			{
-				var assets = await _context.Assets
-					.Where(a => assetTags.Contains(a.AssetTag))
-					.ToListAsync();
-
-				var disposals = new List<Disposal>();
-				var changeLogs = new List<ChangeLog>();
-
-				foreach (var asset in assets)
+				// Start the transaction within the execution strategy
+				using var transaction = await _context.Database.BeginTransactionAsync();
+				try
 				{
-					asset.IsDisposed = true;
-					asset.Status = "Disposed";
+					// Instead of directly using Contains, get all assets and filter in memory
+					var allAssets = await _context.Assets.ToListAsync();
+					var assets = allAssets.Where(a => assetTags.Contains(a.AssetTag)).ToList();
 
-					disposals.Add(new Disposal
+					if (!assets.Any())
 					{
-						AssetTag = asset.AssetTag,
-						DisposalType = disposalType,
-						DisposalDate = DateTime.UtcNow,
-						SaleValue = saleValue
-					});
+						throw new InvalidOperationException("No assets found for disposal");
+					}
 
-					changeLogs.Add(new ChangeLog
+					var disposals = new List<Disposal>();
+					var currentTime = DateTime.UtcNow;
+
+					foreach (var asset in assets)
 					{
-						EntityName = "Asset",
-						EntityId = asset.AssetTag,
-						ActionType = "Disposal",
-						ChangeDate = DateTime.UtcNow,
-						OldValues = "IsDisposed: False",
-						NewValues = $"IsDisposed: True, DisposalType: {disposalType}"
-					});
+						// Update asset
+						asset.IsDisposed = true;
+						asset.Status = "Disposed";
+
+						// Create disposal record
+						disposals.Add(new Disposal
+						{
+							AssetTag = asset.AssetTag,
+							DisposalType = disposalType,
+							DisposalDate = currentTime,
+							SaleValue = saleValue
+						});
+					}
+
+					// Execute all database operations
+					await _context.Disposals.AddRangeAsync(disposals);
+					await _context.SaveChangesAsync();
+
+					// Commit the transaction
+					await transaction.CommitAsync();
 				}
-
-				await _context.Disposals.AddRangeAsync(disposals);
-				await _context.changeLogs.AddRangeAsync(changeLogs);
-				await _context.SaveChangesAsync();
-				await transaction.CommitAsync();
-			}
-			catch
-			{
-				await transaction.RollbackAsync();
-				throw;
-			}
+				catch (Exception ex)
+				{
+					// Rollback on failure
+					await transaction.RollbackAsync();
+					throw new Exception($"Bulk disposal failed: {ex.Message}", ex);
+				}
+			});
 		}
 	}
 }
