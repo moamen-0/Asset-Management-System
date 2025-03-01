@@ -82,27 +82,27 @@
         }
     </style>
     <script>
-        $(document).ready(function () {
-            $('#changeLogsTable').DataTable({
-                processing: true,
-                serverSide: true,
-                    ajax: {
+          $(document).ready(function () {
+                $('#changeLogsTable').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
             url: '@Url.Action("GetChangeLogs")',
             type: 'POST',
-            error: function (xhr, error, thrown) {
-                console.error('DataTables error:', error);
-                toastr.error('Error loading change logs. Please try refreshing the page.');
+            error: function(xhr, error, thrown) {
+                console.error('DataTables error:', xhr.responseText);
+                alert('Error loading change logs: ' + xhr.responseText);
             }
         },
-        // Add loading indicator
-        processing: true,
-        language: {
-            processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
-        },
-        // Improve performance
-        deferRender: true,
-        scroller: true,
-        scrollY: '50vh',
+                // Add loading indicator
+                processing: true,
+                language: {
+                    processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
+                },
+                // Improve performance
+                deferRender: true,
+                scroller: true,
+                scrollY: '50vh',
                 scrollX: false,
                 order: [[5, 'desc']],
                 columns: [
@@ -110,23 +110,50 @@
                     { data: 'entityId', className: "text-center" },
                     { data: 'actionType', className: "text-center" },
                     {
-                        data: 'oldValues',
+                        data: 'hasOldValues',
                         className: "text-center",
                         render: function (data) {
-                            return formatJsonButton(data, 'Old Values');
+                            return data ?
+                                '<button class="btn btn-sm btn-outline-info rounded-pill" onclick="fetchValues(\'old\', this)"><i class="bi bi-eye-fill"></i> View</button>' :
+                                '<span class="text-muted">No Data</span>';
                         }
                     },
                     {
-                        data: 'newValues',
+                        data: 'hasNewValues',
                         className: "text-center",
                         render: function (data) {
-                            return formatJsonButton(data, 'New Values');
+                            return data ?
+                                '<button class="btn btn-sm btn-outline-info rounded-pill" onclick="fetchValues(\'new\', this)"><i class="bi bi-eye-fill"></i> View</button>' :
+                                '<span class="text-muted">No Data</span>';
                         }
                     },
                     { data: 'changeDate', className: "text-center" },
                     { data: 'userFullName', className: "text-center" }
                 ]
             });
+
+            // Add function to fetch values only when needed
+            window.fetchValues = function(type, button) {
+                var row = $(button).closest('tr');
+                var table = $('#changeLogsTable').DataTable();
+                var data = table.row(row).data();
+
+                $.ajax({
+                    url: '@Url.Action("GetChangeLogValues")',
+                    type: 'GET',
+                    data: {
+                        id: data.entityId,
+                        entityName: data.entityName,
+                        type: type
+                    },
+                    success: function(response) {
+                        showJsonModal(response.values, type === 'old' ? 'Old Values' : 'New Values');
+                    },
+                    error: function() {
+                        alert('Error loading values');
+                    }
+                });
+            }
         });
 
              function formatJsonButton(json, title) {

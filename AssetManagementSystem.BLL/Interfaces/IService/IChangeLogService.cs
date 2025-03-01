@@ -20,6 +20,7 @@ namespace AssetManagementSystem.BLL.Interfaces.IService
 			string searchValue,
 			string sortColumn,
 			string sortDirection);
+		Task<ChangeLog> GetChangeLogByEntityAsync(string entityName, string entityId);
 
 
 	}

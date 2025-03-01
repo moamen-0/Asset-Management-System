@@ -20,5 +20,8 @@ namespace AssetManagementSystem.BLL.Interfaces.IRepository
 			string searchValue,
 			string sortColumn,
 			string sortDirection);
+
+		Task<ChangeLog> GetByEntityAsync(string entityName, string entityId);
+
 	}
 }

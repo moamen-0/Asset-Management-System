@@ -111,5 +111,14 @@ namespace AssetManagementSystem.BLL.Repositories
 
 			return (logs, totalCount);
 		}
+
+		public async Task<ChangeLog> GetByEntityAsync(string entityName, string entityId)
+		{
+			return await _context.changeLogs
+				.Include(c => c.User)
+				.Where(c => c.EntityName == entityName && c.EntityId == entityId)
+				.OrderByDescending(c => c.ChangeDate)
+				.FirstOrDefaultAsync();
+		}
 	}
 }

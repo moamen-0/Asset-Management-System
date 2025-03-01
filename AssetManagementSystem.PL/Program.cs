@@ -116,7 +116,7 @@ namespace AssetManagementSystem.PL
 			// Add this after AddMemoryCache()
 			builder.Services.Configure<MemoryCacheOptions>(options =>
 			{
-				options.SizeLimit = 1024;
+				//options.SizeLimit = 1024;
 				options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
 			});
 

@@ -49,30 +49,63 @@ namespace AssetManagementSystem.PL.Controllers
 				var sortDirection = Request.Form["order[0][dir]"].FirstOrDefault();
 				var sortColumn = Request.Form[$"columns[{sortColumnIndex}][data]"].FirstOrDefault();
 
-				var (logs, totalCount) = await _changeLogService.GetPaginatedAsync(
-					start, length, searchValue, sortColumn, sortDirection);
+				// Use the repository directly to bypass caching
+				var logs = await _changeLogService.GetPaginatedAsync(start, length, searchValue, sortColumn, sortDirection);
+				var totalCount = logs.TotalCount;
+
+				var data = logs.Logs.Select(l => new
+				{
+					entityName = l.EntityName,
+					entityId = l.EntityId,
+					actionType = FormatActionType(l.ActionType),
+					hasOldValues = !string.IsNullOrEmpty(l.OldValues),
+					hasNewValues = !string.IsNullOrEmpty(l.NewValues),
+					oldValuesId = l.Id,
+					newValuesId = l.Id,
+					changeDate = l.ChangeDate.ToString("yyyy-MM-dd HH:mm:ss"),
+					userFullName = l.User?.FullName ?? "System"
+				});
 
 				return Json(new
 				{
 					draw = draw,
 					recordsTotal = totalCount,
 					recordsFiltered = totalCount,
-					data = logs.Select(l => new
-					{
-						entityName = l.EntityName,
-						entityId = l.EntityId,
-						actionType = FormatActionType(l.ActionType),
-						oldValues = FormatJsonData(l.OldValues),
-						newValues = FormatJsonData(l.NewValues),
-						changeDate = l.ChangeDate.ToString("yyyy-MM-dd HH:mm:ss"),
-						userFullName = l.User?.FullName ?? "System"
-					})
+					data = data
 				});
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "Error fetching change logs");
-				return StatusCode(500, new { error = "An error occurred while fetching the logs." });
+				return StatusCode(500, ex.Message);
+			}
+		}
+
+		// Add this new method to get the values when needed
+		[HttpGet]
+		public async Task<IActionResult> GetChangeLogValues(string id, string entityName, string type)
+		{
+			try
+			{
+				// Find all changelogs for this entity
+				var changeLogs = await _changeLogService.GetAllChangeLogsAsync();
+				var changeLog = changeLogs
+					.Where(c => c.EntityName == entityName && c.EntityId == id)
+					.OrderByDescending(c => c.ChangeDate)
+					.FirstOrDefault();
+
+				if (changeLog == null)
+				{
+					return NotFound("Change log not found");
+				}
+
+				// Return the requested values
+				string values = type == "old" ? changeLog.OldValues : changeLog.NewValues;
+				return Json(new { values = values });
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error fetching change log values");
+				return StatusCode(500, ex.Message);
 			}
 		}
 
@@ -86,7 +119,6 @@ namespace AssetManagementSystem.PL.Controllers
 				_ => actionType
 			};
 		}
-
 		private string FormatJsonData(string jsonData)
 		{
 			if (string.IsNullOrEmpty(jsonData)) return null;

@@ -96,6 +96,7 @@ namespace AssetManagementSystem.BLL.Services
 
 				return await _cache.GetOrCreateAsync(cacheKey, async entry =>
 				{
+					entry.Size = 1;
 					entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
 					return await _changeLogRepository.GetPaginatedAsync(start, length, searchValue, sortColumn, sortDirection);
 				});
@@ -105,6 +106,11 @@ namespace AssetManagementSystem.BLL.Services
 				_logger.LogError(ex, "Error getting paginated change logs");
 				throw;
 			}
+		}
+
+		public async Task<ChangeLog> GetChangeLogByEntityAsync(string entityName, string entityId)
+		{
+			return await _changeLogRepository.GetByEntityAsync(entityName, entityId);
 		}
 	}
 }
