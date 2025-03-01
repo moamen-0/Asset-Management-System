@@ -23,7 +23,7 @@ namespace AssetManagementSystem.BLL
 		public IFloorRepository _floorRepository;
 		private IAssetTransferRepository _assetTransferRepository;
 		private IUserRepository _userRepository;
-
+		private INotificationRepository _notificationRepository;
 		public UnitOfWork(AssetManagementDbContext context)
 		{
 			_context = context;
@@ -37,7 +37,7 @@ namespace AssetManagementSystem.BLL
 			_floorRepository = new FloorRepository(_context);
 			_assetTransferRepository = new AssetTransferRepository(_context);
 			_userRepository = new UserRepository(_context);
-
+			_notificationRepository = new NotificationRepository(_context);
 		}
 
 
@@ -62,6 +62,8 @@ namespace AssetManagementSystem.BLL
 
 		public IUserRepository user => _userRepository;
 
+		public INotificationRepository NotificationRepository => _notificationRepository ??= new NotificationRepository(_context);	
+		
 		public async Task<int> SaveChangesAsync()
 		{
 			return await _context.SaveChangesAsync();

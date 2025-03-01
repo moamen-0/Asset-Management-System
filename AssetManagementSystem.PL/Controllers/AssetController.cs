@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 namespace AssetManagementSystem.PL.Controllers
 {
 	[Authorize]
-	public class AssetController : Controller
+	public class AssetController : BaseController
 	{
 		private readonly IAssetService _assetService;
 		private readonly IFacilityService _facilityService;
@@ -31,28 +31,27 @@ namespace AssetManagementSystem.PL.Controllers
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IAssetRepository _assetRepository;
 
-		private readonly UserManager<User> _userManager;
+	
 		private readonly SignInManager<User> _signInManager;
 
 		public AssetController(
-			IAssetService assetService,
-			IUnitOfWork unitOfWork,
-			IAssetRepository assetRepository,
-			UserManager<User> userManager,
-			SignInManager<User> signInManager,
-			IFacilityService facilityService,
-			ILogger<AssetController> logger
-			)
+		   IAssetService assetService,
+		   IUnitOfWork unitOfWork,
+		   IAssetRepository assetRepository,
+		   UserManager<User> userManager,
+		   SignInManager<User> signInManager,
+		   IFacilityService facilityService,
+		   ILogger<AssetController> logger,
+		   INotificationService notificationService)
+		   : base(notificationService, userManager)
 		{
 			_assetService = assetService;
 			_unitOfWork = unitOfWork;
 			_assetRepository = assetRepository;
-			_userManager = userManager;
 			_signInManager = signInManager;
 			_facilityService = facilityService;
 			_logger = logger;
 		}
-
 		public async Task<IActionResult> Index()
 		{
 			var assets = await _assetService.GetAllAssetsAsync();
@@ -337,6 +336,21 @@ namespace AssetManagementSystem.PL.Controllers
 
 				// Save the asset
 				await _assetService.AddAssetAsync(asset);
+				// Create notification for admins and managers
+				await CreateNotificationForRole(Roles.Admin,
+					"New Asset Created",
+					$"Asset {asset.AssetTag} was created by {currentUser.FullName}",
+					"Asset",
+					asset.AssetTag,
+					Url.Action("Details", "Asset", new { id = asset.AssetTag }));
+
+				// Create notification for managers as well
+				await CreateNotificationForRole(Roles.Manager,
+					"New Asset Created",
+					$"Asset {asset.AssetTag} was created by {currentUser.FullName}",
+					"Asset",
+					asset.AssetTag,
+					Url.Action("Details", "Asset", new { id = asset.AssetTag }));
 
 				TempData["SuccessMessage"] = $"Asset {asset.AssetTag} created successfully";
 				return RedirectToAction(nameof(Index));
@@ -408,6 +422,35 @@ namespace AssetManagementSystem.PL.Controllers
 			asset.InsertUser = currentUser.UserName; // Assign the logged-in user's username
 
 			await _assetService.UpdateAssetAsync(asset);
+
+			// Create notification for asset edit
+			await CreateNotificationForRole(Roles.Admin,
+				"Asset Updated",
+				$"Asset {asset.AssetTag} was updated by {currentUser.FullName}",
+				"Asset",
+				asset.AssetTag,
+				Url.Action("Details", "Asset", new { id = asset.AssetTag }));
+
+			// Also notify managers
+			await CreateNotificationForRole(Roles.Manager,
+				"Asset Updated",
+				$"Asset {asset.AssetTag} was updated by {currentUser.FullName}",
+				"Asset",
+				asset.AssetTag,
+				Url.Action("Details", "Asset", new { id = asset.AssetTag }));
+
+			// Notify the original owner/user of the asset if applicable
+			if (!string.IsNullOrEmpty(asset.UserId))
+			{
+				await CreateNotificationForUser(
+					asset.UserId,
+					"Asset Updated",
+					$"Asset {asset.AssetTag} ({asset.AssetDescription}) assigned to you has been updated",
+					"AssetUpdate",
+					asset.AssetTag,
+					Url.Action("Details", "Asset", new { id = asset.AssetTag }));
+			}
+
 			return RedirectToAction(nameof(Index));
 		}
 
@@ -437,13 +480,38 @@ namespace AssetManagementSystem.PL.Controllers
 			{
 				return RedirectToAction("Login", "Auth"); // Redirect to login if no user is logged in
 			}
-
+			// Store asset details before deletion for use in notifications
+			string assetDescription = asset.AssetDescription ?? "No description";
+			string assetUserId = asset.UserId;
 			asset.InsertDate = DateTime.UtcNow; // Add a DeleteDate field to track when the asset was deleted
 			asset.InsertUser = currentUser.UserName; // Assign the logged-in user's username
 
 			await _unitOfWork.AssetRepository.DeleteAsync(id);
 			await _unitOfWork.SaveChangesAsync();
+			// Notify admins about asset deletion
+			await CreateNotificationForRole(Roles.Admin,
+				"Asset Deleted",
+				$"Asset {id} ({assetDescription}) was deleted by {currentUser.FullName}",
+				"AssetDeletion",
+				id);
 
+			// Notify managers about asset deletion
+			await CreateNotificationForRole(Roles.Manager,
+				"Asset Deleted",
+				$"Asset {id} ({assetDescription}) was deleted by {currentUser.FullName}",
+				"AssetDeletion",
+				id);
+
+			// Notify the original owner/user of the asset if applicable
+			if (!string.IsNullOrEmpty(assetUserId))
+			{
+				await CreateNotificationForUser(
+					assetUserId,
+					"Asset Deleted",
+					$"Asset {id} ({assetDescription}) that was assigned to you has been deleted",
+					"AssetDeletion",
+					id);
+			}
 			return RedirectToAction(nameof(Index));
 		}
 

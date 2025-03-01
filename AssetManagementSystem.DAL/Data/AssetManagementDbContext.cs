@@ -37,6 +37,7 @@ namespace AssetManagementSystem.DAL.Data
 		public DbSet<StoreKeeper> StoreKeepers { get; set; }
 		public DbSet<ReturnDocument> ReturnDocuments { get; set; }
 		public DbSet<ReturnDocumentItem> ReturnDocumentItems { get; set; }
+		public DbSet<Notification> Notifications { get; set; }
 		private string GetCurrentUserId()
 		{
 			var httpContext = _httpContextAccessor.HttpContext;
@@ -300,6 +301,12 @@ namespace AssetManagementSystem.DAL.Data
 				.WithMany(d => d.Items)
 				.HasForeignKey(i => i.ReturnDocumentId)
 				.OnDelete(DeleteBehavior.Cascade);
+
+			modelBuilder.Entity<Notification>()
+	.HasOne(n => n.User)
+	.WithMany()
+	.HasForeignKey(n => n.UserId)
+	.OnDelete(DeleteBehavior.Cascade);
 
 		}
 	}

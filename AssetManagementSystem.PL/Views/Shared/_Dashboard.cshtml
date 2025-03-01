@@ -17,6 +17,36 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
 
     <style>
+        .notification-dropdown {
+            width: 350px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            transition: background-color 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+            .notification-item:hover {
+                background-color: rgba(0, 123, 255, 0.1);
+            }
+
+            .notification-item.unread {
+                border-left-color: #007bff;
+                background-color: rgba(0, 123, 255, 0.05);
+            }
+
+        #notification-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            padding: 3px 6px;
+            border-radius: 50%;
+            background: red;
+            color: white;
+            font-size: 0.7rem;
+        }
         .language-switcher {
             display: flex;
             gap: 8px;
@@ -192,15 +222,30 @@
                     <a class="nav-link dropdown-toggle" href="#" id="notificationIcon" role="button"
                        data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
                         <i class="fas fa-bell"></i>
-                        <span class="icon-badge">3</span>
+                        <span class="icon-badge" id="notification-badge">0</span>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationIcon">
-                        <h6 class="dropdown-header">Notifications</h6>
-                        <a class="dropdown-item" href="#">New asset added</a>
-                        <a class="dropdown-item" href="#">Approval pending</a>
-                        <a class="dropdown-item" href="#">System update</a>
+                    <div class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationIcon" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                        <div class="dropdown-header d-flex justify-content-between align-items-center">
+                            <span>Notifications</span>
+                            <div>
+                                <form asp-controller="Notification" asp-action="MarkAllAsRead" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-link text-decoration-none">Mark all as read</button>
+                                </form>
+                            </div>
+                        </div>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item text-center" href="#">View all notifications</a>
+                        <div id="notification-list">
+                            <div class="text-center p-2">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mb-0">Loading notifications...</p>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a asp-controller="Notification" asp-action="Index" class="dropdown-item text-center">
+                            View all notifications
+                        </a>
                     </div>
                 </li>
 
@@ -324,6 +369,12 @@
                                 <p>User Management</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="@Url.Action("DepartmentUsers", "User")" class="nav-link">
+                                <i class="nav-icon fas fa-users-cog"></i>
+                                <p>Department Users</p>
+                            </a>
+                        </li>
                         <!-- Locations Management (Unified) -->
                         <li class="nav-item">
                             <a href="@Url.Action("Index", "Location")" class="nav-link">
@@ -340,13 +391,13 @@
                         <li class="nav-item">
                             <a href="@Url.Action("Index", "Disbursement")" class="nav-link">
                                 <i class="nav-icon fas fa-clipboard-list"></i>
-                                <p>طلبات الصرف</p>
+                                <p>Disbursement Request</p>
                             </a>
                         </li> 
                         <li class="nav-item">
                             <a href="@Url.Action("Index", "ReturnDocument")" class="nav-link">
                                 <i class="nav-icon fas fa-clipboard-list"></i>
-                                <p>طلبات الصرف</p>
+                                <p>Return Document</p>
                             </a>
                         </li>
                     </ul>
@@ -366,6 +417,67 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
 
     <script>
+             function loadNotifications() {
+            $.ajax({
+                url: '@Url.Action("GetUnreadNotifications", "Notification")',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        // Update the notification badge
+                        const badgeElem = $('#notification-badge');
+                        const count = response.count;
+
+                        if (count > 0) {
+                            badgeElem.text(count).show();
+                        } else {
+                            badgeElem.hide();
+                        }
+
+                        // Update the notification list
+                        const listElem = $('#notification-list');
+                        listElem.empty();
+
+                        if (response.notifications.length === 0) {
+                            listElem.html('<div class="text-center p-3 text-muted">No new notifications</div>');
+                        } else {
+                            response.notifications.forEach(notification => {
+                                let actionButton = '';
+                                if (notification.actionUrl) {
+                                    actionButton = `<a href="${notification.actionUrl}" class="btn btn-sm btn-primary">View</a>`;
+                                }
+
+                                listElem.append(`
+                                    <div class="dropdown-item notification-item">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">${notification.title}</h6>
+                                                <p class="mb-1 small">${notification.message}</p>
+                                                <small class="text-muted">${notification.timeAgo}</small>
+                                            </div>
+                                            <div class="ms-2">
+                                                <form action="/Notification/MarkAsRead/${notification.id}" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-check"></i>
+                                                    </button>
+                                                </form>
+                                                ${actionButton}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="dropdown-divider"></div>
+                                `);
+                            });
+                        }
+                    } else {
+                        console.error('Failed to load notifications:', response.error);
+                    }
+                },
+                error: function() {
+                    console.error('Error fetching notifications');
+                }
+            });
+        }
+
               function handleLanguageChange(lang) {
             console.log("Language changed to:", lang);
 
@@ -374,6 +486,13 @@
             document.getElementById(`lang-${lang}`).classList.add('active');
         }
         $(document).ready(function () {
+
+			// Load notifications
+			loadNotifications();
+
+			// Refresh notifications every 60 seconds
+
+			setInterval(loadNotifications, 60000);
                  // Initialize tooltips
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
         tooltipTriggerList.map(function (tooltipTriggerEl) {

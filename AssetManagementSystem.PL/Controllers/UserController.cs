@@ -293,4 +293,58 @@ public class UserController : Controller
 
 		return RedirectToAction(nameof(Index));
 	}
+
+	[HttpGet]
+	[Authorize(Roles = $"{Roles.Admin},{Roles.Manager}")]
+	public async Task<IActionResult> DepartmentUsers(int? departmentId, string searchTerm = "")
+	{
+		// Get all departments for dropdown
+		var departments = await _unitOfWork.DepartmentRepository.GetAllAsync();
+		ViewBag.Departments = new SelectList(departments, "Id", "Name", departmentId);
+
+		// Get users based on selected department
+		IEnumerable<User> users;
+
+		if (departmentId.HasValue)
+		{
+			// Filter by department
+			users = await _userManager.Users
+				.Include(u => u.Department)
+				.Where(u => u.DepartmentId == departmentId)
+				.ToListAsync();
+
+			// Set the selected department for the view
+			ViewBag.SelectedDepartmentId = departmentId.Value;
+
+			// Get department name for display
+			var selectedDept = departments.FirstOrDefault(d => d.Id == departmentId.Value);
+			ViewBag.SelectedDepartmentName = selectedDept?.Name ?? "Unknown Department";
+		}
+		else
+		{
+			// Get all users with departments
+			users = await _userManager.Users
+				.Include(u => u.Department)
+				.ToListAsync();
+
+			// No department selected
+			ViewBag.SelectedDepartmentId = null;
+			ViewBag.SelectedDepartmentName = null;
+		}
+
+		// Apply additional search filtering if provided
+		if (!string.IsNullOrEmpty(searchTerm))
+		{
+			users = users.Where(u =>
+				u.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+				u.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+				u.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+				(u.Department != null && u.Department.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+			).ToList();
+		}
+
+		ViewBag.SearchTerm = searchTerm;
+
+		return View(users);
+	}
 }

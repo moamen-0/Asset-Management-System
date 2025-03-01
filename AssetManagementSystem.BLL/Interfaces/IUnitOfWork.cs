@@ -20,7 +20,7 @@ namespace AssetManagementSystem.BLL.Interfaces
 		public IFloorRepository floorRepository { get; }
 		public IUserRepository user { get; }
 		Task<int> SaveChangesAsync();
-
+		public INotificationRepository NotificationRepository { get; }
 
 	}
 }

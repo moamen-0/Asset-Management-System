@@ -67,6 +67,8 @@ namespace AssetManagementSystem.PL
 			builder.Services.AddScoped<IDisbursementService, DisbursementService>();
 			builder.Services.AddScoped<IReturnDocumentRepository, ReturnDocumentRepository>();
 			builder.Services.AddScoped<IReturnDocumentService, ReturnDocumentService>();
+			builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+			builder.Services.AddScoped<INotificationService, NotificationService>();
 
 			builder.Services.AddDbContextPool<AssetManagementDbContext>(options =>
 	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

@@ -120,9 +120,12 @@ namespace AssetManagementSystem.BLL.Repositories
 			return true;
 		}
 
-		public Task<IEnumerable<User>> GetUsersByDepartmentAsync(int departmentId)
+		public async Task<IEnumerable<User>> GetUsersByDepartmentAsync(int departmentId)
 		{
-			throw new NotImplementedException();
+			return await _context.Users
+	   .Where(u => u.DepartmentId == departmentId)
+	   .Include(u => u.Department)
+	   .ToListAsync();
 		}
 
 		//public async Task<IEnumerable<User>> GetUsersByDepartmentAsync(int departmentId)
