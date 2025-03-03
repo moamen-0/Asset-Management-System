@@ -1,13 +1,13 @@
 ﻿@{
-    ViewData["Title"] = "Disposals";
+    ViewData["Title"] = "التكهينات";
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
 
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0"><i class="bi bi-trash3-fill me-2"></i> Disposals</h2>
+        <h2 class="mb-0"><i class="bi bi-trash3-fill me-2"></i> التكهينات</h2>
         <a asp-action="Create" class="btn btn-success rounded-pill">
-            <i class="bi bi-plus-circle"></i> Create New Disposal
+            <i class="bi bi-plus-circle"></i> اضافة تكهين
         </a>
     </div>
 
@@ -53,6 +53,9 @@
                     type: 'POST'
                 },
                 order: [[3, 'desc']], // Order by date
+                      language: {
+            url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json"
+        },
                 columns: [
                     { data: 'id', className: "text-center" },
                     { data: 'assetTag', className: "text-center" },
@@ -66,10 +69,10 @@
                         render: function (data, type, row) {
                             return `
                                 <a href="@Url.Action("Edit", "Disposal")/${data}" class="btn btn-sm btn-warning rounded-pill me-1">
-                                    <i class="bi bi-pencil-square"></i> Edit
+                                    <i class="bi bi-pencil-square"></i> تعديل
                                 </a>
                                <a href="@Url.Action("Delete", "Disposal")/${data}" class="btn btn-sm btn-danger rounded-pill me-1">
-                                    <i class="bi bi-trash"></i> Delete
+                                    <i class="bi bi-trash"></i> حذف
                                 </a>
                             `;
                         }
