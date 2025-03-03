@@ -1,10 +1,10 @@
 ﻿@model AssetManagementSystem.DAL.Entities.Asset
 @{
-    ViewData["Title"] = "Dispose Asset";
+    ViewData["Title"] = "تكهين الأصل";
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
 
-<h2>Dispose Asset</h2>
+<h2>تكهين الأصل</h2>
 
 <form asp-action="Dispose" method="post">
     @Html.AntiForgeryToken()
@@ -25,6 +25,6 @@
         <label class="form-check-label" for="isDisposed">Mark as Disposed</label>
     </div>
 
-    <button type="submit" class="btn btn-danger">Dispose Asset</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-danger">تكهين الأصل</button>
+    <a asp-action="Index" class="btn btn-secondary">الغاء</a>
 </form>

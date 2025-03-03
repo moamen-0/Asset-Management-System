@@ -1,32 +1,31 @@
 ﻿@model IEnumerable<AssetManagementSystem.DAL.Entities.Asset>
 
 @{
-    ViewData["Title"] = "Assets";
+    ViewData["Title"] = "الأصول";
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
-<!-- Consolidated Asset Tags Filter Section -->
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <h5 class="text-primary mb-3">
-            <i class="bi bi-input-cursor-text"></i> Filter by Asset Tags
+            <i class="bi bi-input-cursor-text"></i> تصفية حسب Assets Tags
         </h5>
 
         <div class="row">
             <div class="col-md-8">
                 <div class="form-group">
                     <label class="form-label">
-                        <i class="bi bi-clipboard-data"></i> Enter Asset Tags
-                        <small class="text-muted">(one per line, comma-separated, or from Excel)</small>
+                        <i class="bi bi-clipboard-data"></i> أدخل Assets Tags
+                        <small class="text-muted">(واحد لكل سطر، مفصولة بفواصل، أو من Excel)</small>
                     </label>
                     <textarea id="assetTagsInput" class="form-control font-monospace"
                               rows="4"
-                              placeholder="Example:
+                              placeholder="مثال:
 AST001
 AST002, AST003
 AST004&#9;AST005"></textarea>
                     <div class="mt-2">
                         <span id="tagCounter" class="text-muted small">
-                            <i class="bi bi-hash"></i> 0 tags detected
+                            <i class="bi bi-hash"></i> تم اكتشاف 0 Tags
                         </span>
                     </div>
                 </div>
@@ -34,13 +33,13 @@ AST004&#9;AST005"></textarea>
             <div class="col-md-4">
                 <div class="d-flex flex-column h-100 justify-content-end">
                     <button id="filterAssets" class="btn btn-primary mb-2">
-                        <i class="bi bi-filter"></i> Filter in Same Page
+                        <i class="bi bi-filter"></i> تصفية في نفس الصفحة
                     </button>
                     <button id="filterNewPage" class="btn btn-success mb-2">
-                        <i class="bi bi-box-arrow-up-right"></i> Open in New Page
+                        <i class="bi bi-box-arrow-up-right"></i> فتح في صفحة جديدة
                     </button>
                     <button id="clearFilter" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-lg"></i> Clear Filter
+                        <i class="bi bi-x-lg"></i> مسح التصفية
                     </button>
                 </div>
             </div>
@@ -48,79 +47,79 @@ AST004&#9;AST005"></textarea>
     </div>
 </div>
 
-    <!-- Filter Results Section - Initially Hidden -->
-    <div id="filterResultsSection" class="mb-4" style="display: none;">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-filter-circle-fill me-2"></i> Filtered Assets</h5>
-                <button type="button" id="closeFilterResults" class="btn btn-sm btn-light">
-                    <i class="bi bi-x-lg"></i> Close
-                </button>
+<!-- قسم نتائج التصفية - مخفي في البداية -->
+<div id="filterResultsSection" class="mb-4" style="display: none;">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-filter-circle-fill me-2"></i> الأصول المصفاة</h5>
+            <button type="button" id="closeFilterResults" class="btn btn-sm btn-light">
+                <i class="bi bi-x-lg"></i> إغلاق
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="filterStats" class="alert alert-info">
+                <span>عرض الأصول المصفاة</span>
             </div>
-            <div class="card-body">
-                <div id="filterStats" class="alert alert-info">
-                    <span>Showing filtered assets</span>
-                </div>
 
-                <div class="table-responsive">
-                    <table id="filteredAssetsTable" class="table table-striped table-hover table-bordered align-middle">
-                        <thead class="table-dark text-center">
-                            <tr>
-                                <th>Asset Tag</th>
-                                <th>Description</th>
-                                <th>Department</th>
-                                <th>Brand</th>
-                                <th>Model</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Filtered results will be inserted here -->
-                        </tbody>
-                    </table>
-                </div>
+            <div class="table-responsive">
+                <table id="filteredAssetsTable" class="table table-striped table-hover table-bordered align-middle">
+                    <thead class="table-dark text-center">
+                        <tr>
+                            <th>Asset Tag</th>
+                            <th>Description</th>
+                            <th>Department</th>
+                            <th>Brand</th>
+                            <th>Model</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- سيتم إدراج النتائج المصفاة هنا -->
+                    </tbody>
+                </table>
+            </div>
 
-                <div id="filterTags" class="mt-3">
-                    <h6>Filtered by these asset tags:</h6>
-                    <div id="matchedTags" class="d-flex flex-wrap gap-2 mb-2">
-                        <!-- Matched tags will be inserted here -->
-                    </div>
-                    <div id="missingTagsAlert" class="alert alert-warning mt-2" style="display: none;">
-                        <strong><i class="bi bi-exclamation-triangle"></i> Note:</strong>
-                        The following tags were not found in the database:
-                        <div id="missingTags" class="d-flex flex-wrap gap-2 mt-1">
-                            <!-- Missing tags will be inserted here -->
-                        </div>
+            <div id="filterTags" class="mt-3">
+                <h6>تم التصفية حسب Assets Tags التالية:</h6>
+                <div id="matchedTags" class="d-flex flex-wrap gap-2 mb-2">
+                    <!-- سيتم إدراج الTags المطابقة هنا -->
+                </div>
+                <div id="missingTagsAlert" class="alert alert-warning mt-2" style="display: none;">
+                    <strong><i class="bi bi-exclamation-triangle"></i> ملاحظة:</strong>
+                    لم يتم العثور على الTags التالية في قاعدة البيانات:
+                    <div id="missingTags" class="d-flex flex-wrap gap-2 mt-1">
+                        <!-- سيتم إدراج الTags المفقودة هنا -->
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 <div class="card shadow-lg p-4">
-    <!-- Bulk Tag Selection -->
+    <!-- الاختيار السريع للأصول -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <h5 class="text-primary mb-3">
-                <i class="bi bi-input-cursor-text"></i> Quick Asset Selection
+                <i class="bi bi-input-cursor-text"></i> الاختيار السريع للأصول
             </h5>
 
             <div class="row">
                 <div class="col-md-8">
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="bi bi-clipboard-data"></i> Paste Asset Tags
-                            <small class="text-muted">(one per line, comma-separated, or from Excel)</small>
+                            <i class="bi bi-clipboard-data"></i> لصق Assets Tags
+                            <small class="text-muted">(واحد لكل سطر، مفصولة بفواصل، أو من Excel)</small>
                         </label>
                         <textarea id="bulkAssetTags" class="form-control font-monospace"
                                   rows="4"
-                                  placeholder="Example:
+                                  placeholder="مثال:
 AST001
 AST002, AST003
 AST004&#9;AST005"></textarea>
                         <div class="mt-2">
                             <span id="tagCounter" class="text-muted small">
-                                <i class="bi bi-hash"></i> 0 tags detected
+                                <i class="bi bi-hash"></i> تم اكتشاف 0 Tags
                             </span>
                         </div>
                     </div>
@@ -128,10 +127,10 @@ AST004&#9;AST005"></textarea>
                 <div class="col-md-4">
                     <div class="d-flex flex-column h-100 justify-content-end">
                         <button id="processAssetTags" class="btn btn-primary mb-2">
-                            <i class="bi bi-check2-all"></i> Select These Assets
+                            <i class="bi bi-check2-all"></i> تحديد هذه الأصول
                         </button>
                         <button id="clearAssetTags" class="btn btn-outline-secondary">
-                            <i class="bi bi-x-lg"></i> Clear Input
+                            <i class="bi bi-x-lg"></i> مسح الإدخال
                         </button>
                     </div>
                 </div>
@@ -139,30 +138,30 @@ AST004&#9;AST005"></textarea>
         </div>
     </div>
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="text-primary"><i class="bi bi-box-seam"></i> Assets Management</h2>
+        <h2 class="text-primary"><i class="bi bi-box-seam"></i> إدارة الأصول</h2>
         <a asp-action="Create" class="btn btn-success fw-bold">
-            <i class="bi bi-plus-circle"></i> Add Asset
+            <i class="bi bi-plus-circle"></i> إضافة أصل
         </a>
     </div>
 
     <div class="table-responsive">
         <table id="assetsTable" class="table table-striped table-hover table-bordered align-middle">
             <thead class="table-dark text-center">
-                <!-- Bulk Operations Controls -->
+                <!-- عناصر التحكم بالعمليات المجمعة -->
                 <div class="card shadow-lg p-4 mb-4">
-                    <h4 class="text-primary"><i class="bi bi-boxes"></i> Bulk Operations</h4>
+                    <h4 class="text-primary"><i class="bi bi-boxes"></i> العمليات المجمعة</h4>
                     <div class="d-flex gap-3">
                         <button id="bulkTransferBtn" class="btn btn-primary" disabled>
-                            <i class="bi bi-arrow-left-right"></i> Transfer Selected Assets
+                            <i class="bi bi-arrow-left-right"></i> نقل الأصول المحددة
                         </button>
                         <button id="bulkDisposeBtn" class="btn btn-warning" disabled>
-                            <i class="bi bi-trash"></i> Dispose Selected Assets
+                            <i class="bi bi-trash"></i> التكهين من الأصول المحددة
                         </button>
                         <button id="bulkReturnBtn" class="btn btn-info" disabled>
-                            <i class="bi bi-arrow-return-left"></i> Create Return Document
+                            <i class="bi bi-arrow-return-left"></i> إنشاء مستند إرجاع
                         </button>
                         <span id="selectedCount" class="ms-3 align-self-center text-muted">
-                            0 assets selected
+                            0 أصول محددة
                         </span>
                     </div>
                 </div>
@@ -190,82 +189,82 @@ AST004&#9;AST005"></textarea>
                 </tr>
             </thead>
             <tbody>
-                <!-- Data loads dynamically -->
+                <!-- يتم تحميل البيانات بشكل ديناميكي -->
             </tbody>
         </table>
     </div>
 </div>
 
 <div class="card shadow-lg p-4 mt-4">
-    <h4 class="text-primary mb-3"><i class="bi bi-file-earmark-arrow-up"></i> Import & Export Assets</h4>
+    <h4 class="text-primary mb-3"><i class="bi bi-file-earmark-arrow-up"></i> استيراد وتصدير الأصول</h4>
 
     <div class="row">
-        <!-- Upload Section -->
+        <!-- قسم التحميل -->
         <div class="col-md-6">
             <div class="card border-0 p-3 shadow-sm">
-                <h5 class="text-secondary"><i class="bi bi-upload"></i> Upload Excel File</h5>
+                <h5 class="text-secondary"><i class="bi bi-upload"></i> تحميل ملف Excel</h5>
                 @using (Html.BeginForm("ImportAssets", "Asset", FormMethod.Post, new { enctype = "multipart/form-data" }))
                 {
                     <div class="mb-3">
                         <input type="file" name="file" class="form-control" required />
                     </div>
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-file-earmark-arrow-up"></i> Upload & Import
+                        <i class="bi bi-file-earmark-arrow-up"></i> تحميل واستيراد
                     </button>
                 }
             </div>
         </div>
 
-        <!-- Export Section -->
+        <!-- قسم التصدير -->
         <div class="col-md-6">
             <div class="card border-0 p-3 shadow-sm">
-                <h5 class="text-secondary"><i class="bi bi-download"></i> Export Data</h5>
+                <h5 class="text-secondary"><i class="bi bi-download"></i> تصدير البيانات</h5>
                 <div class="d-grid gap-2">
                     <a href="@Url.Action("ExportAssets", "Asset")" class="btn btn-success">
-                        <i class="bi bi-file-earmark-excel"></i> Export to Excel
+                        <i class="bi bi-file-earmark-excel"></i> تصدير إلى Excel
                     </a>
                     <a href="@Url.Action("ExportAssetsToPdf", "Asset")" class="btn btn-danger">
-                        <i class="bi bi-file-earmark-pdf"></i> Export to PDF
+                        <i class="bi bi-file-earmark-pdf"></i> تصدير إلى PDF
                     </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<!-- Bulk Transfer Modal -->
+<!-- نافذة نقل الأصول المجمعة -->
 <div class="modal fade" id="bulkTransferModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">
-                    <i class="bi bi-arrow-left-right"></i> Bulk Transfer Assets
+                    <i class="bi bi-arrow-left-right"></i> نقل الأصول المجمعة
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="bulkTransferForm">
                 <div class="modal-body">
                     <div class="alert alert-info">
-                        <span id="transferAssetCount">0</span> assets selected for transfer
+                        <span id="transferAssetCount">0</span> أصول محددة للنقل
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Target Department</label>
+                        <label class="form-label">القسم الهدف</label>
                         <select id="targetDepartment" class="form-select" required>
-                            <option value="">Select Department</option>
+                            <option value="">اختر القسم</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Target User (Optional)</label>
+                        <label class="form-label">المستخدم الهدف (اختياري)</label>
                         <select id="targetUser" class="form-select">
-                            <option value="">Select User</option>
+                            <option value="">اختر المستخدم</option>
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x"></i> Cancel
+                        <i class="bi bi-x"></i> إلغاء
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check2"></i> Transfer
+                        <i class="bi bi-check2"></i> نقل
                     </button>
                 </div>
             </form>
@@ -273,54 +272,54 @@ AST004&#9;AST005"></textarea>
     </div>
 </div>
 
-<!-- Bulk Disposal Modal -->
+<!-- نافذة التكهين من الأصول المجمعة -->
 <div class="modal fade" id="bulkDisposalModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-warning text-white">
                 <h5 class="modal-title">
-                    <i class="bi bi-trash"></i> Bulk Dispose Assets
+                    <i class="bi bi-trash"></i> التكهين من الأصول المجمعة
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="bulkDisposalForm">
-                <!-- Update the bulk disposal modal body -->
+                <!-- تحديث محتوى نافذة التكهين المجمعة -->
                 <div class="modal-body">
                     <div class="alert alert-warning">
-                        <span id="disposeAssetCount">0</span> assets selected for disposal
+                        <span id="disposeAssetCount">0</span> أصول محددة للتكهين
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Disposal Type</label>
+                        <label class="form-label">نوع التكهين</label>
                         <select id="disposalType" class="form-select" required>
-                            <option value="">Select Type</option>
-                            <option value="Sale">Sale</option>
-                            <option value="Scrapped">Scrapped</option>
-                            <option value="Donated">Donated</option>
-                            <option value="Return">Return to Supplier</option>
-                            <option value="Lost">Lost/Missing</option>
+                            <option value="">اختر النوع</option>
+                            <option value="بيع">بيع</option>
+                            <option value="إتلاف">إتلاف</option>
+                            <option value="تبرع">تبرع</option>
+                            <option value="إرجاع">إرجاع</option>
+                            <option value="مفقود">مفقود</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Sale Value</label>
+                        <label class="form-label">قيمة البيع</label>
                         <input type="number" id="saleValue" class="form-control" value="0" min="0" step="0.01" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Disposal Reason</label>
+                        <label class="form-label">سبب التكهين</label>
                         <textarea id="disposalReason" class="form-control" rows="3"
-                                  placeholder="Enter reason for disposal"></textarea>
+                                  placeholder="أدخل سبب التكهين"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Notes</label>
+                        <label class="form-label">ملاحظات</label>
                         <textarea id="disposalNotes" class="form-control" rows="2"
-                                  placeholder="Additional notes (optional)"></textarea>
+                                  placeholder="ملاحظات إضافية (اختياري)"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x"></i> Cancel
+                        <i class="bi bi-x"></i> إلغاء
                     </button>
                     <button type="submit" class="btn btn-warning">
-                        <i class="bi bi-check2"></i> Dispose
+                        <i class="bi bi-check2"></i> التكهين
                     </button>
                 </div>
             </form>
@@ -396,6 +395,9 @@ AST004&#9;AST005"></textarea>
                 },
                 scrollX: true,
                 order: [[2, 'asc']], // Sort by Asset Tag by default
+                "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json"
+        },
                 columns: [
                     {
                         data: null,
@@ -449,6 +451,9 @@ AST004&#9;AST005"></textarea>
             let filteredTable = $('#filteredAssetsTable').DataTable({
                 responsive: true,
                 dom: 'Bfrtip',
+                "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json"
+        },
                 buttons: [
                     'copyHtml5',
                     'excelHtml5',
@@ -736,7 +741,7 @@ AST004&#9;AST005"></textarea>
             // Function to update bulk controls
             function updateBulkControls() {
                 const count = selectedAssets.size;
-                $('#selectedCount').text(`${count} assets selected`);
+                $('#selectedCount').text(`${count} أصول محددة`);
                 $('#transferAssetCount').text(count);
                 $('#disposeAssetCount').text(count);
 

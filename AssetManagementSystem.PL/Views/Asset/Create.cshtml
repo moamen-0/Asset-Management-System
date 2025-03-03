@@ -1,7 +1,7 @@
 ﻿@model AssetManagementSystem.DAL.Entities.Asset
 
 @{
-    ViewData["Title"] = "Create Asset";
+    ViewData["Title"] = "اضافة أصل";
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
 
@@ -15,7 +15,7 @@
     }
 
     <form asp-action="Create" method="post" id="createAssetForm" class="needs-validation" novalidate>
-        <h2 class="mb-4 text-primary"><i class="bi bi-box-seam"></i> Create Asset</h2>
+        <h2 class="mb-4 text-primary"><i class="bi bi-box-seam"></i> اضافة أصل</h2>
 
         <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
@@ -227,7 +227,7 @@
                     <div class="form-check form-switch mt-4">
                         <input asp-for="IsDisposed" class="form-check-input" id="IsDisposed" />
                         <label class="form-check-label" for="IsDisposed">
-                            <i class="bi bi-trash"></i> Mark as Disposed
+                            <i class="bi bi-trash"></i> تكهين
                         </label>
                         <span asp-validation-for="IsDisposed" class="text-danger"></span>
                     </div>
@@ -237,10 +237,10 @@
 
         <div class="d-flex justify-content-between">
             <button type="submit" class="btn btn-success btn-lg">
-                <i class="bi bi-plus-circle"></i> Create Asset
+                <i class="bi bi-plus-circle"></i> اضافة أصل
             </button>
             <a asp-action="Index" class="btn btn-secondary btn-lg">
-                <i class="bi bi-arrow-left"></i> Back to List
+                <i class="bi bi-arrow-left"></i> الرجوع الي القائمة
             </a>
         </div>
     </form>

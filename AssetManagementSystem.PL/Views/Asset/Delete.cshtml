@@ -1,11 +1,11 @@
 ﻿@model AssetManagementSystem.DAL.Entities.Asset
 @{
-    ViewData["Title"] = "Delete Asset";
+    ViewData["Title"] = "حذف الأصل";
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
-<h2>Delete Asset</h2>
+<h2>حذف الأصل</h2>
 
-<p>Are you sure you want to delete this asset?</p>
+<p>هل انت متأكد من حذف هذا الأصل؟</p>
 
 <table class="table">
     <tr>
@@ -45,7 +45,7 @@
         <td>@Model.Model</td>
     </tr>
     <tr>
-        <th>Is Disposed</th>
+        <th>تكهين</th>
         <td>@(Model.IsDisposed ? "Yes" : "No")</td>
     </tr>
 </table>
@@ -53,6 +53,6 @@
 <form asp-action="DeleteConfirmed" method="post">
     @Html.AntiForgeryToken()
     <input type="hidden" name="id" value="@Model.AssetTag" />
-    <button type="submit" class="btn btn-danger">Delete</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-danger">حذف</button>
+    <a asp-action="Index" class="btn btn-secondary">الغاء</a>
 </form>

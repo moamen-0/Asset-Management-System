@@ -1,187 +1,179 @@
 ﻿@using System.Security.Claims
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- AdminLTE CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
+    <!-- AdminLTE RTL CSS -->
+    <link rel="stylesheet" href="~/css/adminlte.rtl.css">
+
+    <!-- Google Fonts - Arabic Support -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap">
 
     <style>
+        /* Set Arabic font family */
+        body {
+            font-family: 'Cairo', sans-serif;
+            direction: rtl;
+            background-color: #f8f9fa; /* Light background for better contrast */
+        }
+
+        /* Sidebar Styles */
+        .app-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 250px;
+            z-index: 1030; /* Lower z-index to ensure navbar stays above */
+            overflow-x: hidden;
+            background-color: #343a40;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s ease;
+        }
+
+        .sidebar-brand {
+            padding: 15px;
+            background-color: #2c3136; /* Slightly darker background for brand */
+            border-bottom: 1px solid #4b545c; /* Subtle border */
+        }
+
+        body.sidebar-collapse .app-sidebar {
+            right: -250px;
+        }
+
+        body.sidebar-collapse .content-wrapper,
+        body.sidebar-collapse .main-header {
+            margin-right: 0;
+        }
+
+        .pushmenu-btn {
+            z-index: 1032; /* Highest z-index to stay on top */
+            position: relative;
+        }
+        .brand-link {
+            color: #fff !important;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .nav-sidebar .nav-link {
+            padding: 10px 15px;
+            color: #c2c7d0; /* Light text color */
+            transition: background-color 0.3s ease;
+        }
+
+            .nav-sidebar .nav-link:hover {
+                background-color: #4b545c; /* Hover effect */
+                color: #fff;
+            }
+
+            .nav-sidebar .nav-link.active {
+                background-color: #007bff; /* Active link color */
+                color: #fff;
+            }
+
+        .user-panel {
+            padding: 15px;
+            border-bottom: 1px solid #4b545c; /* Subtle border */
+        }
+
+            .user-panel .info {
+                color: #fff;
+            }
+
+                .user-panel .info small {
+                    color: #c2c7d0; /* Light text for role */
+                }
+
+        /* Navbar Styles */
+        .main-header {
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1031; /* Higher z-index than sidebar */
+            position: relative;
+            transition: margin-right 0.3s ease;
+        }
+
+        .navbar-nav .nav-link {
+            color: #343a40; /* Dark text for navbar links */
+            padding: 10px 15px;
+            transition: color 0.3s ease;
+        }
+
+            .navbar-nav .nav-link:hover {
+                color: #007bff; /* Hover effect */
+            }
+
         .notification-dropdown {
             width: 350px;
             max-height: 500px;
             overflow-y: auto;
+            border: 1px solid #ddd; /* Subtle border */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
         }
 
         .notification-item {
-            transition: background-color 0.3s;
-            border-left: 3px solid transparent;
+            padding: 10px;
+            border-bottom: 1px solid #eee; /* Subtle border */
+            transition: background-color 0.3s ease;
         }
 
             .notification-item:hover {
-                background-color: rgba(0, 123, 255, 0.1);
+                background-color: #f8f9fa; /* Hover effect */
             }
 
             .notification-item.unread {
-                border-left-color: #007bff;
-                background-color: rgba(0, 123, 255, 0.05);
+                border-right: 3px solid #007bff; /* Highlight for unread notifications */
             }
 
-        #notification-badge {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            padding: 3px 6px;
-            border-radius: 50%;
-            background: red;
-            color: white;
-            font-size: 0.7rem;
-        }
-        .language-switcher {
-            display: flex;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 5px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        /* Content Wrapper */
+        .content-wrapper {
+            margin-right: 250px;
+            margin-left: 0;
+            padding: 20px;
+            background-color: #fff;
+            transition: margin-right 0.3s ease;
         }
 
-        .lang-btn {
-            border: none;
-            padding: 10px 20px;
-            font-size: 14px;
-            font-weight: bold;
-            color: black; /* Default text color is black */
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            transition: all 0.3s ease-in-out;
-            cursor: pointer;
-            outline: none;
-        }
-
-            .lang-btn:hover {
-                background: rgba(255, 255, 255, 0.4);
-                transform: scale(1.05);
-            }
-
-            .lang-btn.active {
-                background: linear-gradient(135deg, #4e54c8, #8f94fb);
-                color: white; /* Text color is white when active */
-                box-shadow: 0 4px 10px rgba(79, 92, 255, 0.3);
-                transform: scale(1.1);
-            }
-        .dropdown-item {
-            cursor: pointer;
-        }
-
-            .dropdown-item:hover {
-                background-color: #f8f9fa;
-            }
-
-        .flag-icon {
-            margin-right: 8px;
-        }
-
-        [dir="rtl"] .flag-icon {
-            margin-right: 0;
-            margin-left: 8px;
-        }
-
-        .nav-item .icon-badge {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            font-size: 0.75rem;
-            background-color: red;
-            color: white;
-            border-radius: 50%;
-            padding: 3px 6px;
-        }
-
-        .dropdown-menu {
-            margin-top: 0.125rem;
-            position: absolute;
-            z-index: 1050;
-        }
-
-            .dropdown-menu.show {
-                display: block;
-            }
-
-        .nav-item.dropdown {
-            position: relative;
-        }
-
-        /* Ensure proper dropdown positioning */
-        .navbar-nav .dropdown-menu {
-            position: absolute;
-            float: none;
-        }
-
-        /* Fix RTL dropdown alignment */
-        [dir="rtl"] .dropdown-menu-end {
-            right: auto;
-            left: 0;
-        }
         /* Dark Mode Styles */
-        .dark-mode {
+        .dark-mode .main-header {
             background-color: #343a40 !important;
-            color: white !important;
+            border-color: #454d55 !important;
         }
 
-            .dark-mode .main-header.navbar {
-                background-color: #343a40 !important;
-                border-color: #454d55 !important;
-            }
+        .dark-mode .navbar-nav .nav-link {
+            color: #fff !important;
+        }
 
-            .dark-mode .main-header .navbar-nav .nav-link {
-                color: white !important;
-            }
+        .dark-mode .content-wrapper {
+            background-color: #454d55 !important;
+            color: #fff !important;
+        }
 
-            .dark-mode .main-sidebar {
-                background-color: #343a40 !important;
-            }
+        .dark-mode .dropdown-menu {
+            background-color: #343a40 !important;
+            border-color: #454d55 !important;
+        }
 
-                .dark-mode .main-sidebar .nav-sidebar .nav-link {
-                    color: white !important;
-                }
+        .dark-mode .dropdown-item {
+            color: #fff !important;
+        }
 
-            .dark-mode .content-wrapper {
+            .dark-mode .dropdown-item:hover {
                 background-color: #454d55 !important;
             }
 
-            .dark-mode .brand-link {
-                background-color: #343a40 !important;
-                color: white !important;
-            }
-
-            .dark-mode .user-panel .info a {
-                color: white !important;
-            }
-
-            .dark-mode .dropdown-menu {
-                background-color: #343a40 !important;
-                border-color: #454d55 !important;
-            }
-
-            .dark-mode .dropdown-item {
-                color: white !important;
-            }
-
-                .dark-mode .dropdown-item:hover {
-                    background-color: #454d55 !important;
-                }
+        
     </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -200,23 +192,12 @@
                         <i class="fas fa-expand"></i>
                     </a>
                 </li>
-           
 
-            <!-- Language Switcher -->
-            <li class="nav-item">
-                <div class="language-switcher">
-                    <button type="button" class="lang-btn active" onclick="handleLanguageChange('en')" id="lang-en">
-                        🇺🇸 EN
-                    </button>
-                    <button type="button" class="lang-btn" onclick="handleLanguageChange('ar')" id="lang-ar">
-                        🇪🇬 AR
-                    </button>
-                </div>
-            </li>
-			</ul>
+               
+            </ul>
 
             <!-- Right navbar links -->
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav me-auto">
                 <!-- Notifications Icon -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="notificationIcon" role="button"
@@ -224,12 +205,12 @@
                         <i class="fas fa-bell"></i>
                         <span class="icon-badge" id="notification-badge">0</span>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationIcon" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                    <div class="dropdown-menu dropdown-menu-start notification-dropdown" aria-labelledby="notificationIcon" style="width: 300px; max-height: 400px; overflow-y: auto;">
                         <div class="dropdown-header d-flex justify-content-between align-items-center">
-                            <span>Notifications</span>
+                            <span>الإشعارات</span>
                             <div>
                                 <form asp-controller="Notification" asp-action="MarkAllAsRead" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-link text-decoration-none">Mark all as read</button>
+                                    <button type="submit" class="btn btn-sm btn-link text-decoration-none">تحديد الكل كمقروء</button>
                                 </form>
                             </div>
                         </div>
@@ -237,19 +218,17 @@
                         <div id="notification-list">
                             <div class="text-center p-2">
                                 <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                    <span class="visually-hidden">Loading...</span>
+                                    <span class="visually-hidden">جاري التحميل...</span>
                                 </div>
-                                <p class="mb-0">Loading notifications...</p>
+                                <p class="mb-0">جاري تحميل الإشعارات...</p>
                             </div>
                         </div>
                         <div class="dropdown-divider"></div>
                         <a asp-controller="Notification" asp-action="Index" class="dropdown-item text-center">
-                            View all notifications
+                            عرض جميع الإشعارات
                         </a>
                     </div>
                 </li>
-
-               
 
                 <!-- Dark Mode Toggle -->
                 <li class="nav-item">
@@ -262,24 +241,24 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                        data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
-                        <i class="bi bi-person-circle"></i> Profile
+                        <i class="bi bi-person-circle"></i> الملف الشخصي
                     </a>
-                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <h6 class="dropdown-header">User Options</h6>
+                    <div class="dropdown-menu dropdown-menu-start" aria-labelledby="navbarDropdown">
+                        <h6 class="dropdown-header">خيارات المستخدم</h6>
                         <a class="dropdown-item" asp-controller="User" asp-action="Profile">
-                            <i class="fas fa-user-circle me-2"></i> View Profile
+                            <i class="fas fa-user-circle ms-2"></i> عرض الملف الشخصي
                         </a>
                         <a class="dropdown-item" asp-controller="User" asp-action="EditProfile">
-                            <i class="fas fa-edit me-2"></i> Edit Profile
+                            <i class="fas fa-edit ms-2"></i> تعديل الملف الشخصي
                         </a>
                         <a class="dropdown-item" asp-controller="User" asp-action="ChangePassword">
-                            <i class="fas fa-key me-2"></i> Change Password
+                            <i class="fas fa-key ms-2"></i> تغيير كلمة المرور
                         </a>
                         <div class="dropdown-divider"></div>
                         <form asp-controller="Auth" asp-action="Logout" method="post" class="dropdown-item">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-link text-danger p-0">
-                                <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                <i class="fas fa-sign-out-alt ms-2"></i> تسجيل الخروج
                             </button>
                         </form>
                     </div>
@@ -290,7 +269,7 @@
                     <form asp-controller="Auth" asp-action="Logout" method="post" id="logoutForm">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-sign-out-alt"></i> Logout
+                            <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
                         </button>
                     </form>
                 </li>
@@ -298,20 +277,23 @@
         </nav>
 
         <!-- Sidebar -->
-        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <!-- Sidebar -->
+        <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
             <!-- Brand Logo -->
-            <a href="#" class="brand-link text-center">
-                <i class="fas fa-cubes pl-3"></i> <span class="brand-text font-weight-light">Asset Management</span>
-            </a>
+            <div class="sidebar-brand">
+                <a href="#" class="brand-link text-center">
+                    <i class="fas fa-cubes ms-2"></i> <span class="brand-text fw-light">إدارة الأصول</span>
+                </a>
+            </div>
 
-            <div class="sidebar">
+            <div class="sidebar-wrapper">
                 <!-- Sidebar Menu -->
                 <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
                         <li class="nav-item">
                             <!-- User Profile -->
-                            <div class="user-panel d-flex align-items-center">
-                                <div class="image">
+                            <div class="user-panel d-flex align-items-center mt-3 mb-3 pb-3">
+                                <div class="image ms-2">
                                     <i class="fas fa-user-circle fa-2x text-white"></i>
                                 </div>
                                 <div class="info">
@@ -325,79 +307,79 @@
                         <!-- Dashboard -->
                         <li class="nav-item">
                             <a href="@Url.Action("Index", "Home")" class="nav-link">
-                                <i class="nav-icon fas fa-tachometer-alt"></i>
-                                <p>Dashboard</p>
+                                <i class="nav-icon fas fa-tachometer-alt ms-2"></i>
+                                <p>لوحة التحكم</p>
                             </a>
                         </li>
 
                         <!-- Assets -->
                         <li class="nav-item">
                             <a href="@Url.Action("Index", "Asset")" class="nav-link">
-                                <i class="nav-icon fas fa-box"></i>
-                                <p>Assets</p>
+                                <i class="nav-icon fas fa-box ms-2"></i>
+                                <p>الأصول</p>
                             </a>
                         </li>
 
                         <!-- Changelog -->
                         <li class="nav-item">
                             <a href="@Url.Action("Index", "ChangeLog")" class="nav-link">
-                                <i class="nav-icon fas fa-history"></i>
-                                <p>Changelog</p>
+                                <i class="nav-icon fas fa-history ms-2"></i>
+                                <p>سجل التغييرات</p>
                             </a>
                         </li>
 
                         <!-- Disposal -->
                         <li class="nav-item">
                             <a href="@Url.Action("Index", "Disposal")" class="nav-link">
-                                <i class="nav-icon fas fa-trash-alt"></i>
-                                <p>Disposal</p>
+                                <i class="nav-icon fas fa-trash-alt ms-2"></i>
+                                <p>التخلص من الأصول</p>
                             </a>
                         </li>
 
                         <!-- Asset Transfers -->
                         <li class="nav-item">
                             <a href="@Url.Action("Index", "AssetTransfer")" class="nav-link">
-                                <i class="nav-icon fas fa-exchange-alt"></i>
-                                <p>Asset Transfers</p>
+                                <i class="nav-icon fas fa-exchange-alt ms-2"></i>
+                                <p>نقل الأصول</p>
                             </a>
                         </li>
 
                         <!-- User Management -->
                         <li class="nav-item">
                             <a href="@Url.Action("Index", "User")" class="nav-link">
-                                <i class="nav-icon fas fa-users-cog"></i>
-                                <p>User Management</p>
+                                <i class="nav-icon fas fa-users-cog ms-2"></i>
+                                <p>إدارة المستخدمين</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="@Url.Action("DepartmentUsers", "User")" class="nav-link">
-                                <i class="nav-icon fas fa-users-cog"></i>
-                                <p>Department Users</p>
+                                <i class="nav-icon fas fa-users-cog ms-2"></i>
+                                <p>مستخدمي القسم</p>
                             </a>
                         </li>
                         <!-- Locations Management (Unified) -->
                         <li class="nav-item">
                             <a href="@Url.Action("Index", "Location")" class="nav-link">
-                                <i class="nav-icon fas fa-map-marked-alt"></i>
-                                <p>Location Management</p>
+                                <i class="nav-icon fas fa-map-marked-alt ms-2"></i>
+                                <p>إدارة المواقع</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="@Url.Action("Departments", "Location")" class="nav-link">
-                                <i class="nav-icon fas fa-sitemap"></i>
-                                <p>Departments</p>
+                                <i class="nav-icon fas fa-sitemap ms-2"></i>
+                                <p>الأقسام</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="@Url.Action("Index", "Disbursement")" class="nav-link">
-                                <i class="nav-icon fas fa-clipboard-list"></i>
-                                <p>Disbursement Request</p>
+                                <i class="nav-icon fas fa-clipboard-list ms-2"></i>
+                                <p>طلبات الصرف</p>
                             </a>
-                        </li> 
+                        </li>
                         <li class="nav-item">
                             <a href="@Url.Action("Index", "ReturnDocument")" class="nav-link">
-                                <i class="nav-icon fas fa-clipboard-list"></i>
-                                <p>Return Document</p>
+                                <i class="nav-icon fas fa-clipboard-list ms-2"></i>
+                                <p>مستندات الإرجاع</p>
                             </a>
                         </li>
                     </ul>
@@ -414,106 +396,67 @@
     <!-- Required JS Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js"></script>
+    <script src="~/js/adminlte.js"></script>
 
     <script>
-             function loadNotifications() {
-            $.ajax({
-                url: '@Url.Action("GetUnreadNotifications", "Notification")',
-                type: 'GET',
-                success: function(response) {
-                    if (response.success) {
-                        // Update the notification badge
-                        const badgeElem = $('#notification-badge');
-                        const count = response.count;
-
-                        if (count > 0) {
-                            badgeElem.text(count).show();
-                        } else {
-                            badgeElem.hide();
-                        }
-
-                        // Update the notification list
-                        const listElem = $('#notification-list');
-                        listElem.empty();
-
-                        if (response.notifications.length === 0) {
-                            listElem.html('<div class="text-center p-3 text-muted">No new notifications</div>');
-                        } else {
-                            response.notifications.forEach(notification => {
-                                let actionButton = '';
-                                if (notification.actionUrl) {
-                                    actionButton = `<a href="${notification.actionUrl}" class="btn btn-sm btn-primary">View</a>`;
-                                }
-
-                                listElem.append(`
-                                    <div class="dropdown-item notification-item">
-                                        <div class="d-flex align-items-start">
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1">${notification.title}</h6>
-                                                <p class="mb-1 small">${notification.message}</p>
-                                                <small class="text-muted">${notification.timeAgo}</small>
-                                            </div>
-                                            <div class="ms-2">
-                                                <form action="/Notification/MarkAsRead/${notification.id}" method="post" class="d-inline">
-                                                    <button type="submit" class="btn btn-sm btn-outline-primary">
-                                                        <i class="bi bi-check"></i>
-                                                    </button>
-                                                </form>
-                                                ${actionButton}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="dropdown-divider"></div>
-                                `);
-                            });
-                        }
-                    } else {
-                        console.error('Failed to load notifications:', response.error);
-                    }
-                },
-                error: function() {
-                    console.error('Error fetching notifications');
-                }
-            });
-        }
-
-              function handleLanguageChange(lang) {
-            console.log("Language changed to:", lang);
-
-            // تحديث الزر النشط
-            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`lang-${lang}`).classList.add('active');
-        }
         $(document).ready(function () {
+            // Load notifications
+            loadNotifications();
 
-			// Load notifications
-			loadNotifications();
+            // Refresh notifications every 60 seconds
+            setInterval(loadNotifications, 60000);
 
-			// Refresh notifications every 60 seconds
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
 
-			setInterval(loadNotifications, 60000);
-                 // Initialize tooltips
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl)
-        });
+            // Initialize popovers
+            var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+            popoverTriggerList.map(function (popoverTriggerEl) {
+                return new bootstrap.Popover(popoverTriggerEl)
+            });
 
-        // Initialize popovers
-        var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
-        popoverTriggerList.map(function (popoverTriggerEl) {
-            return new bootstrap.Popover(popoverTriggerEl)
-        });
-            // Sidebar toggle
-            $('[data-widget="pushmenu"]').on('click', function () {
-                $('.main-sidebar').toggleClass('sidebar-collapse');
+            // Fixed sidebar toggle function for RTL layout
+            let sidebarCollapsed = false;
+            $('[data-widget="pushmenu"]').on('click', function(e) {
+                e.preventDefault();
+
+                sidebarCollapsed = !sidebarCollapsed;
+                $('body').toggleClass('sidebar-collapse', sidebarCollapsed);
+
+                if (sidebarCollapsed) {
+                    // Collapse sidebar - move off screen
+                    $('.app-sidebar').css({
+                        'right': '-250px',
+                        'transition': 'right 0.3s ease'
+                    });
+                    $('.content-wrapper, .main-header').css({
+                        'margin-right': '0',
+                        'transition': 'margin-right 0.3s ease'
+                    });
+                } else {
+                    // Expand sidebar - bring back on screen
+                    $('.app-sidebar').css({
+                        'right': '0',
+                        'transition': 'right 0.3s ease'
+                    });
+                    $('.content-wrapper, .main-header').css({
+                        'margin-right': '250px',
+                        'transition': 'margin-right 0.3s ease'
+                    });
+                }
             });
 
             // Fullscreen toggle with cross-browser support
             $('[data-widget="fullscreen"]').on('click', function () {
                 if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen();
-                } else {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.warn('Error attempting to enable fullscreen:', err);
+                    });
+                } else if (document.exitFullscreen) {
                     document.exitFullscreen();
                 }
             });
@@ -538,29 +481,74 @@
                 applyDarkMode(darkMode);
             });
 
-
-
-
-
-             // Bootstrap Dropdown Initialization
+            // Bootstrap Dropdown Initialization
             var dropdowns = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
-        dropdowns.map(function (dropdownToggle) {
-            return new bootstrap.Dropdown(dropdownToggle, {
-                autoClose: true
+            dropdowns.map(function (dropdownToggle) {
+                return new bootstrap.Dropdown(dropdownToggle, {
+                    autoClose: true
+                });
             });
         });
-        });
-          // Language Switcher
-              function switchLanguage(lang) {
-            // Store the selected language
-            localStorage.setItem('selectedLanguage', lang);
 
-            // Update the document direction
-            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-            document.documentElement.lang = lang;
+        function loadNotifications() {
+            $.ajax({
+                url: '@Url.Action("GetUnreadNotifications", "Notification")',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        // Update the notification badge
+                        const badgeElem = $('#notification-badge');
+                        const count = response.count;
 
-            // Optionally reload the page
-            location.reload();
+                        if (count > 0) {
+                            badgeElem.text(count).show();
+                        } else {
+                            badgeElem.hide();
+                        }
+
+                        // Update the notification list
+                        const listElem = $('#notification-list');
+                        listElem.empty();
+
+                        if (response.notifications.length === 0) {
+                            listElem.html('<div class="text-center p-3 text-muted">لا توجد إشعارات جديدة</div>');
+                        } else {
+                            response.notifications.forEach(notification => {
+                                let actionButton = '';
+                                if (notification.actionUrl) {
+                                    actionButton = `<a href="${notification.actionUrl}" class="btn btn-sm btn-primary">عرض</a>`;
+                                }
+
+                                listElem.append(`
+                                    <div class="dropdown-item notification-item">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">${notification.title}</h6>
+                                                <p class="mb-1 small">${notification.message}</p>
+                                                <small class="text-muted">${notification.timeAgo}</small>
+                                            </div>
+                                            <div class="me-2">
+                                                <form action="/Notification/MarkAsRead/${notification.id}" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-check"></i>
+                                                    </button>
+                                                </form>
+                                                ${actionButton}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="dropdown-divider"></div>
+                                `);
+                            });
+                        }
+                    } else {
+                        console.error('Failed to load notifications:', response.error);
+                    }
+                },
+                error: function() {
+                    console.error('Error fetching notifications');
+                }
+            });
         }
     </script>
 
