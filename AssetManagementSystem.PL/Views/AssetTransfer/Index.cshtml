@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "Asset Transfers";
+    ViewData["Title"] = "نقل الأصول";
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
 <style>
@@ -7,24 +7,23 @@
         background-color: white !important; /* Primary blue */
         color: #0d6efd !important; /* White text on hover */
     }
-
 </style>
 <div class="container mt-4">
     <div class="card shadow-lg rounded-4 border-0">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h3 class="fw-bold m-0"><i class="bi bi-arrow-left-right"></i> Asset Transfers</h3>
+            <h3 class="fw-bold m-0"><i class="bi bi-arrow-left-right"></i> نقل الأصول</h3>
             <a asp-action="Create" class="btn btn-light text-primary rounded-pill px-4 shadow-sm">
-                <i class="bi bi-plus-lg"></i> Add Transfer
+                <i class="bi bi-plus-lg"></i> إضافة مناقلة
             </a>
         </div>
 
         <div class="card-body">
             <div class="d-flex justify-content-end gap-2 mb-3">
                 <button id="exportExcel" class="btn btn-outline-success rounded-pill px-3 shadow-sm">
-                    <i class="bi bi-file-earmark-excel"></i> Export all to Excel
+                    <i class="bi bi-file-earmark-excel"></i> تصدير الكل إلى Excel
                 </button>
                 <button id="exportPdf" class="btn btn-outline-danger rounded-pill px-3 shadow-sm">
-                    <i class="bi bi-file-earmark-pdf"></i> Export all to PDF
+                    <i class="bi bi-file-earmark-pdf"></i> تصدير الكل إلى PDF
                 </button>
             </div>
 
@@ -115,7 +114,7 @@
                 buttons: [
                     {
                         extend: 'excelHtml5',
-                        text: '<i class="fas fa-file-excel"></i> Export Selected',
+                        text: '<i class="fas fa-file-excel"></i> تصدير المحدد',
                         className: 'btn btn-outline-success btn-sm rounded-pill px-3 shadow-sm',
                         exportOptions: {
                             columns: [1, 2, 3, 4, 5, 6, 7],
@@ -124,7 +123,7 @@
                     },
                     {
                         extend: 'pdfHtml5',
-                        text: '<i class="fas fa-file-pdf"></i> Export Selected',
+                        text: '<i class="fas fa-file-pdf"></i> تصدير المحدد',
                         className: 'btn btn-outline-danger btn-sm rounded-pill px-3 shadow-sm',
                         exportOptions: {
                             columns: [1, 2, 3, 4, 5, 6, 7],

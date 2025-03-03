@@ -12,8 +12,8 @@
 }
 else
 {
-    <h2>Delete Asset Transfer</h2>
-    <h4>Are you sure you want to delete this asset transfer?</h4>
+    <h2>حذف مناقلة</h2>
+    <h4>هل انت متأكد؟</h4>
     <div class="card">
         <div class="card-body">
             <dl class="row">
@@ -41,7 +41,7 @@ else
     <form asp-action="DeleteConfirmed" method="post">
         @Html.AntiForgeryToken()
         <input type="hidden" name="id" value="@Model.Id" />
-        <button type="submit" class="btn btn-danger">Delete</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-danger">حذف</button>
+        <a asp-action="Index" class="btn btn-secondary">الرجوع</a>
     </form>
 }
