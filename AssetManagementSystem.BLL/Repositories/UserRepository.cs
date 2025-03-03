@@ -31,7 +31,10 @@ namespace AssetManagementSystem.BLL.Repositories
 		public async Task<User> GetUserByIdAsync(string id)
 		{
 			return await _context.Users
-				.FindAsync(id); // أسرع من `FirstOrDefaultAsync`
+				.Include(u => u.Department)
+				.Include(u => u.Assets)  // Include the Assets collection
+					.ThenInclude(a => a.Department)  // Optionally include nested properties
+				.FirstOrDefaultAsync(u => u.Id == id);
 		}
 
 		public async Task<User> GetUserByEmailAsync(string email)

@@ -39,22 +39,22 @@
     <div class="card shadow-sm border-danger text-center">
         <div class="card-body">
             <h2 class="text-danger mb-4">
-                <i class="bi bi-trash3-fill me-2"></i> Delete User
+                <i class="bi bi-trash3-fill me-2"></i> حذف المستخدم
             </h2>
 
             <p class="fs-5">
-                Are you sure you want to delete <strong class="text-dark">@Model.FullName</strong>?
+               هل انت متأمد من حذف <strong class="text-dark">@Model.FullName</strong>؟
             </p>
 
             <form asp-action="DeleteConfirmed">
                 <input type="hidden" asp-for="Id" />
 
                 <button type="submit" class="btn btn-danger me-2">
-                    <i class="bi bi-trash"></i> Delete
+                    <i class="bi bi-trash"></i> حذف
                 </button>
 
-                <a asp-action="Index" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Cancel
+                <a asp-action="DepartmentUsers" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> عودة
                 </a>
             </form>
         </div>

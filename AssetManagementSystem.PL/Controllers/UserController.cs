@@ -11,6 +11,7 @@ using AssetManagementSystem.BLL.Interfaces.IService;
 using AssetManagementSystem.PL.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using AssetManagementSystem.DAL.Utilities;
+using AssetManagementSystem.BLL.Repositories;
 
 [Authorize]
 public class UserController : Controller
@@ -59,6 +60,11 @@ public class UserController : Controller
 		{
 			return NotFound();
 		}
+
+		// Get user roles
+		var roles = await _userManager.GetRolesAsync(user);
+		ViewBag.UserRoles = roles;
+
 		return View(user);
 	}
 
@@ -66,30 +72,78 @@ public class UserController : Controller
 
 	// Create new user (GET)
 	[Authorize(Roles = Roles.Admin)]
-	public IActionResult Create()
+	public async Task<IActionResult> Create()
 	{
+		// Populate departments dropdown
+		await PopulateDepartmentsDropdown(null);
+
+		// Populate roles dropdown using the constants from Roles class
+		var roles = new List<string>
+	{
+		Roles.Admin,
+		Roles.Manager,
+		Roles.Supervisor,
+		Roles.User,
+		Roles.DataEntry
+	};
+		ViewBag.AvailableRoles = new SelectList(roles);
+
 		return View();
 	}
 
 	// Create new user (POST)
 	[HttpPost]
 	[ValidateAntiForgeryToken]
-	public async Task<IActionResult> Create(User user)
+	public async Task<IActionResult> Create(User user, string Password, string Role)
 	{
 		if (ModelState.IsValid)
 		{
-			await _unitOfWork.user.AddUserAsync(user);
-			return RedirectToAction(nameof(Index));
+			// Create the user with the provided password
+			var result = await _userManager.CreateAsync(user, Password);
+
+			if (result.Succeeded)
+			{
+				// Assign the selected role
+				if (!string.IsNullOrEmpty(Role))
+				{
+					await _userManager.AddToRoleAsync(user, Role);
+				}
+
+				return RedirectToAction(nameof(DepartmentUsers));
+			}
+
+			foreach (var error in result.Errors)
+			{
+				ModelState.AddModelError("", error.Description);
+			}
 		}
+
+		// If we got this far, something failed, redisplay form
+		await PopulateDepartmentsDropdown(user.DepartmentId);
+
+		// Repopulate roles dropdown
+		var roles = new List<string>
+	{
+		Roles.Admin,
+		Roles.Manager,
+		Roles.Supervisor,
+		Roles.User,
+		Roles.DataEntry
+	};
+		ViewBag.AvailableRoles = new SelectList(roles);
+
 		return View(user);
 	}
-
 	// Edit user (GET)
 	[Authorize(Roles = $"{Roles.Admin},{Roles.Manager}")]
 	public async Task<IActionResult> Edit(string id)
 	{
 		var user = await _unitOfWork.user.GetUserByIdAsync(id);
 		if (user == null) return NotFound();
+
+		// Populate departments dropdown
+		await PopulateDepartmentsDropdown(user.DepartmentId);
+
 		return View(user);
 	}
 
@@ -100,9 +154,27 @@ public class UserController : Controller
 	{
 		if (ModelState.IsValid)
 		{
-			await _unitOfWork.user.UpdateUserAsync(user);
-			return RedirectToAction(nameof(Index));
+			var existingUser = await _unitOfWork.user.GetUserByIdAsync(user.Id);
+			if (existingUser == null)
+			{
+				return NotFound();
+			}
+
+			// Update user properties
+			existingUser.FullName = user.FullName;
+			existingUser.Email = user.Email;
+			existingUser.NationalId = user.NationalId;
+			existingUser.RecipientFileNumber = user.RecipientFileNumber;
+			existingUser.DepartmentId = user.DepartmentId;
+
+			// Save changes
+			await _unitOfWork.user.UpdateUserAsync(existingUser);
+			return RedirectToAction(nameof(DepartmentUsers));
 		}
+
+		// If we got this far, something failed, redisplay form
+		await PopulateDepartmentsDropdown(user.DepartmentId);
+
 		return View(user);
 	}
 
@@ -121,7 +193,7 @@ public class UserController : Controller
 	public async Task<IActionResult> DeleteConfirmed(string id)
 	{
 		await _unitOfWork.user.DeleteUserAsync(id);
-		return RedirectToAction(nameof(Index));
+		return RedirectToAction(nameof(DepartmentUsers));
 	}
 
 	[HttpGet]
@@ -219,7 +291,7 @@ public class UserController : Controller
 		}).ToList();
 
 		// Optional: Add a default "No Department" option at the top
-		departmentList.Insert(0, new SelectListItem { Value = "", Text = "-- Department --" });
+		departmentList.Insert(0, new SelectListItem { Value = "", Text = "--Select Department --" });
 
 		// Pass the list to ViewBag
 		ViewBag.Departments = departmentList;
@@ -291,7 +363,7 @@ public class UserController : Controller
 			await _userManager.AddToRolesAsync(user, selectedRoles);
 		}
 
-		return RedirectToAction(nameof(Index));
+		return RedirectToAction(nameof(DepartmentUsers));
 	}
 
 	[HttpGet]

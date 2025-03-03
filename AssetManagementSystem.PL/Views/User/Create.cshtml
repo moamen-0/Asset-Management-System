@@ -1,7 +1,6 @@
 ﻿@model AssetManagementSystem.DAL.Entities.User
-
 @{
-    ViewData["Title"] = "Create User";
+    ViewData["Title"] = "إنشاء مستخدم";
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
 
@@ -26,7 +25,12 @@
     }
 
     .container {
-        max-width: 600px;
+        max-width: 800px;
+    }
+
+    .required::after {
+        content: " *";
+        color: red;
     }
 </style>
 
@@ -35,32 +39,158 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <h2 class="text-primary mb-4">
-                <i class="bi bi-person-plus-fill me-2"></i> Create User
+                <i class="bi bi-person-plus-fill me-2"></i> إنشاء مستخدم
             </h2>
 
-            <form asp-action="Create">
-                <div class="mb-3">
-                    <label class="form-label">Full Name</label>
-                    <input asp-for="FullName" class="form-control" required />
+            <form asp-action="Create" method="post">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="FullName" class="form-label required">الاسم الكامل</label>
+                        <input asp-for="FullName" class="form-control" required placeholder="Enter user's full name" />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Email" class="form-label required">البريد الإلكتروني</label>
+                        <input asp-for="Email" class="form-control" type="email" required placeholder="Enter email address" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <input asp-for="Email" class="form-control" type="email" required />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="NationalId" class="form-label">السجل المدني</label>
+                        <input asp-for="NationalId" class="form-control" placeholder="Enter national ID (optional)" />
+                        <span asp-validation-for="NationalId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="RecipientFileNumber" class="form-label">رقم الملف</label>
+                        <input asp-for="RecipientFileNumber" class="form-control" placeholder="Enter file number (optional)" />
+                        <span asp-validation-for="RecipientFileNumber" class="text-danger"></span>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Role</label>
-                    @* <select asp-for="Role" class="form-control">
-                        <option value="Admin">Admin</option>
-                        <option value="User">User</option>
-                    </select> *@
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="Password" class="form-label required">كلمة المرور</label>
+                        <div class="input-group">
+                            <input type="password" id="Password" name="Password" class="form-control" required placeholder="Enter password" />
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('Password')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <span class="text-danger" id="PasswordValidation"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="ConfirmPassword" class="form-label required">تأكيد كلمة المرور</label>
+                        <div class="input-group">
+                            <input type="password" id="ConfirmPassword" name="ConfirmPassword" class="form-control" required placeholder="Confirm password" />
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('ConfirmPassword')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <span class="text-danger" id="ConfirmPasswordValidation"></span>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-check-circle"></i> Save
-                </button>
-                <a asp-action="Index" class="btn btn-secondary ms-2">
-                    <i class="bi bi-arrow-left"></i> Back
-                </a>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DepartmentId" class="form-label">القسم</label>
+                        <select asp-for="DepartmentId" class="form-select" asp-items="ViewBag.Departments">
+                        </select>
+                        <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="Role" class="form-label required">الدور</label>
+                        <select id="Role" name="Role" class="form-select" required>
+                            <option value="">-- اختر الدور --</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Manager">مدير </option>
+                            <option value="Supervisor">مشرف</option>
+                            <option value="User">مستخدم</option>
+                            <option value="Data Entry">مدخل بيانات</option>
+                        </select>
+                        <span class="text-danger" id="RoleValidation"></span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> إنشاء مستخدم
+                    </button>
+                    <a asp-action="DepartmentUsers" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> العودة إلى المستخدمين
+                    </a>
+                </div>
             </form>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function togglePasswordVisibility(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const fieldType = passwordField.type;
+
+            passwordField.type = fieldType === 'password' ? 'text' : 'password';
+
+            // Also toggle the eye icon
+            const eyeIcon = event.currentTarget.querySelector('i');
+            eyeIcon.classList.toggle('bi-eye');
+            eyeIcon.classList.toggle('bi-eye-slash');
+        }
+
+        // Password validation
+        document.getElementById('Password').addEventListener('blur', validatePassword);
+        document.getElementById('ConfirmPassword').addEventListener('blur', validateConfirmPassword);
+
+        function validatePassword() {
+            const password = document.getElementById('Password').value;
+            const validation = document.getElementById('PasswordValidation');
+
+            if (password.length < 6) {
+                validation.textContent = 'يجب أن تكون كلمة المرور على الأقل 6 أحرف';
+                return false;
+            } else {
+                validation.textContent = '';
+                return true;
+            }
+        }
+
+        function validateConfirmPassword() {
+            const password = document.getElementById('Password').value;
+            const confirmPassword = document.getElementById('ConfirmPassword').value;
+            const validation = document.getElementById('ConfirmPasswordValidation');
+
+            if (password !== confirmPassword) {
+                validation.textContent = 'كلمات المرور غير متطابقة';
+                return false;
+            } else {
+                validation.textContent = '';
+                return true;
+            }
+        }
+
+        // Form submission validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const isPasswordValid = validatePassword();
+            const isConfirmPasswordValid = validateConfirmPassword();
+            const role = document.getElementById('Role').value;
+
+            if (!isPasswordValid || !isConfirmPasswordValid) {
+                e.preventDefault();
+                return;
+            }
+
+            // Validate role selection
+            if (!role) {
+                document.getElementById('RoleValidation').textContent = 'الرجاء اختيار دور';
+                e.preventDefault();
+            }
+        });
+    </script>
+}

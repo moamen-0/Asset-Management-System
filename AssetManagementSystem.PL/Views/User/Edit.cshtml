@@ -1,7 +1,6 @@
 ﻿@model AssetManagementSystem.DAL.Entities.User
-
 @{
-    ViewData["Title"] = "Edit User";
+    ViewData["Title"] = "تعديل مستخدم";
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
 
@@ -28,6 +27,11 @@
         transform: scale(1.05);
         transition: 0.3s ease-in-out;
     }
+
+    .required::after {
+        content: " *";
+        color: red;
+    }
 </style>
 
 <!-- Page Content -->
@@ -35,38 +39,71 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <h2 class="text-primary mb-4">
-                <i class="bi bi-pencil-square me-2"></i> Edit User
+                <i class="bi bi-pencil-square me-2"></i> تعديل مستخدم
             </h2>
 
-            <form asp-action="Edit">
+            <form asp-action="Edit" method="post">
                 <input type="hidden" asp-for="Id" />
 
-                <div class="mb-3">
-                    <label class="form-label"><i class="bi bi-person-circle me-1"></i> Full Name</label>
-                    <input asp-for="FullName" class="form-control" required />
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="FullName" class="form-label required"><i class="bi bi-person-circle me-1"></i> الاسم الكامل</label>
+                        <input asp-for="FullName" class="form-control" required />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Email" class="form-label required"><i class="bi bi-envelope me-1"></i> البريد الإلكتروني</label>
+                        <input asp-for="Email" class="form-control" type="email" required />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label"><i class="bi bi-envelope me-1"></i> Email</label>
-                    <input asp-for="Email" class="form-control" type="email" required />
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="NationalId" class="form-label"><i class="bi bi-card-text me-1"></i> الهوية الوطنية</label>
+                        <input asp-for="NationalId" class="form-control" />
+                        <span asp-validation-for="NationalId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="RecipientFileNumber" class="form-label"><i class="bi bi-file-earmark-text me-1"></i> رقم الملف</label>
+                        <input asp-for="RecipientFileNumber" class="form-control" />
+                        <span asp-validation-for="RecipientFileNumber" class="text-danger"></span>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label"><i class="bi bi-person-gear me-1"></i> Role</label>
-                    @* <select asp-for="Role" class="form-control">
-                        <option value="Admin">Admin</option>
-                        <option value="User">User</option>
-                    </select> *@
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DepartmentId" class="form-label"><i class="bi bi-building me-1"></i> القسم</label>
+                        <select asp-for="DepartmentId" class="form-select" asp-items="ViewBag.Departments">
+                        </select>
+                        <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                    </div>
                 </div>
 
-                <button type="submit" class="btn btn-warning">
-                    <i class="bi bi-save"></i> Update
-                </button>
-
-                <a class="btn btn-secondary ms-2" asp-action="Index">
-                    <i class="bi bi-arrow-left"></i> Cancel
-                </a>
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-save"></i> تحديث المستخدم
+                    </button>
+                    <a class="btn btn-secondary" asp-action="DepartmentUsers">
+                        <i class="bi bi-arrow-left"></i> العودة إلى المستخدمين
+                    </a>
+                </div>
             </form>
+        </div>
+    </div>
+
+    <!-- قسم إدارة الأدوار -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <h4 class="text-primary mb-3">
+                <i class="bi bi-person-gear me-2"></i> أدوار المستخدم
+            </h4>
+            <p class="text-muted">لإدارة أدوار هذا المستخدم، يرجى استخدام صفحة إدارة الأدوار المخصصة.</p>
+            <a asp-action="ManageRoles" asp-route-userId="@Model.Id" class="btn btn-primary">
+                <i class="bi bi-person-gear"></i> إدارة أدوار المستخدم
+            </a>
         </div>
     </div>
 </div>
