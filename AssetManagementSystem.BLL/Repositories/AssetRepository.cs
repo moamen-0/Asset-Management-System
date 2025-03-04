@@ -28,6 +28,7 @@ namespace AssetManagementSystem.BLL.Repositories
 				.Include(a => a.Room)
 				.Include(a => a.Department)
 				.Include(a => a.User)
+				.Include(a => a.Supervisor)
 				.ToListAsync();
 		}
 
@@ -40,6 +41,7 @@ namespace AssetManagementSystem.BLL.Repositories
 				.Include(a => a.Room)
 				.Include(a => a.Department)
 				.Include(a => a.User)
+				 .Include(a => a.Supervisor)
 				.FirstOrDefaultAsync(a => a.AssetTag == assetTag);
 		}
 
