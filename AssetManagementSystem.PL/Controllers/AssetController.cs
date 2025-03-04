@@ -1487,13 +1487,21 @@ namespace AssetManagementSystem.PL.Controllers
 		{
 			try
 			{
+				
 				var supervisors = await _userManager.GetUsersInRoleAsync(Roles.Supervisor);
-				var result = supervisors.Select(s => new { id = s.Id, name = s.FullName }).ToList();
-				return Json(result);
+
+				var result = supervisors.Select(s => new
+				{
+					id = s.Id,
+					name = s.FullName
+				}).ToList();
+
+				return Json(new { success = true, data = result });
 			}
 			catch (Exception ex)
 			{
-				return StatusCode(500, new { error = ex.Message });
+				_logger.LogError(ex, "خطأ في الحصول على المشرفين");
+				return Json(new { success = false, error = "حدث خطأ في استرجاع قائمة المشرفين" });
 			}
 		}
 

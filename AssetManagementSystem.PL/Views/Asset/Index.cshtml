@@ -140,7 +140,7 @@
                                 <span class="badge bg-white text-info ms-2 bulk-badge">0</span>
                             </button>
                             <button id="bulkSupervisorBtn" class="btn btn-success" disabled>
-                                <i class="bi bi-person-check"></i> Assign Supervisor
+                                <i class="bi bi-person-check"></i> تعيين مشرف
                             </button>
                             <button id="clearSelectionBtn" class="btn btn-outline-secondary px-4" disabled>
                                 <i class="fas fa-eraser me-2"></i> مسح التحديد
@@ -549,29 +549,29 @@ AST004⟶AST005"></textarea>
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">
-                    <i class="bi bi-people"></i> Assign Supervisor
+                    <i class="bi bi-people"></i> تعيين مشرف
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="bulkSupervisorForm">
                 <div class="modal-body">
                     <div class="alert alert-info">
-                        <span id="supervisorAssetCount">0</span> assets selected for supervisor assignment
+                        تم اختيار <span id="supervisorAssetCount">0</span> أصل لتعيين المشرف
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Select Supervisor</label>
+                        <label class="form-label">اختر المشرف</label>
                         <select id="supervisorSelect" class="form-select" required>
-                            <option value="">Select Supervisor</option>
-                            <!-- Will be populated with JavaScript -->
+                            <option value="">-- اختر المشرف --</option>
+                            <!-- سيتم ملؤها بواسطة جافا سكريبت -->
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x"></i> Cancel
+                        <i class="bi bi-x"></i> إلغاء
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check2"></i> Assign
+                        <i class="bi bi-check2"></i> تعيين
                     </button>
                 </div>
             </form>
@@ -746,74 +746,7 @@ AST004⟶AST005"></textarea>
     </style>
 
     <script>
-            $('#bulkSupervisorBtn').click(function() {
-            $('#supervisorAssetCount').text(selectedAssets.size);
-            loadSupervisors();
-            $('#bulkSupervisorModal').modal('show');
-        });
 
-        // Function to load supervisors for the dropdown
-        function loadSupervisors() {
-            $.ajax({
-                url: '@Url.Action("GetSupervisors")',
-                type: 'GET',
-                success: function(response) {
-                    const select = $('#supervisorSelect');
-                    select.empty().append('<option value="">Select Supervisor</option>');
-
-                    response.forEach(supervisor => {
-                        select.append(`<option value="${supervisor.id}">${supervisor.name}</option>`);
-                    });
-                },
-                error: function(error) {
-                    console.error('Error loading supervisors:', error);
-                    alert('Failed to load supervisors. Please try again.');
-                }
-            });
-        }
-
-        // Handle form submission
-        $('#bulkSupervisorForm').on('submit', function(e) {
-            e.preventDefault();
-
-            const supervisorId = $('#supervisorSelect').val();
-            if (!supervisorId) {
-                alert('Please select a supervisor');
-                return;
-            }
-
-            // Show loading indicator
-            const loadingOverlay = showLoadingOverlay("Assigning Supervisor");
-
-            // Send request to assign supervisor
-            $.ajax({
-                url: '@Url.Action("BulkAssignSupervisor")',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    assetTags: Array.from(selectedAssets),
-                    supervisorId: supervisorId
-                }),
-                success: function(response) {
-                    loadingOverlay.remove();
-                    $('#bulkSupervisorModal').modal('hide');
-
-                    // Clear selections
-                    selectedAssets.clear();
-                    updateBulkControls();
-
-                    // Reload the table
-                    table.ajax.reload();
-
-                    // Show success message
-                    toastr.success('Supervisor assigned successfully');
-                },
-                error: function(xhr) {
-                    loadingOverlay.remove();
-                    alert('Error assigning supervisor: ' + (xhr.responseJSON?.error || 'Unknown error'));
-                }
-            });
-        });
         $(document).ready(function () {
             // Initialize Dashboard Stats
             fetchAssetStats();
@@ -1245,9 +1178,9 @@ AST004⟶AST005"></textarea>
                 const count = selectedAssets.size;
                 $('#selectedCount').text(count);
                 $('.bulk-badge').text(count);
-                
-                $('#bulkTransferBtn, #bulkDisposeBtn, #bulkReturnBtn, #clearSelectionBtn').prop('disabled', count === 0);
-                
+                     // Update this line to include the supervisor button
+        $('#bulkTransferBtn, #bulkDisposeBtn, #bulkReturnBtn, #bulkSupervisorBtn, #clearSelectionBtn').prop('disabled', count === 0);
+    
                 if (count > 0) {
                     $('.selection-counter').addClass('animate__animated animate__pulse');
                     setTimeout(() => {
@@ -1597,7 +1530,99 @@ AST004⟶AST005"></textarea>
                         }
                     });
                 });
+                        // Supervisor button click handler
+        $('#bulkSupervisorBtn').click(function() {
+            $('#supervisorAssetCount').text(selectedAssets.size);
+            loadSupervisors();
+            $('#bulkSupervisorModal').modal('show');
+        });
 
+        // Function to load supervisors for the dropdown
+        function loadSupervisors() {
+            $.ajax({
+                url: '/Asset/GetSupervisors',
+                type: 'GET',
+                success: function(response) {
+                    const select = $('#supervisorSelect');
+                    select.empty().append('<option value="">-- اختر المشرف --</option>');
+
+                    if (response.success && Array.isArray(response.data)) {
+                        response.data.forEach(supervisor => {
+                            select.append(`<option value="${supervisor.id}">${supervisor.name}</option>`);
+                        });
+                    } else {
+                        select.append('<option value="" disabled>خطأ في تحميل المشرفين</option>');
+                    }
+                },
+                error: function(error) {
+                    console.error('Error loading supervisors:', error);
+                    Swal.fire({
+                        title: 'خطأ!',
+                        text: 'فشل تحميل قائمة المشرفين. الرجاء المحاولة مرة أخرى.',
+                        icon: 'error',
+                        confirmButtonText: 'حسناً'
+                    });
+                }
+            });
+        }
+
+        // Handle supervisor form submission
+        $('#bulkSupervisorForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const supervisorId = $('#supervisorSelect').val();
+            if (!supervisorId) {
+                Swal.fire({
+                    title: 'تنبيه!',
+                    text: 'الرجاء اختيار مشرف',
+                    icon: 'warning',
+                    confirmButtonText: 'حسناً'
+                });
+                return;
+            }
+
+            // Show loading indicator
+            const loadingOverlay = showLoadingOverlay("جاري تعيين المشرف...");
+
+            // Send request to assign supervisor
+            $.ajax({
+                url: '/Asset/BulkAssignSupervisor',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    assetTags: Array.from(selectedAssets),
+                    supervisorId: supervisorId
+                }),
+                success: function(response) {
+                    loadingOverlay.remove();
+                    $('#bulkSupervisorModal').modal('hide');
+
+                    // Clear selections
+                    selectedAssets.clear();
+                    updateBulkControls();
+
+                    // Reload the table
+                    table.ajax.reload();
+
+                    // Show success message
+                    Swal.fire({
+                        title: 'تم بنجاح!',
+                        text: 'تم تعيين المشرف بنجاح',
+                        icon: 'success',
+                        confirmButtonText: 'حسناً'
+                    });
+                },
+                error: function(xhr) {
+                    loadingOverlay.remove();
+                    Swal.fire({
+                        title: 'خطأ!',
+                        text: 'فشل تعيين المشرف: ' + (xhr.responseJSON?.error || 'خطأ غير معروف'),
+                        icon: 'error',
+                        confirmButtonText: 'حسناً'
+                    });
+                }
+            });
+        });
                      
             });
         
