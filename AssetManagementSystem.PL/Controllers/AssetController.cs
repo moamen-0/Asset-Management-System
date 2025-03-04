@@ -273,7 +273,7 @@ namespace AssetManagementSystem.PL.Controllers
 				ViewBag.Buildings = buildings;
 				ViewBag.Floors = floors;
 				ViewBag.Rooms = rooms;
-
+				ViewBag.Supervisors = await GetSupervisorsForDropdownAsync();
 				return View();
 			}
 			catch (Exception ex)
@@ -298,10 +298,12 @@ namespace AssetManagementSystem.PL.Controllers
 				ModelState.Remove("Room");
 				ModelState.Remove("Department");
 				ModelState.Remove("User");
+				ModelState.Remove("Supervisor");
 
 				if (!ModelState.IsValid)
 				{
 					await PopulateDropdownsAsync();
+					ViewBag.Supervisors = await GetSupervisorsForDropdownAsync();
 					return View(asset);
 				}
 
@@ -322,6 +324,7 @@ namespace AssetManagementSystem.PL.Controllers
 				{
 					ModelState.AddModelError("AssetTag", "Asset Tag is required");
 					await PopulateDropdownsAsync();
+					ViewBag.Supervisors = await GetSupervisorsForDropdownAsync();
 					return View(asset);
 				}
 
@@ -331,6 +334,7 @@ namespace AssetManagementSystem.PL.Controllers
 				{
 					ModelState.AddModelError("AssetTag", "An asset with this tag already exists");
 					await PopulateDropdownsAsync();
+					ViewBag.Supervisors = await GetSupervisorsForDropdownAsync();
 					return View(asset);
 				}
 
@@ -359,6 +363,7 @@ namespace AssetManagementSystem.PL.Controllers
 			{
 				ModelState.AddModelError("", $"An error occurred: {ex.Message}");
 				await PopulateDropdownsAsync();
+				ViewBag.Supervisors = await GetSupervisorsForDropdownAsync();
 				return View(asset);
 			}
 		}
@@ -399,6 +404,7 @@ namespace AssetManagementSystem.PL.Controllers
 			var asset = await _assetService.GetAssetByIdAsync(id);
 			if (asset == null)
 				return NotFound();
+			ViewBag.Supervisors = await GetSupervisorsForDropdownAsync();
 			return View(asset);
 		}
 
@@ -409,7 +415,10 @@ namespace AssetManagementSystem.PL.Controllers
 				return BadRequest();
 
 			if (!ModelState.IsValid)
+			{
+				ViewBag.Supervisors = await GetSupervisorsForDropdownAsync();
 				return View(asset);
+			}
 
 			var currentUser = await GetCurrentUserAsync();
 			if (currentUser == null)
@@ -1414,6 +1423,12 @@ namespace AssetManagementSystem.PL.Controllers
 			{
 				return Json(new { success = false, error = ex.Message });
 			}
+		}
+
+		private async Task<SelectList> GetSupervisorsForDropdownAsync()
+		{
+			var users = await _userManager.GetUsersInRoleAsync(Roles.Supervisor);
+			return new SelectList(users, "Id", "FullName");
 		}
 	}
 
