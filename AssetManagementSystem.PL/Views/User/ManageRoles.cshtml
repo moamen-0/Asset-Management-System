@@ -1,68 +1,101 @@
 ﻿@model AssetManagementSystem.PL.Models.UserRoleViewModel
 @{
-	Layout = "~/Views/Shared/_Dashboard.cshtml";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
 
-
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header bg-primary text-white">
-            <h4>Manage Roles for User</h4>
+<div class="container mt-4" dir="rtl">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-gradient-primary text-white py-3">
+            <h4 class="mb-0"><i class="fas fa-user-shield me-2"></i> إدارة صلاحيات المستخدم</h4>
         </div>
-        <div class="card-body">
-            <div class="row mb-3">
+        <div class="card-body p-4">
+            <!-- User Details Section -->
+            <div class="row mb-4">
                 <div class="col-md-6">
-                    <h5>User Details</h5>
-                    <dl class="row">
-                        <dt class="col-sm-4">Full Name:</dt>
-                        <dd class="col-sm-8">@Model.FullName</dd>
-
-                        <dt class="col-sm-4">Email:</dt>
-                        <dd class="col-sm-8">@Model.Email</dd>
-
-                    </dl>
+                    <div class="card border-0 shadow-sm rounded-3 h-100">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary mb-3">
+                                <i class="fas fa-user-circle me-2"></i> بيانات المستخدم
+                            </h5>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-light rounded-circle p-3 me-3">
+                                    <i class="fas fa-user fa-2x text-primary"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0">@Model.FullName</h5>
+                                    <p class="text-muted mb-0">@Model.Email</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-6">
-                    <h5>Current Roles</h5>
-                    @if (Model.CurrentRoles.Any())
-                    {
-                        foreach (var role in Model.CurrentRoles)
-                        {
-                            <span class="badge bg-info me-2">@role</span>
-                        }
-                    }
-                    else
-                    {
-                        <p>No roles assigned</p>
-                    }
+                    <div class="card border-0 shadow-sm rounded-3 h-100">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary mb-3">
+                                <i class="fas fa-check-circle me-2"></i> الصلاحيات الحالية
+                            </h5>
+                            @if (Model.CurrentRoles.Any())
+                            {
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var role in Model.CurrentRoles)
+                                    {
+                                        <span class="badge bg-primary rounded-pill px-3 py-2">
+                                            <i class="fas fa-shield-alt me-1"></i> @role
+                                        </span>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i> لا توجد صلاحيات مخصصة لهذا المستخدم
+                                </div>
+                            }
+                        </div>
+                    </div>
                 </div>
             </div>
 
+            <!-- Role Management Form -->
             <form asp-action="UpdateRoles" method="post">
                 <input type="hidden" asp-for="UserId" />
 
-                <div class="form-group">
-                    <h5>Assign Roles</h5>
-                    <div class="row">
-                        @foreach (var role in Model.AvailableRoles)
-                        {
-                            <div class="col-md-3 mb-2">
-                                <div class="form-check">
-                                    <input type="checkbox"
-                                           name="selectedRoles"
-                                           value="@role"
-                                           class="form-check-input"
-                                    @(Model.CurrentRoles.Contains(role) ? "checked" : "") />
-                                    <label class="form-check-label">@role</label>
+                <div class="card border-0 shadow-sm rounded-3 mb-4">
+                    <div class="card-header bg-light py-3">
+                        <h5 class="mb-0 text-primary">
+                            <i class="fas fa-edit me-2"></i> تعيين الصلاحيات
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach (var role in Model.AvailableRoles)
+                            {
+                                <div class="col-md-3 mb-3">
+                                    <div class="form-check form-switch custom-switch">
+                                        <input type="checkbox"
+                                               name="selectedRoles"
+                                               value="@role"
+                                               class="form-check-input"
+                                               id="role_@role"
+                                        @(Model.CurrentRoles.Contains(role) ? "checked" : "") />
+                                        <label class="form-check-label" for="role_@role">
+                                            @GetArabicRoleName(role)
+                                        </label>
+                                    </div>
                                 </div>
-                            </div>
-                        }
+                            }
+                        </div>
                     </div>
                 </div>
 
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">Update Roles</button>
-                    <a asp-action="DepartmentUsers" class="btn btn-secondary">Back to List</a>
+                <div class="d-flex justify-content-between">
+                    <a asp-action="DepartmentUsers" class="btn btn-outline-secondary px-4 rounded-pill">
+                        <i class="fas fa-arrow-right me-2"></i> العودة للقائمة
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4 rounded-pill">
+                        <i class="fas fa-save me-2"></i> حفظ التغييرات
+                    </button>
                 </div>
             </form>
         </div>
@@ -70,9 +103,87 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
-            // Add any client-side validation or enhancement here
+            // Add animation to role switches
+            $('.form-check-input').change(function() {
+                if(this.checked) {
+                    $(this).parent().addClass('animate__animated animate__pulse');
+                    setTimeout(() => {
+                        $(this).parent().removeClass('animate__animated animate__pulse');
+                    }, 1000);
+                }
+            });
+
+            // Confirm before submitting changes
+           $('form').on('submit', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'تأكيد التغييرات',
+                    text: 'هل أنت متأكد من حفظ التغييرات على صلاحيات المستخدم؟',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'نعم، حفظ التغييرات',
+                    cancelButtonText: 'إلغاء',
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                });
+            });
         });
     </script>
+
+    <style>
+        /* Custom styling for role switches */
+        .custom-switch .form-check-input {
+            width: 3em;
+            height: 1.5em;
+            cursor: pointer;
+        }
+
+            .custom-switch .form-check-input:checked {
+                background-color: #0d6efd;
+                border-color: #0d6efd;
+            }
+
+        .form-check-label {
+            padding-right: 10px;
+            font-weight: 500;
+        }
+
+        /* Gradient background for header */
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
+        }
+
+        /* Improve card hover effect */
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+            .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+            }
+    </style>
+}
+
+@functions {
+    string GetArabicRoleName(string roleName)
+    {
+        return roleName switch
+        {
+            "Admin" => "مدير النظام",
+            "Manager" => "مدير",
+            "Supervisor" => "مشرف",
+            "User" => "مستخدم",
+            "Data Entry" => "مدخل بيانات",
+            _ => roleName
+        };
+    }
 }

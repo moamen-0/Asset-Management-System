@@ -1,55 +1,199 @@
 ﻿@using AssetManagementSystem.DAL.Entities
 @model EditProfileViewModel
 @{
-    ViewData["Title"] = "Edit Profile";
+    ViewData["Title"] = "تعديل الملف الشخصي";
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
 
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">Edit Profile</h3>
+<div class="container mt-4" dir="rtl">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-primary text-white p-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user-edit fa-2x me-3"></i>
+                        <div>
+                            <h3 class="mb-0">تعديل الملف الشخصي</h3>
+                            <p class="mb-0 text-white-50">تحديث المعلومات الشخصية الخاصة بك</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
+
+                <div class="card-body p-4">
                     <form asp-action="EditProfile" method="post">
-                        <div class="form-group mb-3">
-                            <label asp-for="FullName">Full Name</label>
-                            <input asp-for="FullName" class="form-control">
-                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            جميع الحقول المميزة بعلامة <span class="text-danger">*</span> مطلوبة
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label asp-for="Email">Email</label>
-                            <input asp-for="Email" class="form-control" type="email">
-                            <span asp-validation-for="Email" class="text-danger"></span>
-                        </div> 
-                        <div class="form-group mb-3">
-                            <label asp-for="NationalId">National Id</label>
-                            <input asp-for="NationalId" class="form-control">
-                            <span asp-validation-for="NationalId" class="text-danger"></span>
+                        <div class="row">
+                            <!-- Personal Information Section -->
+                            <div class="col-md-12 mb-4">
+                                <h5 class="border-bottom pb-2 text-primary">
+                                    <i class="fas fa-user-circle me-2"></i> المعلومات الشخصية
+                                </h5>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FullName" class="form-label fw-bold">
+                                    الاسم الكامل <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-user text-primary"></i>
+                                    </span>
+                                    <input asp-for="FullName" class="form-control" placeholder="أدخل الاسم الكامل">
+                                </div>
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Email" class="form-label fw-bold">
+                                    البريد الإلكتروني <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-envelope text-primary"></i>
+                                    </span>
+                                    <input asp-for="Email" class="form-control" type="email" placeholder="example@domain.com" dir="ltr">
+                                </div>
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Identification Information Section -->
+                            <div class="col-md-12 mt-2 mb-4">
+                                <h5 class="border-bottom pb-2 text-primary">
+                                    <i class="fas fa-id-card me-2"></i> معلومات الهوية
+                                </h5>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="NationalId" class="form-label fw-bold">
+                                    رقم الهوية الوطنية
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-id-badge text-primary"></i>
+                                    </span>
+                                    <input asp-for="NationalId" class="form-control" placeholder="أدخل رقم الهوية الوطنية" dir="ltr">
+                                </div>
+                                <span asp-validation-for="NationalId" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FileNumber" class="form-label fw-bold">
+                                    رقم الملف
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-folder-open text-primary"></i>
+                                    </span>
+                                    <input asp-for="FileNumber" class="form-control" placeholder="أدخل رقم الملف" dir="ltr">
+                                </div>
+                                <span asp-validation-for="FileNumber" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Organizational Information Section -->
+                            <div class="col-md-12 mt-2 mb-4">
+                                <h5 class="border-bottom pb-2 text-primary">
+                                    <i class="fas fa-building me-2"></i> معلومات المؤسسة
+                                </h5>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DepartmentId" class="form-label fw-bold">
+                                    القسم
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-sitemap text-primary"></i>
+                                    </span>
+                                    <select asp-for="DepartmentId" class="form-select"
+                                            asp-items="@(ViewBag.Departments)">
+                                       
+                                    </select>
+                                </div>
+                                <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+                            </div>
                         </div>
-                        <div class="form-group mb-3">
-                            <label asp-for="FileNumber">File Number</label>
-                            <input asp-for="FileNumber" class="form-control">
-                            <span asp-validation-for="FileNumber" class="text-danger"></span>
+
+                        <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                            <a asp-action="Profile" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i> إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> حفظ التغييرات
+                            </button>
                         </div>
-
-                        <div class="form-group mb-3">
-                            <label asp-for="DepartmentId">Department</label>
-                            <select asp-for="DepartmentId" class="form-control"
-                                    asp-items="@(ViewBag.Departments)">
-                            </select>
-                        </div>
-
-
-
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                        <a asp-action="Profile" class="btn btn-secondary">Cancel</a>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <!-- Input Masking for ID fields -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.6/jquery.inputmask.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize enhanced select boxes
+            $('select.form-select').select2({
+                theme: 'bootstrap-5',
+                language: "ar",
+                dir: "rtl"
+            });
+
+            // Add input masking for National ID (assuming 10 digits)
+            $("#NationalId").inputmask("9999999999", { placeholder: "X" });
+        });
+    </script>
+
+    <style>
+        /* RTL specific adjustments */
+        .me-1, .me-2, .me-3, .me-4 {
+            margin-right: 0 !important;
+        }
+
+        .me-1 {
+            margin-left: 0.25rem !important;
+        }
+
+        .me-2 {
+            margin-left: 0.5rem !important;
+        }
+
+        .me-3 {
+            margin-left: 1rem !important;
+        }
+
+        .me-4 {
+            margin-left: 1.5rem !important;
+        }
+
+        /* Form styling enhancements */
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        .input-group-text {
+            border: 1px solid #ced4da;
+        }
+
+        .input-group:focus-within .input-group-text {
+            border-color: #0d6efd;
+        }
+
+        /* Required field indicator styling */
+        .text-danger {
+            font-weight: bold;
+        }
+
+        /* Select2 RTL fixes */
+        .select2-container--bootstrap-5.select2-container--rtl .select2-selection {
+            text-align: right;
+        }
+    </style>
+}
