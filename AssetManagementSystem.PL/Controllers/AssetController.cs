@@ -1430,8 +1430,80 @@ namespace AssetManagementSystem.PL.Controllers
 			var users = await _userManager.GetUsersInRoleAsync(Roles.Supervisor);
 			return new SelectList(users, "Id", "FullName");
 		}
-	}
+		[HttpPost]
+		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager}")]
+		public async Task<IActionResult> BulkAssignSupervisor([FromBody] BulkSupervisorAssignRequest request)
+		{
+			try
+			{
+				if (request?.AssetTags == null || !request.AssetTags.Any() || string.IsNullOrEmpty(request.SupervisorId))
+				{
+					return BadRequest(new { error = "Invalid request parameters" });
+				}
 
+				// Verify supervisor exists and has Supervisor role
+				var supervisor = await _userManager.FindByIdAsync(request.SupervisorId);
+				if (supervisor == null)
+				{
+					return BadRequest(new { error = "Selected supervisor not found" });
+				}
+
+				if (!await _userManager.IsInRoleAsync(supervisor, Roles.Supervisor))
+				{
+					return BadRequest(new { error = "Selected user is not a supervisor" });
+				}
+
+				// Assign supervisor to each asset
+				foreach (var assetTag in request.AssetTags)
+				{
+					await _assetService.AssignSupervisorToAssetAsync(assetTag, request.SupervisorId);
+				}
+
+				// Get current user for notifications
+				var currentUser = await GetCurrentUserAsync();
+
+				// Notify the supervisor
+				await CreateNotificationForUser(
+					request.SupervisorId,
+					"Bulk Supervision Assignment",
+					$"You have been assigned as supervisor for {request.AssetTags.Count} assets",
+					"BulkAssetSupervision",
+					null,
+					Url.Action("SupervisedAssets", "Asset"));
+
+				return Ok(new
+				{
+					success = true,
+					message = $"Successfully assigned supervisor to {request.AssetTags.Count} assets"
+				});
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, new { error = ex.Message });
+			}
+		}
+		[HttpGet]
+		public async Task<IActionResult> GetSupervisors()
+		{
+			try
+			{
+				var supervisors = await _userManager.GetUsersInRoleAsync(Roles.Supervisor);
+				var result = supervisors.Select(s => new { id = s.Id, name = s.FullName }).ToList();
+				return Json(result);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, new { error = ex.Message });
+			}
+		}
+
+
+	}
+public class BulkSupervisorAssignRequest
+		{
+			public List<string> AssetTags { get; set; }
+			public string SupervisorId { get; set; }
+		}
 	public class BulkOperationRequest
 	{
         public List<string> AssetTags { get; set; }
