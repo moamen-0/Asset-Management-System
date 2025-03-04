@@ -5,245 +5,369 @@
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
 
-<div class="card p-4 shadow-sm">
-    @if (!string.IsNullOrEmpty(TempData["ErrorMessage"]?.ToString()))
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
-    <form asp-action="Create" method="post" id="createAssetForm" class="needs-validation" novalidate>
-        <h2 class="mb-4 text-primary"><i class="bi bi-box-seam"></i> اضافة أصل</h2>
-
-        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
-
-        <!-- Basic Information -->
-        <div class="card mb-4">
-            <div class="card-header bg-light">
-                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Basic Information</h5>
-            </div>
-            <div class="card-body row">
-                <div class="col-md-6 mb-3">
-                    <label asp-for="AssetTag" class="form-label required">
-                        <i class="bi bi-tag"></i> Asset Tag
-                        <i class="bi bi-question-circle" data-bs-toggle="tooltip" title="Unique identifier for the asset"></i>
-                    </label>
-                    <input asp-for="AssetTag" class="form-control" required placeholder="Enter asset tag" />
-                    <span asp-validation-for="AssetTag" class="text-danger"></span>
-                    <div class="invalid-feedback">Please enter an asset tag.</div>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label asp-for="AssetDescription" class="form-label">
-                        <i class="bi bi-card-text"></i> Description
-                    </label>
-                    <input asp-for="AssetDescription" class="form-control" placeholder="Enter asset description" />
-                    <span asp-validation-for="AssetDescription" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="AssetClass1" class="form-label">
-                        <i class="bi bi-diagram-3"></i> Asset Class 1
-                    </label>
-                    <input asp-for="AssetClass1" class="form-control" placeholder="Enter Asset Class 1" />
-                    <span asp-validation-for="AssetClass1" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="AssetClass2" class="form-label">
-                        <i class="bi bi-diagram-3"></i> Asset Class 2
-                    </label>
-                    <input asp-for="AssetClass2" class="form-control" placeholder="Enter Asset Class 2" />
-                    <span asp-validation-for="AssetClass2" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="AssetClass3" class="form-label">
-                        <i class="bi bi-diagram-3"></i> Asset Class 3
-                    </label>
-                    <input asp-for="AssetClass3" class="form-control" placeholder="Enter Asset Class 3" />
-                    <span asp-validation-for="AssetClass3" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="Cluster" class="form-label">
-                        <i class="bi bi-collection"></i> Cluster
-                    </label>
-                    <input asp-for="Cluster" class="form-control" placeholder="Enter cluster name" />
-                    <span asp-validation-for="Cluster" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="Brand" class="form-label">
-                        <i class="bi bi-tag-fill"></i> Brand
-                    </label>
-                    <input asp-for="Brand" class="form-control" placeholder="Enter brand name" />
-                    <span asp-validation-for="Brand" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="Model" class="form-label">
-                        <i class="bi bi-cpu"></i> Model
-                    </label>
-                    <input asp-for="Model" class="form-control" placeholder="Enter model" />
-                    <span asp-validation-for="Model" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="SerialNumber" class="form-label">
-                        <i class="bi bi-upc-scan"></i> Serial Number
-                    </label>
-                    <input asp-for="SerialNumber" class="form-control" placeholder="Enter serial number" />
-                    <span asp-validation-for="SerialNumber" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="Details" class="form-label">
-                        <i class="bi bi-list-ul"></i> Additional Details
-                    </label>
-                    <textarea asp-for="Details" class="form-control" rows="2" placeholder="Enter additional details"></textarea>
-                    <span asp-validation-for="Details" class="text-danger"></span>
-                </div>
+<div class="container-fluid py-4">
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-header bg-gradient-primary text-white p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0"><i class="bi bi-box-seam-fill me-2 animate__animated animate__pulse animate__infinite"></i>اضافة أصل جديد</h2>
+                <span class="badge bg-light text-primary rounded-pill px-3 py-2 shadow-sm">Asset Management</span>
             </div>
         </div>
-
-        <!-- Location Information -->
-        <div class="card mb-4">
-            <div class="card-header bg-light">
-                <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Location Information</h5>
-            </div>
-            <div class="card-body row">
-                <!-- Facility Dropdown -->
-                <div class="col-md-6 mb-3">
-                    <label asp-for="FacilityId" class="form-label">
-                        <i class="bi bi-building"></i> Facility
-                    </label>
-                    <select asp-for="FacilityId" class="form-select" id="facilitySelect" required>
-                        <option value="">Select Facility</option>
-                        @foreach (var facility in ViewBag.Facilities ?? new List<dynamic>())
-                        {
-                            <option value="@facility.Id">@facility.Name</option>
-                        }
-                    </select>
+        
+        <div class="card-body p-4">
+            @if (!string.IsNullOrEmpty(TempData["ErrorMessage"]?.ToString()))
+            {
+                <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill fs-4 me-2 text-danger"></i>
+                        <strong>@TempData["ErrorMessage"]</strong>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
+            }
 
-                <!-- Department Dropdown -->
-                <div class="col-md-6 mb-3">
-                    <label asp-for="DepartmentId" class="form-label">
-                        <i class="bi bi-briefcase"></i> Department
-                    </label>
-                    <select asp-for="DepartmentId" class="form-select" id="departmentSelect" required>
-                        <option value="">Select Department</option>
-                        @foreach (var department in ViewBag.Departments ?? new List<dynamic>())
-                        {
-                            <option value="@department.Id" data-facility-id="@department.FacilityId">@department.Name</option>
-                        }
-                    </select>
-                </div>
+            <form asp-action="Create" method="post" id="createAssetForm" class="needs-validation" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                
+                <!-- Smart Tabs Navigation -->
+                <ul class="nav nav-pills nav-fill mb-4" id="assetFormTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active rounded-pill" id="basic-info-tab" data-bs-toggle="pill" data-bs-target="#basic-info" type="button" role="tab">
+                            <i class="bi bi-info-circle me-2"></i>المعلومات الأساسية
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill" id="location-info-tab" data-bs-toggle="pill" data-bs-target="#location-info" type="button" role="tab">
+                            <i class="bi bi-geo-alt me-2"></i>معلومات الموقع
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill" id="asset-details-tab" data-bs-toggle="pill" data-bs-target="#asset-details" type="button" role="tab">
+                            <i class="bi bi-card-list me-2"></i>تفاصيل الأصل
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Tab Content -->
+                <div class="tab-content" id="assetFormTabContent">
+                    <!-- Basic Information Tab -->
+                    <div class="tab-pane fade show active" id="basic-info" role="tabpanel">
+                        <div class="card border-0 shadow-sm mb-4 bg-light rounded-4">
+                            <div class="card-header bg-primary bg-opacity-10 border-0">
+                                <h5 class="mb-0 text-primary">
+                                    <i class="bi bi-info-circle-fill me-2"></i>معلومات الأصل الأساسية
+                                </h5>
+                            </div>
+                            <div class="card-body row p-4">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="AssetTag" class="form-label required fw-bold">
+                                        <i class="bi bi-tag-fill text-primary me-2"></i>رمز الأصل
+                                        <i class="bi bi-question-circle text-muted" data-bs-toggle="tooltip" title="الرمز التعريفي الفريد للأصل"></i>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white"><i class="bi bi-hash"></i></span>
+                                        <input asp-for="AssetTag" class="form-control form-control-lg border-primary" required placeholder="أدخل رمز الأصل" />
+                                    </div>
+                                    <span asp-validation-for="AssetTag" class="text-danger"></span>
+                                    <div class="invalid-feedback">يرجى إدخال رمز الأصل.</div>
+                                </div>
 
-                <!-- Building Dropdown -->
-                <div class="col-md-4 mb-3">
-                    <label asp-for="BuildingId" class="form-label">
-                        <i class="bi bi-house"></i> Building
-                    </label>
-                    <select asp-for="BuildingId" class="form-select" id="buildingSelect" required>
-                        <option value="">Select Building</option>
-                        @foreach (var building in ViewBag.Buildings ?? new List<dynamic>())
-                        {
-                            <option value="@building.Id" data-facility-id="@building.FacilityId">@building.Name</option>
-                        }
-                    </select>
-                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="AssetDescription" class="form-label fw-bold">
+                                        <i class="bi bi-card-text text-primary me-2"></i>وصف الأصل
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white"><i class="bi bi-pencil"></i></span>
+                                        <input asp-for="AssetDescription" class="form-control form-control-lg" placeholder="أدخل وصف الأصل" />
+                                    </div>
+                                    <span asp-validation-for="AssetDescription" class="text-danger"></span>
+                                </div>
 
-                <!-- Floor Dropdown -->
-                <div class="col-md-4 mb-3">
-                    <label asp-for="FloorId" class="form-label">
-                        <i class="bi bi-layers"></i> Floor
-                    </label>
-                    <select asp-for="FloorId" class="form-select" id="floorSelect" required>
-                        <option value="">Select Floor</option>
-                        @foreach (var floor in ViewBag.Floors ?? new List<dynamic>())
-                        {
-                            <option value="@floor.Id" data-building-id="@floor.BuildingId">@floor.Name</option>
-                        }
-                    </select>
-                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label asp-for="AssetClass1" class="form-label fw-bold">
+                                        <i class="bi bi-diagram-3 text-primary me-2"></i>تصنيف الأصل 1
+                                    </label>
+                                    <input asp-for="AssetClass1" class="form-control" placeholder="أدخل تصنيف الأصل 1" />
+                                    <span asp-validation-for="AssetClass1" class="text-danger"></span>
+                                </div>
 
-                <!-- Room Dropdown -->
-                <div class="col-md-4 mb-3">
-                    <label asp-for="RoomTag" class="form-label">
-                        <i class="bi bi-door-closed"></i> Room
-                    </label>
-                    <select asp-for="RoomTag" class="form-select" id="roomSelect" required>
-                        <option value="">Select Room</option>
-                        @foreach (var room in ViewBag.Rooms ?? new List<dynamic>())
-                        {
-                            <option value="@room.RoomTag" data-floor-id="@room.FloorId">@room.Name</option>
-                        }
-                    </select>
-                </div>
-            </div>
-        </div>
+                                <div class="col-md-4 mb-3">
+                                    <label asp-for="AssetClass2" class="form-label fw-bold">
+                                        <i class="bi bi-diagram-3 text-primary me-2"></i>تصنيف الأصل 2
+                                    </label>
+                                    <input asp-for="AssetClass2" class="form-control" placeholder="أدخل تصنيف الأصل 2" />
+                                    <span asp-validation-for="AssetClass2" class="text-danger"></span>
+                                </div>
 
-        <!-- Asset Details -->
-        <div class="card mb-4">
-            <div class="card-header bg-light">
-                <h5 class="mb-0"><i class="bi bi-card-list"></i> Asset Details</h5>
-            </div>
-            <div class="card-body row">
-                <div class="col-md-6 mb-3">
-                    <label asp-for="AssetType" class="form-label">
-                        <i class="bi bi-box"></i> Asset Type
-                    </label>
-                    <select asp-for="AssetType" class="form-select" asp-items="ViewBag.AssetTypes">
-                        <option value="">Select Asset Type</option>
-                    </select>
-                    <span asp-validation-for="AssetType" class="text-danger"></span>
-                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label asp-for="AssetClass3" class="form-label fw-bold">
+                                        <i class="bi bi-diagram-3 text-primary me-2"></i>تصنيف الأصل 3
+                                    </label>
+                                    <input asp-for="AssetClass3" class="form-control" placeholder="أدخل تصنيف الأصل 3" />
+                                    <span asp-validation-for="AssetClass3" class="text-danger"></span>
+                                </div>
 
-                <div class="col-md-6 mb-3">
-                    <label asp-for="Status" class="form-label">
-                        <i class="bi bi-info-circle"></i> Status
-                    </label>
-                    <select asp-for="Status" class="form-select" asp-items="ViewBag.StatusOptions">
-                        <option value="">Select Status</option>
-                    </select>
-                    <span asp-validation-for="Status" class="text-danger"></span>
-                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label asp-for="Cluster" class="form-label fw-bold">
+                                        <i class="bi bi-collection text-primary me-2"></i>المجموعة
+                                    </label>
+                                    <input asp-for="Cluster" class="form-control" placeholder="أدخل اسم المجموعة" />
+                                    <span asp-validation-for="Cluster" class="text-danger"></span>
+                                </div>
 
-                <div class="col-md-6 mb-3">
-                    <label asp-for="UserId" class="form-label">
-                        <i class="bi bi-person"></i> Assigned User
-                    </label>
-                    <select asp-for="UserId" class="form-select" asp-items="ViewBag.Users">
-                        <option value="">None (Unassigned)</option>
-                    </select>
-                    <span asp-validation-for="UserId" class="text-danger"></span>
-                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label asp-for="Brand" class="form-label fw-bold">
+                                        <i class="bi bi-tag-fill text-primary me-2"></i>العلامة التجارية
+                                    </label>
+                                    <input asp-for="Brand" class="form-control" placeholder="أدخل اسم العلامة التجارية" />
+                                    <span asp-validation-for="Brand" class="text-danger"></span>
+                                </div>
 
-                <div class="col-md-6 mb-3">
-                    <div class="form-check form-switch mt-4">
-                        <input asp-for="IsDisposed" class="form-check-input" id="IsDisposed" />
-                        <label class="form-check-label" for="IsDisposed">
-                            <i class="bi bi-trash"></i> تكهين
-                        </label>
-                        <span asp-validation-for="IsDisposed" class="text-danger"></span>
+                                <div class="col-md-4 mb-3">
+                                    <label asp-for="Model" class="form-label fw-bold">
+                                        <i class="bi bi-cpu text-primary me-2"></i>الطراز
+                                    </label>
+                                    <input asp-for="Model" class="form-control" placeholder="أدخل الطراز" />
+                                    <span asp-validation-for="Model" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="SerialNumber" class="form-label fw-bold">
+                                        <i class="bi bi-upc-scan text-primary me-2"></i>الرقم التسلسلي
+                                    </label>
+                                    <input asp-for="SerialNumber" class="form-control" placeholder="أدخل الرقم التسلسلي" />
+                                    <span asp-validation-for="SerialNumber" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Details" class="form-label fw-bold">
+                                        <i class="bi bi-list-ul text-primary me-2"></i>تفاصيل إضافية
+                                    </label>
+                                    <textarea asp-for="Details" class="form-control" rows="2" placeholder="أدخل تفاصيل إضافية"></textarea>
+                                    <span asp-validation-for="Details" class="text-danger"></span>
+                                </div>
+                                
+                                <div class="d-flex justify-content-end mt-3">
+                                    <button type="button" class="btn btn-primary btn-lg rounded-pill next-tab" data-target="#location-info-tab">
+                                        التالي <i class="bi bi-arrow-right ms-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Location Information Tab -->
+                    <div class="tab-pane fade" id="location-info" role="tabpanel">
+                        <div class="card border-0 shadow-sm mb-4 bg-light rounded-4">
+                            <div class="card-header bg-primary bg-opacity-10 border-0">
+                                <h5 class="mb-0 text-primary">
+                                    <i class="bi bi-geo-alt-fill me-2"></i>معلومات الموقع
+                                </h5>
+                            </div>
+                            <div class="card-body row p-4">
+                                <!-- Interactive Location Selector -->
+                                <div class="location-selector mb-4">
+                                    <div class="progress mb-4" style="height: 10px;">
+                                        <div id="locationProgress" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    
+                                    <!-- Facility Dropdown -->
+                                    <div class="col-md-12 mb-4">
+                                        <label asp-for="FacilityId" class="form-label fw-bold">
+                                            <i class="bi bi-building text-primary me-2"></i>المنشأة
+                                        </label>
+                                        <select asp-for="FacilityId" class="form-select form-select-lg" id="facilitySelect" required>
+                                            <option value="">اختر المنشأة</option>
+                                            @foreach (var facility in ViewBag.Facilities ?? new List<dynamic>())
+                                            {
+                                                <option value="@facility.Id">@facility.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+
+                                    <div class="row">
+                                        <!-- Department Dropdown -->
+                                        <div class="col-md-6 mb-3">
+                                            <label asp-for="DepartmentId" class="form-label fw-bold">
+                                                <i class="bi bi-briefcase text-primary me-2"></i>القسم
+                                            </label>
+                                            <select asp-for="DepartmentId" class="form-select" id="departmentSelect" required>
+                                                <option value="">اختر القسم</option>
+                                                @foreach (var department in ViewBag.Departments ?? new List<dynamic>())
+                                                {
+                                                    <option value="@department.Id" data-facility-id="@department.FacilityId">@department.Name</option>
+                                                }
+                                            </select>
+                                        </div>
+
+                                        <!-- Building Dropdown -->
+                                        <div class="col-md-6 mb-3">
+                                            <label asp-for="BuildingId" class="form-label fw-bold">
+                                                <i class="bi bi-house text-primary me-2"></i>المبنى
+                                            </label>
+                                            <select asp-for="BuildingId" class="form-select" id="buildingSelect" required>
+                                                <option value="">اختر المبنى</option>
+                                                @foreach (var building in ViewBag.Buildings ?? new List<dynamic>())
+                                                {
+                                                    <option value="@building.Id" data-facility-id="@building.FacilityId">@building.Name</option>
+                                                }
+                                            </select>
+                                        </div>
+
+                                        <!-- Floor Dropdown -->
+                                        <div class="col-md-6 mb-3">
+                                            <label asp-for="FloorId" class="form-label fw-bold">
+                                                <i class="bi bi-layers text-primary me-2"></i>الطابق
+                                            </label>
+                                            <select asp-for="FloorId" class="form-select" id="floorSelect" required>
+                                                <option value="">اختر الطابق</option>
+                                                @foreach (var floor in ViewBag.Floors ?? new List<dynamic>())
+                                                {
+                                                    <option value="@floor.Id" data-building-id="@floor.BuildingId">@floor.Name</option>
+                                                }
+                                            </select>
+                                        </div>
+
+                                        <!-- Room Dropdown -->
+                                        <div class="col-md-6 mb-3">
+                                            <label asp-for="RoomTag" class="form-label fw-bold">
+                                                <i class="bi bi-door-closed text-primary me-2"></i>الغرفة
+                                            </label>
+                                            <select asp-for="RoomTag" class="form-select" id="roomSelect" required>
+                                                <option value="">اختر الغرفة</option>
+                                                @foreach (var room in ViewBag.Rooms ?? new List<dynamic>())
+                                                {
+                                                    <option value="@room.RoomTag" data-floor-id="@room.FloorId">@room.Name</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Location Preview Card -->
+                                <div class="col-12 mt-3">
+                                    <div class="card bg-white border-0 shadow-sm rounded-3 mb-3" id="locationPreview" style="display: none;">
+                                        <div class="card-body">
+                                            <h5 class="card-title"><i class="bi bi-geo-fill text-danger"></i> الموقع المختار</h5>
+                                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                                <span class="badge bg-primary"><i class="bi bi-building"></i> <span id="previewFacility">-</span></span>
+                                                <span class="badge bg-info"><i class="bi bi-briefcase"></i> <span id="previewDepartment">-</span></span>
+                                                <span class="badge bg-secondary"><i class="bi bi-house"></i> <span id="previewBuilding">-</span></span>
+                                                <span class="badge bg-success"><i class="bi bi-layers"></i> <span id="previewFloor">-</span></span>
+                                                <span class="badge bg-warning text-dark"><i class="bi bi-door-closed"></i> <span id="previewRoom">-</span></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between mt-3">
+                                    <button type="button" class="btn btn-outline-primary btn-lg rounded-pill prev-tab" data-target="#basic-info-tab">
+                                        <i class="bi bi-arrow-left me-2"></i> السابق
+                                    </button>
+                                    <button type="button" class="btn btn-primary btn-lg rounded-pill next-tab" data-target="#asset-details-tab">
+                                        التالي <i class="bi bi-arrow-right ms-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Asset Details Tab -->
+                    <div class="tab-pane fade" id="asset-details" role="tabpanel">
+                        <div class="card border-0 shadow-sm mb-4 bg-light rounded-4">
+                            <div class="card-header bg-primary bg-opacity-10 border-0">
+                                <h5 class="mb-0 text-primary">
+                                    <i class="bi bi-card-list me-2"></i>تفاصيل الأصل
+                                </h5>
+                            </div>
+                            <div class="card-body row p-4">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="AssetType" class="form-label fw-bold">
+                                        <i class="bi bi-box text-primary me-2"></i>نوع الأصل
+                                    </label>
+                                    <select asp-for="AssetType" class="form-select" asp-items="ViewBag.AssetTypes">
+                                        <option value="">اختر نوع الأصل</option>
+                                    </select>
+                                    <span asp-validation-for="AssetType" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Status" class="form-label fw-bold">
+                                        <i class="bi bi-info-circle text-primary me-2"></i>الحالة
+                                    </label>
+                                    <select asp-for="Status" class="form-select" asp-items="ViewBag.StatusOptions">
+                                        <option value="">اختر الحالة</option>
+                                    </select>
+                                    <span asp-validation-for="Status" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="UserId" class="form-label fw-bold">
+                                        <i class="bi bi-person text-primary me-2"></i>المستلم المعين
+                                    </label>
+                                    <select asp-for="UserId" class="form-select" id="userSelect" asp-items="ViewBag.Users">
+                                        <option value="">بدون تعيين</option>
+                                    </select>
+                                    <span asp-validation-for="UserId" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check form-switch mt-4 p-0">
+                                        <div class="card rounded-4 border-0 bg-white shadow-sm p-3 cursor-pointer" id="disposedToggleCard">
+                                            <div class="d-flex align-items-center">
+                                                <div class="form-check form-switch me-3">
+                                                    <input asp-for="IsDisposed" class="form-check-input" id="IsDisposed" style="width: 3em; height: 1.5em;" />
+                                                </div>
+                                                <div>
+                                                    <label class="form-check-label fw-bold cursor-pointer" for="IsDisposed">
+                                                        <i class="bi bi-trash text-danger me-2"></i>تكهين الأصل
+                                                    </label>
+                                                    <p class="text-muted mb-0 small">حدد هذا الخيار إذا كان الأصل متكهن</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span asp-validation-for="IsDisposed" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Summary Section -->
+                                <div class="col-12 mt-4">
+                                    <div class="card bg-white border-0 shadow rounded-4">
+                                        <div class="card-header bg-light border-0">
+                                            <h5 class="mb-0"><i class="bi bi-clipboard-check text-success me-2"></i>ملخص الأصل</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row" id="assetSummary">
+                                                <div class="col-md-6">
+                                                    <p><strong>رمز الأصل:</strong> <span id="summaryAssetTag">-</span></p>
+                                                    <p><strong>الوصف:</strong> <span id="summaryDescription">-</span></p>
+                                                    <p><strong>النوع:</strong> <span id="summaryType">-</span></p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <p><strong>الموقع:</strong> <span id="summaryLocation">-</span></p>
+                                                    <p><strong>الحالة:</strong> <span id="summaryStatus">-</span></p>
+                                                    <p><strong>المستلم:</strong> <span id="summaryUser">-</span></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between mt-4">
+                                    <button type="button" class="btn btn-outline-primary btn-lg rounded-pill prev-tab" data-target="#location-info-tab">
+                                        <i class="bi bi-arrow-left me-2"></i> السابق
+                                    </button>
+                                    <button type="submit" class="btn btn-success btn-lg rounded-pill">
+                                        <i class="bi bi-plus-circle me-2"></i> اضافة أصل
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </form>
         </div>
-
-        <div class="d-flex justify-content-between">
-            <button type="submit" class="btn btn-success btn-lg">
-                <i class="bi bi-plus-circle"></i> اضافة أصل
-            </button>
-            <a asp-action="Index" class="btn btn-secondary btn-lg">
-                <i class="bi bi-arrow-left"></i> الرجوع الي القائمة
-            </a>
-        </div>
-    </form>
+    </div>
 </div>
 
 <style>
@@ -253,33 +377,140 @@
     }
 
     .card {
-        border-radius: 10px;
+        border-radius: 15px;
+        transition: all 0.3s ease;
     }
 
-    .card-header {
-        border-radius: 10px 10px 0 0 !important;
+    .nav-pills .nav-link {
+        transition: all 0.3s ease;
+        padding: 10px 20px;
+        margin: 0 5px;
+    }
+
+    .nav-pills .nav-link.active {
+        background-color: #0d6efd;
+        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    .form-control, .form-select {
+        border-radius: 8px;
+        padding: 10px 15px;
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        border-color: #86b7fe;
+    }
+    
+    .btn {
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #0d6efd, #0b5ed7);
+    }
+    
+    .btn-success {
+        background: linear-gradient(45deg, #198754, #157347);
+    }
+    
+    .cursor-pointer {
+        cursor: pointer;
+    }
+    
+    /* Animation classes */
+    .fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+    
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Custom Select2 Styling */
+    .select2-container--bootstrap-5 .select2-selection {
+        border-radius: 8px;
+        padding: 8px;
+    }
+    
+    #locationPreview {
+        transition: all 0.3s ease;
+    }
+    
+    #disposedToggleCard:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1) !important;
+    }
+    
+    .bg-gradient-primary {
+        background: linear-gradient(45deg, #0d6efd, #0a58ca);
     }
 </style>
 
 @section Scripts {
-
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
 
     <script>
         $(document).ready(function() {
+            // Initialize Select2 for improved dropdowns
+            $('.form-select').select2({
+                theme: 'bootstrap-5',
+                placeholder: "Select an option",
+                allowClear: true
+            });
+            
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+            
+            // Tab navigation
+            $('.next-tab').click(function() {
+                var targetTabId = $(this).data('target');
+                $(targetTabId).click();
+                updateTabVisibility();
+            });
+            
+            $('.prev-tab').click(function() {
+                var targetTabId = $(this).data('target');
+                $(targetTabId).click();
+                updateTabVisibility();
+            });
+            
+            function updateTabVisibility() {
+                setTimeout(function() {
+                    $('.tab-pane.active').addClass('fade-in');
+                }, 100);
+            }
+            
             // Hide all building, floor and room options initially
             hideAllOptions('#buildingSelect');
             hideAllOptions('#floorSelect');
             hideAllOptions('#roomSelect');
             hideAllOptions('#departmentSelect');
+            
+            // Track location selection progress
+            updateLocationProgress();
 
             // When facility changes, show only relevant buildings and departments
             $('#facilitySelect').change(function() {
                 var facilityId = $(this).val();
+                var facilityName = $(this).find("option:selected").text();
+                
+                // Update preview
+                $('#previewFacility').text(facilityId ? facilityName : '-');
 
                 // Reset all dependent dropdowns if facility is cleared
                 if (!facilityId) {
@@ -287,6 +518,8 @@
                     resetDropdown('#buildingSelect');
                     resetDropdown('#floorSelect');
                     resetDropdown('#roomSelect');
+                    $('#previewDepartment, #previewBuilding, #previewFloor, #previewRoom').text('-');
+                    updateLocationProgress();
                     return;
                 }
 
@@ -299,16 +532,28 @@
                 // Reset floors and rooms
                 resetDropdown('#floorSelect');
                 resetDropdown('#roomSelect');
+                $('#previewDepartment, #previewBuilding, #previewFloor, #previewRoom').text('-');
+                
+                // Show location preview card
+                $('#locationPreview').show();
+                
+                updateLocationProgress();
             });
 
             // When building changes, show only relevant floors
             $('#buildingSelect').change(function() {
                 var buildingId = $(this).val();
+                var buildingName = $(this).find("option:selected").text();
+                
+                // Update preview
+                $('#previewBuilding').text(buildingId ? buildingName : '-');
 
                 // Reset floors and rooms if building is cleared
                 if (!buildingId) {
                     resetDropdown('#floorSelect');
                     resetDropdown('#roomSelect');
+                    $('#previewFloor, #previewRoom').text('-');
+                    updateLocationProgress();
                     return;
                 }
 
@@ -317,44 +562,270 @@
 
                 // Reset rooms
                 resetDropdown('#roomSelect');
+                $('#previewFloor, #previewRoom').text('-');
+                
+                updateLocationProgress();
             });
 
             // When floor changes, show only relevant rooms
             $('#floorSelect').change(function() {
                 var floorId = $(this).val();
+                var floorName = $(this).find("option:selected").text();
+                
+                // Update preview
+                $('#previewFloor').text(floorId ? floorName : '-');
 
                 // Reset rooms if floor is cleared
                 if (!floorId) {
                     resetDropdown('#roomSelect');
+                    $('#previewRoom').text('-');
+                    updateLocationProgress();
                     return;
                 }
 
                 // Show only rooms for selected floor
                 filterOptionsByAttribute('#roomSelect', 'data-floor-id', floorId);
+                $('#previewRoom').text('-');
+                updateLocationProgress();
             });
+
+            // When room changes, update preview
+            $('#roomSelect').change(function() {
+                var roomTag = $(this).val();
+                var roomName = $(this).find("option:selected").text();
+
+                // Update preview
+                $('#previewRoom').text(roomTag ? roomName : '-');
+                updateLocationProgress();
+            });
+
+            // When department changes, update preview
+            $('#departmentSelect').change(function() {
+                var departmentId = $(this).val();
+                var departmentName = $(this).find("option:selected").text();
+
+                // Update preview
+                $('#previewDepartment').text(departmentId ? departmentName : '-');
+                updateLocationProgress();
+            });
+
+            // Update location progress bar
+            function updateLocationProgress() {
+                var steps = ['#facilitySelect', '#departmentSelect', '#buildingSelect', '#floorSelect', '#roomSelect'];
+                var filled = 0;
+
+                steps.forEach(function(selector) {
+                    if ($(selector).val()) {
+                        filled++;
+                    }
+                });
+
+                var percentage = (filled / steps.length) * 100;
+                $('#locationProgress').css('width', percentage + '%');
+
+                // Update the aria values for accessibility
+                $('#locationProgress').attr('aria-valuenow', percentage);
+
+                // If all fields are filled, show a success message
+                if (percentage === 100) {
+                    $('#locationProgress').removeClass('bg-warning bg-danger').addClass('bg-success');
+                } else if (percentage > 40) {
+                    $('#locationProgress').removeClass('bg-danger bg-success').addClass('bg-warning');
+                } else {
+                    $('#locationProgress').removeClass('bg-warning bg-success').addClass('bg-danger');
+                }
+            }
+
+            // Update summary when values change
+            function updateAssetSummary() {
+                $('#summaryAssetTag').text($('#AssetTag').val() || '-');
+                $('#summaryDescription').text($('#AssetDescription').val() || '-');
+                $('#summaryType').text($('#AssetType option:selected').text() !== 'اختر نوع الأصل' ? $('#AssetType option:selected').text() : '-');
+
+                // Construct location string
+                var locationParts = [];
+                if ($('#facilitySelect option:selected').text() !== 'اختر المنشأة')
+                    locationParts.push($('#facilitySelect option:selected').text());
+                if ($('#buildingSelect option:selected').text() !== 'اختر المبنى')
+                    locationParts.push($('#buildingSelect option:selected').text());
+                if ($('#floorSelect option:selected').text() !== 'اختر الطابق')
+                    locationParts.push($('#floorSelect option:selected').text());
+                if ($('#roomSelect option:selected').text() !== 'اختر الغرفة')
+                    locationParts.push($('#roomSelect option:selected').text());
+
+                $('#summaryLocation').text(locationParts.length > 0 ? locationParts.join(' / ') : '-');
+
+                $('#summaryStatus').text($('#Status option:selected').text() !== 'اختر الحالة' ? $('#Status option:selected').text() : '-');
+                $('#summaryUser').text($('#userSelect option:selected').text() !== 'بدون تعيين' ? $('#userSelect option:selected').text() : 'غير معين');
+            }
+
+            // Call summary update on input changes
+            $('input, select').on('change', updateAssetSummary);
+
+            // Initialize summary
+            updateAssetSummary();
+
+            // Helper function to hide all options except the first one
+            function hideAllOptions(selector) {
+                $(selector + ' option:not(:first)').hide();
+            }
+
+            // Helper function to reset a dropdown to its initial state
+            function resetDropdown(selector) {
+                $(selector).val('').trigger('change');
+                $(selector + ' option:not(:first)').hide();
+            }
+
+            // Helper function to filter options based on a data attribute
+            function filterOptionsByAttribute(selector, attribute, value) {
+                // Reset dropdown first
+                $(selector).val('').trigger('change');
+
+                // Hide all options
+                $(selector + ' option:not(:first)').hide();
+
+                // Show only options with matching attribute
+                $(selector + ' option[' + attribute + '="' + value + '"]').show();
+            }
+
+            // Clicking on disposal toggle card
+            $('#disposedToggleCard').click(function(e) {
+                if (!$(e.target).is('#IsDisposed')) {
+                    $('#IsDisposed').prop('checked', !$('#IsDisposed').prop('checked')).trigger('change');
+                }
+            });
+
+            // Handle disposed state changes
+            $('#IsDisposed').change(function() {
+                if ($(this).is(':checked')) {
+                    // Show a warning modal
+                    if (!$('#disposalWarningModal').length) {
+                        var modal = `
+                            <div class="modal fade" id="disposalWarningModal" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-warning">
+                                            <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>تحذير</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>هل أنت متأكد من تكهين هذا الأصل؟ هذا الإجراء قد يكون غير قابل للإلغاء.</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" id="cancelDisposal">إلغاء</button>
+                                            <button type="button" class="btn btn-warning" data-bs-dismiss="modal">تأكيد</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        $('body').append(modal);
+
+                        $('#cancelDisposal').click(function() {
+                            $('#IsDisposed').prop('checked', false).trigger('change');
+                            $('#disposalWarningModal').modal('hide');
+                        });
+                    }
+
+                    var disposalModal = new bootstrap.Modal(document.getElementById('disposalWarningModal'));
+                    disposalModal.show();
+                }
+            });
+
+            // Form validation enhancement
+            (function() {
+                'use strict';
+
+                // Fetch all the forms we want to apply custom Bootstrap validation styles to
+                var forms = document.querySelectorAll('.needs-validation');
+
+                // Loop over them and prevent submission
+                Array.prototype.slice.call(forms).forEach(function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+
+                            // Find the first invalid tab and activate it
+                            var invalidInputs = form.querySelectorAll(':invalid');
+                            if (invalidInputs.length > 0) {
+                                var tabPane = invalidInputs[0].closest('.tab-pane');
+                                if (tabPane) {
+                                    var tabId = tabPane.id;
+                                    $('#' + tabId + '-tab').tab('show');
+
+                                    // Scroll to the first invalid element
+                                    invalidInputs[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                                    // Highlight the invalid field
+                                    $(invalidInputs[0]).addClass('animate__animated animate__headShake');
+                                    setTimeout(function() {
+                                        $(invalidInputs[0]).removeClass('animate__animated animate__headShake');
+                                    }, 1000);
+                                }
+                            }
+                        } else {
+                            // Show spinner on submit
+                            var submitBtn = form.querySelector('button[type="submit"]');
+                            if (submitBtn) {
+                                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>جاري الحفظ...';
+                                submitBtn.disabled = true;
+                            }
+                        }
+
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            })();
+
+            // Add keyboard navigation for tabs
+            $(document).keydown(function(e) {
+                if (e.ctrlKey) {
+                    if (e.key === 'ArrowRight') {
+                        var activeTab = $('.nav-link.active');
+                        var nextTab = activeTab.parent().next().find('.nav-link');
+                        if (nextTab.length) {
+                            nextTab.tab('show');
+                            e.preventDefault();
+                        }
+                    } else if (e.key === 'ArrowLeft') {
+                        var activeTab = $('.nav-link.active');
+                        var prevTab = activeTab.parent().prev().find('.nav-link');
+                        if (prevTab.length) {
+                            prevTab.tab('show');
+                            e.preventDefault();
+                        }
+                    }
+                }
+            });
+
+            // Keyboard shortcuts help
+            $('body').append(`
+                <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+                    <div class="toast" id="shortcutToast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+                        <div class="toast-header">
+                            <i class="bi bi-keyboard me-2 text-primary"></i>
+                            <strong class="me-auto">اختصارات لوحة المفاتيح</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            <p class="mb-1"><kbd>Ctrl</kbd> + <kbd>→</kbd> : الانتقال إلى التبويب التالي</p>
+                            <p class="mb-0"><kbd>Ctrl</kbd> + <kbd>←</kbd> : الانتقال إلى التبويب السابق</p>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            // Show keyboard shortcuts toast with a delay
+            setTimeout(function() {
+                var shortcutToast = new bootstrap.Toast(document.getElementById('shortcutToast'));
+                shortcutToast.show();
+
+                // Hide after 5 seconds
+                setTimeout(function() {
+                    shortcutToast.hide();
+                }, 5000);
+            }, 3000);
         });
-
-        // Helper function to hide all options except the first one
-        function hideAllOptions(selector) {
-            $(selector + ' option:not(:first)').hide();
-        }
-
-        // Helper function to reset a dropdown to its initial state
-        function resetDropdown(selector) {
-            $(selector).val('');
-            $(selector + ' option:not(:first)').hide();
-        }
-
-        // Helper function to filter options based on a data attribute
-        function filterOptionsByAttribute(selector, attribute, value) {
-            // Reset dropdown first
-            $(selector).val('');
-
-            // Hide all options
-            $(selector + ' option:not(:first)').hide();
-
-            // Show only options with matching attribute
-            $(selector + ' option[' + attribute + '="' + value + '"]').show();
-        }
     </script>
-    }
+}

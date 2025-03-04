@@ -372,11 +372,10 @@ namespace AssetManagementSystem.PL.Controllers
 			// Define status options
 			ViewBag.StatusOptions = new SelectList(new[]
 			{
-				"Available",
-				"In Use",
-				"Under Maintenance",
-				"Reserved",
-				"Decommissioned"
+				"متاح",
+				"مكهن",
+				"صيانة",
+				"تالف"
 			});
 
 			// Define asset types
@@ -1391,6 +1390,30 @@ namespace AssetManagementSystem.PL.Controllers
 
 			// Redirect to the Return Document creation page
 			return RedirectToAction("Create", "ReturnDocument");
+		}
+
+		[HttpGet]
+		public async Task<IActionResult> GetStats()
+		{
+			try
+			{
+				var assets = await _assetService.GetAllAssetsAsync();
+
+				var stats = new
+				{
+					success = true,
+					totalCount = assets.Count(),
+					activeCount = assets.Count(a => a.Status == "Available" || a.Status == "متاح"),
+					maintenanceCount = assets.Count(a => a.Status == "صيانة"),
+					disposedCount = assets.Count(a => a.IsDisposed || a.Status == "مكهن")
+				};
+
+				return Json(stats);
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, error = ex.Message });
+			}
 		}
 	}
 
