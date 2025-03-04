@@ -28,7 +28,9 @@ namespace AssetManagementSystem.PL.Models
 		public string? Brand { get; set; }
 		public string? Model { get; set; }
 
-		public int? UserId { get; set; } // Now a simple input field
+
+		public string? UserId { get; set; } // Recipient user
+		public string? SupervisorId { get; set; } // Supervisor user
 
 		public string? AssetType { get; set; }
 		public string? Status { get; set; }
