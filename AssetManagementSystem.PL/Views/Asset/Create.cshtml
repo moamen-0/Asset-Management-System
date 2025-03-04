@@ -310,7 +310,15 @@
                                     </select>
                                     <span asp-validation-for="UserId" class="text-danger"></span>
                                 </div>
-
+                                <div class="col-md-6 mb-3">
+                                    <label for="SupervisorId" class="form-label">
+                                        <i class="bi bi-person-check"></i> Supervisor
+                                    </label>
+                                    <select asp-for="SupervisorId" class="form-select" asp-items="ViewBag.Supervisors">
+                                        <option value="">None (No Supervisor)</option>
+                                    </select>
+                                    <span asp-validation-for="SupervisorId" class="text-danger"></span>
+                                </div>
                                 <div class="col-md-6 mb-3">
                                     <div class="form-check form-switch mt-4 p-0">
                                         <div class="card rounded-4 border-0 bg-white shadow-sm p-3 cursor-pointer" id="disposedToggleCard">

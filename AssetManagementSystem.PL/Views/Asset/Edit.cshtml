@@ -89,7 +89,13 @@
                             </select>
                             <span asp-validation-for="Status" class="text-danger"></span>
                         </div>
-
+                        <div class="form-group mb-3">
+                            <label asp-for="SupervisorId" class="fw-bold"><i class="bi bi-person-check me-1"></i> Supervisor</label>
+                            <select asp-for="SupervisorId" class="form-control" asp-items="ViewBag.Supervisors">
+                                <option value="">None (No Supervisor)</option>
+                            </select>
+                            <span asp-validation-for="SupervisorId" class="text-danger"></span>
+                        </div>
                         <div class="form-group mb-3">
                             <label asp-for="SerialNumber" class="fw-bold"><i class="bi bi-upc-scan me-1"></i> Serial Number</label>
                             <input asp-for="SerialNumber" class="form-control" placeholder="Enter serial number" />
