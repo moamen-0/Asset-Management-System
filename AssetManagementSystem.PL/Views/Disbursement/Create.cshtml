@@ -16,9 +16,7 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label asp-for="Department" class="form-label fw-bold">الجهة الطالبة</label>
-                        <select asp-for="Department" class="form-select" asp-items="ViewBag.DepartmentList" required>
-                            <option value="">-- إختر الجهة الطالبة --</option>
-                        </select>
+                        <input asp-for="Department" class="form-control" required placeholder="أدخل الجهة الطالبة" />
                         <span asp-validation-for="Department" class="text-danger"></span>
                     </div>
 

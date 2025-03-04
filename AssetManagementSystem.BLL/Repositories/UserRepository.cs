@@ -130,7 +130,45 @@ namespace AssetManagementSystem.BLL.Repositories
 	   .Include(u => u.Department)
 	   .ToListAsync();
 		}
+		public async Task<User> GetFirstUserInRoleAsync(string role)
+		{
+			// Get the role ID
+			var roleId = await _context.Roles
+				.Where(r => r.Name == role)
+				.Select(r => r.Id)
+				.FirstOrDefaultAsync();
 
+			if (string.IsNullOrEmpty(roleId))
+				return null;
+
+			// Get the first user ID in that role
+			var userId = await _context.UserRoles
+				.Where(ur => ur.RoleId == roleId)
+				.Select(ur => ur.UserId)
+				.FirstOrDefaultAsync();
+
+			if (string.IsNullOrEmpty(userId))
+				return null;
+
+			// Return the user
+			return await GetUserByIdAsync(userId);
+		}
+
+		public async Task<bool> IsUserInRoleAsync(string userId, string role)
+		{
+			// Get the role ID
+			var roleId = await _context.Roles
+				.Where(r => r.Name == role)
+				.Select(r => r.Id)
+				.FirstOrDefaultAsync();
+
+			if (string.IsNullOrEmpty(roleId))
+				return false;
+
+			// Check if the user has this role
+			return await _context.UserRoles
+				.AnyAsync(ur => ur.UserId == userId && ur.RoleId == roleId);
+		}
 		//public async Task<IEnumerable<User>> GetUsersByDepartmentAsync(int departmentId)
 		//{
 		//	return 

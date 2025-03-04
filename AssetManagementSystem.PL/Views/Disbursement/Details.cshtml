@@ -60,24 +60,7 @@
                         <dt class="col-sm-4">مدير المستودعات:</dt>
                         <dd class="col-sm-8">@Model.WarehouseManager</dd>
 
-                        <dt class="col-sm-4">الحالة:</dt>
-                        <dd class="col-sm-8">
-                            @switch (Model.Status)
-                            {
-                                case "Pending":
-                                    <span class="badge bg-warning">قيد الإنتظار</span>
-                                    break;
-                                case "Approved":
-                                    <span class="badge bg-success">تمت الموافقة</span>
-                                    break;
-                                case "Rejected":
-                                    <span class="badge bg-danger">مرفوض</span>
-                                    break;
-                                default:
-                                    <span class="badge bg-secondary">@Model.Status</span>
-                                    break;
-                            }
-                        </dd>
+                        
                     </dl>
                 </div>
             </div>

@@ -38,7 +38,7 @@
                                 <th>التاريخ</th>
                                 <th>الجهة الطالبة</th>
                                 <th>عدد المواد</th>
-                                <th>الحالة</th>
+                               
                                 <th>الإجراءات</th>
                             </tr>
                         </thead>
@@ -51,23 +51,7 @@
                                     <td>@item.RequestDate.ToString("yyyy-MM-dd")</td>
                                     <td>@item.Department</td>
                                     <td>@item.Items.Count</td>
-                                    <td>
-                                        @switch (item.Status)
-                                        {
-                                            case "Pending":
-                                                <span class="badge bg-warning">قيد الإنتظار</span>
-                                                break;
-                                            case "Approved":
-                                                <span class="badge bg-success">تمت الموافقة</span>
-                                                break;
-                                            case "Rejected":
-                                                <span class="badge bg-danger">مرفوض</span>
-                                                break;
-                                            default:
-                                                <span class="badge bg-secondary">@item.Status</span>
-                                                break;
-                                        }
-                                    </td>
+                                  
                                     <td>
                                         <div class="btn-group">
                                             <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">

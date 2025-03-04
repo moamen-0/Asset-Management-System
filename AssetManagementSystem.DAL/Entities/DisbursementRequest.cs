@@ -19,7 +19,7 @@ namespace AssetManagementSystem.DAL.Entities
 		public string? AuthorityName { get; set; } // "مدير مستشفى بريدة المركزي"
 		public string? AuthorityPerson { get; set; } // "حمود بن صالح الزيد"
 		public List<DisbursementItem>? Items { get; set; } = new();
-		public string? Status { get; set; }
+		 
 		public int PageCount { get; set; } = 1;
 	}
 }

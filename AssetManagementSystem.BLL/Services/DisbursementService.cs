@@ -10,6 +10,8 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using Document = QuestPDF.Fluent.Document;
+using AssetManagementSystem.BLL.Repositories;
+using AssetManagementSystem.DAL.Utilities;
 
 namespace AssetManagementSystem.BLL.Services
 {
@@ -18,15 +20,18 @@ namespace AssetManagementSystem.BLL.Services
 		private readonly IDisbursementRepository _disbursementRepository;
 		private readonly IAssetRepository _assetRepository;
 		private readonly IStoreKeeperRepository _storeKeeperRepository;
+		private readonly IUserRepository _userRepository ;
 
 		public DisbursementService(
 			IDisbursementRepository disbursementRepository,
 			IAssetRepository assetRepository,
-			IStoreKeeperRepository storeKeeperRepository)
+			IStoreKeeperRepository storeKeeperRepository,
+			IUserRepository userRepository)
 		{
 			_disbursementRepository = disbursementRepository;
 			_assetRepository = assetRepository;
 			_storeKeeperRepository = storeKeeperRepository;
+			_userRepository = userRepository;
 		}
 
 		public async Task<List<DisbursementRequest>> GetAllRequestsAsync()
@@ -299,41 +304,59 @@ namespace AssetManagementSystem.BLL.Services
 				return string.Empty;
 			}
 
-			// Get the prefix of the first asset (e.g., "C3-101" from "C3-101-0111899")
-			string firstAssetPrefix = GetAssetPrefix(assetTags.First());
-
-			// Check if all assets have the same prefix
-			bool allSamePrefix = assetTags.All(tag => GetAssetPrefix(tag) == firstAssetPrefix);
-
-			if (allSamePrefix)
+			// Get the actual assets
+			var assets = await GetAssetsByTagsAsync(assetTags);
+			if (!assets.Any())
 			{
-				// Find a store keeper for this prefix
-				var storeKeeper = await _storeKeeperRepository.GetByAssetTagPrefixAsync(firstAssetPrefix);
-				return storeKeeper?.Name ?? "غير معروف";
+				return "غير معروف";
+			}
+
+			// Collect all non-null user IDs from assets
+			var assignedUserIds = assets
+				.Where(a => !string.IsNullOrEmpty(a.UserId))
+				.Select(a => a.UserId)
+				.Distinct()
+				.ToList();
+
+			// If no users assigned to assets, return default message
+			if (!assignedUserIds.Any())
+			{
+				// Get the first available supervisor as fallback
+				var fallbackSupervisor = await _userRepository.GetFirstUserInRoleAsync(Roles.Supervisor);
+				return fallbackSupervisor?.FullName ?? "غير محدد";
+			}
+
+			// Get users that are supervisors
+			var supervisors = new List<User>();
+			foreach (var userId in assignedUserIds)
+			{
+				var user = await _userRepository.GetUserByIdAsync(userId);
+				if (user != null && await _userRepository.IsUserInRoleAsync(user.Id, Roles.Supervisor))
+				{
+					supervisors.Add(user);
+				}
+			}
+
+			// Return supervisor information
+			if (supervisors.Count == 0)
+			{
+				// No supervisors found among assigned users
+				var fallbackSupervisor = await _userRepository.GetFirstUserInRoleAsync(Roles.Supervisor);
+				return fallbackSupervisor?.FullName ?? "غير محدد";
+			}
+			else if (supervisors.Count == 1)
+			{
+				// One supervisor found
+				return supervisors[0].FullName;
 			}
 			else
 			{
-				// Multiple store keepers case
-				return "متعدد";
+				// Multiple supervisors found
+				return string.Join(", ", supervisors.Select(s => s.FullName));
 			}
 		}
 
-		private string GetAssetPrefix(string assetTag)
-		{
-			if (string.IsNullOrEmpty(assetTag))
-			{
-				return string.Empty;
-			}
-
-			// Extract the prefix (e.g., "C3-101" from "C3-101-0111899")
-			var parts = assetTag.Split('-');
-			if (parts.Length >= 2)
-			{
-				return $"{parts[0]}-{parts[1]}";
-			}
-			return assetTag;
-		}
-
+		// Helper method to get assets by their tags
 		private async Task<List<Asset>> GetAssetsByTagsAsync(List<string> assetTags)
 		{
 			if (assetTags == null || !assetTags.Any())

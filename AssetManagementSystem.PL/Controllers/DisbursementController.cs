@@ -1,5 +1,6 @@
 ﻿using AssetManagementSystem.BLL.Interfaces.IService;
 using AssetManagementSystem.DAL.Entities;
+using AssetManagementSystem.DAL.Utilities;
 using AssetManagementSystem.PL.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,15 +13,18 @@ namespace AssetManagementSystem.PL.Controllers
 		private readonly IDisbursementService _disbursementService;
 		private readonly IAssetService _assetService;
 		private readonly UserManager<User> _userManager;
+		private readonly RoleManager<IdentityRole> _roleManager;
 
 		public DisbursementController(
 			IDisbursementService disbursementService,
 			IAssetService assetService,
-			UserManager<User> userManager)
+			UserManager<User> userManager,
+			RoleManager<IdentityRole> roleManager)
 		{
 			_disbursementService = disbursementService;
 			_assetService = assetService;
 			_userManager = userManager;
+			_roleManager = roleManager;
 		}
 
 		// GET: /Disbursement
@@ -31,9 +35,9 @@ namespace AssetManagementSystem.PL.Controllers
 		}
 
 		// GET: /Disbursement/Create
-		public async Task<IActionResult> Create()
+		public IActionResult Create()
 		{
-			ViewBag.DepartmentList = await GetDepartmentsAsync();
+
 			return View();
 		}
 
@@ -44,7 +48,7 @@ namespace AssetManagementSystem.PL.Controllers
 		{
 			if (!ModelState.IsValid)
 			{
-				ViewBag.DepartmentList = await GetDepartmentsAsync();
+				
 				return View(model);
 			}
 
@@ -66,7 +70,7 @@ namespace AssetManagementSystem.PL.Controllers
 					WarehouseManager = "ناصر العدل", // Default or get from settings
 					AuthorityName = "مدير مستشفى بريدة المركزي",
 					AuthorityPerson = "حمود بن صالح الزيد",
-					Status = "Pending"
+					
 				};
 
 				// Create with asset tags
@@ -79,7 +83,7 @@ namespace AssetManagementSystem.PL.Controllers
 			catch (Exception ex)
 			{
 				ModelState.AddModelError("", $"حدث خطأ: {ex.Message}");
-				ViewBag.DepartmentList = await GetDepartmentsAsync();
+				 
 				return View(model);
 			}
 		}
@@ -100,7 +104,7 @@ namespace AssetManagementSystem.PL.Controllers
 				AssetTags = request.Items.Select(i => i.AssetTag).ToList()
 			};
 
-			ViewBag.DepartmentList = await GetDepartmentsAsync();
+			 
 			return View(model);
 		}
 
@@ -116,7 +120,7 @@ namespace AssetManagementSystem.PL.Controllers
 
 			if (!ModelState.IsValid)
 			{
-				ViewBag.DepartmentList = await GetDepartmentsAsync();
+				 
 				return View(model);
 			}
 
@@ -141,7 +145,7 @@ namespace AssetManagementSystem.PL.Controllers
 			catch (Exception ex)
 			{
 				ModelState.AddModelError("", $"حدث خطأ: {ex.Message}");
-				ViewBag.DepartmentList = await GetDepartmentsAsync();
+			 
 				return View(model);
 			}
 		}
@@ -238,31 +242,81 @@ namespace AssetManagementSystem.PL.Controllers
 					return Json(new { success = false, error = "No asset tags provided" });
 				}
 
-				string storeKeeperName = await _disbursementService.GetStoreKeeperForAssetsAsync(assetTags);
-				return Json(new { success = true, storeKeeper = storeKeeperName });
+				// Get assets with their associated users
+				var assets = await _assetService.GetAllAssetsAsync();
+				var selectedAssets = assets.Where(a => assetTags.Contains(a.AssetTag)).ToList();
+
+				if (!selectedAssets.Any())
+				{
+					return Json(new { success = false, error = "No matching assets found" });
+				}
+
+				// Get all supervisors in the system
+				var supervisors = await GetSupervisorsAsync();
+				if (!supervisors.Any())
+				{
+					return Json(new { success = true, storeKeeper = "لا يوجد مشرفين معرفين في النظام" });
+				}
+
+				// Find assignee users for the selected assets
+				var assignedUserIds = selectedAssets
+					.Where(a => !string.IsNullOrEmpty(a.UserId))
+					.Select(a => a.UserId)
+					.Distinct()
+					.ToList();
+
+				// Default supervisor
+				string supervisorName = supervisors.First().FullName;
+
+				// If assets have assigned users, check if any are supervisors
+				if (assignedUserIds.Any())
+				{
+					var assignedUsers = new List<User>();
+					foreach (var userId in assignedUserIds)
+					{
+						var user = await _userManager.FindByIdAsync(userId);
+						if (user != null)
+						{
+							assignedUsers.Add(user);
+						}
+					}
+
+					var supervisorUsers = assignedUsers
+						.Where(u => _userManager.IsInRoleAsync(u, Roles.Supervisor).Result)
+						.ToList();
+
+					if (supervisorUsers.Any())
+					{
+						// Use the first supervisor found if there's only one
+						if (supervisorUsers.Count == 1)
+						{
+							supervisorName = supervisorUsers[0].FullName;
+						}
+						else
+						{
+							// If multiple supervisors, concatenate their names
+							supervisorName = string.Join(", ", supervisorUsers.Select(u => u.FullName));
+						}
+					}
+				}
+
+				return Json(new { success = true, storeKeeper = supervisorName });
 			}
 			catch (Exception ex)
 			{
 				return Json(new { success = false, error = ex.Message });
 			}
 		}
-		private async Task<SelectList> GetDepartmentsAsync()
-		{
-			var departments = new List<string>
-		{
-			"العيادات الخارجية",
-			"الادارة",
-			"المختبر",
-			"الطوارئ",
-			"العناية المركزة",
-			"أقسام التنويم",
-			"قسم الأشعة",
-			"الصيدلية",
-			"المستودع الطبي",
-			"قسم المشتريات"
-		};
 
-			return new SelectList(departments);
+		// Helper to get all users with Supervisor role
+		private async Task<List<User>> GetSupervisorsAsync()
+		{
+			var supervisorRole = await _roleManager.FindByNameAsync(Roles.Supervisor);
+			if (supervisorRole == null)
+				return new List<User>();
+
+			var supervisors = await _userManager.GetUsersInRoleAsync(Roles.Supervisor);
+			return supervisors.ToList();
 		}
 		[HttpPost]
 		public async Task<IActionResult> GetAssetsByTags([FromBody] List<string> assetTags)

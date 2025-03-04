@@ -16,5 +16,6 @@ namespace AssetManagementSystem.BLL.Interfaces.IService
 		Task DeleteRequestAsync(int id);
 		Task<byte[]> GeneratePdfAsync(int requestId);
 		Task<string> GetStoreKeeperForAssetsAsync(List<string> assetTags);
+
 	}
 }
