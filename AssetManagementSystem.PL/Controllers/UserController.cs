@@ -368,55 +368,97 @@ public class UserController : Controller
 
 	[HttpGet]
 	[Authorize(Roles = $"{Roles.Admin},{Roles.Manager}")]
-	public async Task<IActionResult> DepartmentUsers(int? departmentId, string searchTerm = "")
+	public async Task<IActionResult> DepartmentUsers(int? departmentId, string? searchTerm, string? roleName, int page = 1)
 	{
-		// Get all departments for dropdown
+		// Set up pagination
+		int pageSize = 10;
+		int skip = (page - 1) * pageSize;
+
+		// Get all departments for the dropdown
 		var departments = await _unitOfWork.DepartmentRepository.GetAllAsync();
 		ViewBag.Departments = new SelectList(departments, "Id", "Name", departmentId);
 
-		// Get users based on selected department
-		IEnumerable<User> users;
+		// Get all roles for the dropdown
+		var roles = await _roleManager.Roles.ToListAsync();
+		ViewBag.Roles = new SelectList(roles, "Name", "Name", roleName);
 
-		if (departmentId.HasValue)
+		// Get base query of all users
+		var usersQuery = _userManager.Users
+			.Include(u => u.Department)
+			.AsQueryable();
+
+		// Apply department filter if provided
+		if (departmentId.HasValue && departmentId > 0)
 		{
-			// Filter by department
-			users = await _userManager.Users
-				.Include(u => u.Department)
-				.Where(u => u.DepartmentId == departmentId)
-				.ToListAsync();
-
-			// Set the selected department for the view
-			ViewBag.SelectedDepartmentId = departmentId.Value;
-
-			// Get department name for display
-			var selectedDept = departments.FirstOrDefault(d => d.Id == departmentId.Value);
-			ViewBag.SelectedDepartmentName = selectedDept?.Name ?? "Unknown Department";
-		}
-		else
-		{
-			// Get all users with departments
-			users = await _userManager.Users
-				.Include(u => u.Department)
-				.ToListAsync();
-
-			// No department selected
-			ViewBag.SelectedDepartmentId = null;
-			ViewBag.SelectedDepartmentName = null;
+			usersQuery = usersQuery.Where(u => u.DepartmentId == departmentId);
+			var selectedDepartment = departments.FirstOrDefault(d => d.Id == departmentId);
+			ViewBag.SelectedDepartmentId = departmentId;
+			ViewBag.SelectedDepartmentName = selectedDepartment?.Name ?? "Unknown Department";
 		}
 
-		// Apply additional search filtering if provided
+		// Apply search term filter if provided
 		if (!string.IsNullOrEmpty(searchTerm))
 		{
-			users = users.Where(u =>
-				u.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-				u.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-				u.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-				(u.Department != null && u.Department.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-			).ToList();
+			searchTerm = searchTerm.Trim().ToLower();
+			usersQuery = usersQuery.Where(u =>
+				u.FullName.ToLower().Contains(searchTerm) ||
+				u.Email.ToLower().Contains(searchTerm) ||
+				(u.NationalId != null && u.NationalId.ToLower().Contains(searchTerm)) ||
+				(u.RecipientFileNumber != null && u.RecipientFileNumber.ToLower().Contains(searchTerm))
+			);
+			ViewBag.SearchTerm = searchTerm;
 		}
 
-		ViewBag.SearchTerm = searchTerm;
+		// Get total count before applying role filter (which requires in-memory processing)
+		var totalCount = await usersQuery.CountAsync();
 
-		return View(users);
+		// Get all users that match the current filters
+		var filteredUsers = await usersQuery.ToListAsync();
+
+		// Apply role filter if provided (this must be done in memory since roles are in a separate table)
+		// Apply role filter if provided (this must be done in memory since roles are in a separate table)
+		if (!string.IsNullOrEmpty(roleName))
+		{
+			var usersInRole = new List<User>();
+			foreach (var user in filteredUsers)
+			{
+				// Check if user is in the selected role
+				if (await _userManager.IsInRoleAsync(user, roleName))
+				{
+					usersInRole.Add(user);
+				}
+			}
+			filteredUsers = usersInRole;
+
+			// Update total count after role filtering
+			totalCount = filteredUsers.Count;
+
+			// Get selected role name for display
+			ViewBag.SelectedroleName = roleName;
+			ViewBag.SelectedRoleName = roleName;
+		}
+
+		// Apply pagination
+		var paginatedUsers = filteredUsers
+			.Skip(skip)
+			.Take(pageSize)
+			.ToList();
+		// Get roles for each user
+		var userRoles = new Dictionary<string, List<string>>();
+		foreach (var user in paginatedUsers)
+		{
+			var _roles = await _userManager.GetRolesAsync(user);
+			userRoles[user.Id] = _roles.ToList();
+		}
+
+		// Add the roles to ViewBag
+		ViewBag.UserRoles = userRoles;
+		// Set pagination info for the view
+		ViewBag.CurrentPage = page;
+		ViewBag.PageSize = pageSize;
+		ViewBag.TotalCount = totalCount;
+		ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+		return View(paginatedUsers);
 	}
 }

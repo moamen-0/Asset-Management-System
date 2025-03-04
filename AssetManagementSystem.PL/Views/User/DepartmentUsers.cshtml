@@ -36,6 +36,17 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">الدور:</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-user-tag text-primary"></i>
+                                </span>
+                                <select name="roleName" class="form-select" asp-items="ViewBag.Roles" onchange="this.form.submit()">
+                                    <option value="">-- جميع الأدوار --</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="col-md-5">
                             <label class="form-label fw-bold">بحث:</label>
                             <div class="input-group">
@@ -55,7 +66,16 @@
                     </form>
                 </div>
             </div>
-
+            @if (ViewBag.SelectedRoleId != null)
+            {
+                <div class="alert alert-info d-flex align-items-center">
+                    <i class="fas fa-user-tag fa-lg ml-3"></i>
+                    <div>
+                        <h5 class="mb-1">الدور: @ViewBag.SelectedRoleName</h5>
+                        <p class="mb-0">عرض @Model.Count() مستخدم بهذا الدور</p>
+                    </div>
+                </div>
+            }
             @if (ViewBag.SelectedDepartmentId != null)
             {
                 <div class="alert alert-info d-flex align-items-center">
@@ -75,6 +95,7 @@
                             <th class="border-start-0">الاسم الكامل</th>
                             <th>البريد الإلكتروني</th>
                             <th>القسم</th>
+                            <th>الأدوار</th>
                             <th>رقم الهوية</th>
                             <th>رقم الملف</th>
                             <th class="border-end-0">الإجراءات</th>
@@ -106,6 +127,19 @@
                                         else
                                         {
                                             <span class="badge bg-secondary">غير معين</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (ViewBag.UserRoles != null && ViewBag.UserRoles.ContainsKey(user.Id))
+                                        {
+                                            foreach (var role in ViewBag.UserRoles[user.Id])
+                                            {
+                                                <span class="badge bg-primary me-1">@role</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">لا توجد أدوار</span>
                                         }
                                     </td>
                                     <td dir="ltr" class="text-end">
@@ -197,7 +231,7 @@
                             @for (int i = startPage; i <= endPage; i++)
                             {
                                 <li class="page-item @(i == currentPage ? "active" : "")">
-                                    <a class="page-link" href="@Url.Action("DepartmentUsers", new { departmentId = ViewBag.SelectedDepartmentId, searchTerm = ViewBag.SearchTerm, page = i })">@i</a>
+                                    <a class="page-link" href="@Url.Action("DepartmentUsers", new { departmentId = ViewBag.SelectedDepartmentId, roleName = ViewBag.SelectedRoleName, searchTerm = ViewBag.SearchTerm, page = i })">@i</a>
                                 </li>
                             }
 
