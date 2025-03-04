@@ -2,67 +2,232 @@
 @{
     Layout = "~/Views/Shared/_AuthLayout.cshtml";
 }
-
-<div class="container d-flex justify-content-center align-items-center vh-100">
-    <div class="card p-5 shadow-lg rounded-4 border-0" style="max-width: 700px; width: 100%;">
-
-        <div class="card-body">
-            <h2 class="text-center fw-bold mb-4 text-primary">Create an Account</h2>
+<div class="register-container">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+            <h2 class="text-center fw-bold mb-4 text-primary fs-1">إنشاء حساب جديد</h2>
+            @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+            {
+                <div class="alert alert-danger alert-dismissible fade show fs-5 mb-4">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>يرجى تصحيح الأخطاء التالية:</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <div asp-validation-summary="All" class="mt-2 fs-6"></div>
+                </div>
+            }
 
             <form asp-action="Register" method="post">
-                <div asp-validation-summary="All" class="alert alert-danger d-none" role="alert"></div>
+                <div asp-validation-summary="All" class="d-none" role="alert"></div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="FullName" class="form-label fw-semibold">Full Name</label>
-                        <input asp-for="FullName" class="form-control rounded-3 shadow-sm" placeholder="Enter your full name" />
-                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="form-group mb-1">
+                            <label asp-for="FullName" class="form-label fw-semibold fs-4">الاسم الكامل</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input asp-for="FullName" class="form-control rounded-end fs-5"
+                                       placeholder="أدخل اسمك الكامل" />
+                            </div>
+                            <span asp-validation-for="FullName" class="text-danger fs-6 mt-1"></span>
+                        </div>
                     </div>
 
-                    <div class="col-md-6 mb-4">
-                        <label asp-for="Email" class="form-label fw-semibold">Email Address</label>
-                        <input asp-for="Email" class="form-control rounded-3 shadow-sm" placeholder="Enter your email" />
-                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    <div class="col-md-6">
+                        <div class="form-group mb-1">
+                            <label asp-for="Email" class="form-label fw-semibold fs-4">البريد الإلكتروني</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input asp-for="Email" class="form-control rounded-end fs-5"
+                                       placeholder="أدخل بريدك الإلكتروني" dir="ltr" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger fs-6 mt-1"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group mb-1">
+                            <label asp-for="Password" class="form-label fw-semibold fs-4">كلمة المرور</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input asp-for="Password" type="password" class="form-control fs-5"
+                                       id="password" placeholder="أدخل كلمة مرور قوية" dir="ltr" />
+                                <button type="button" class="btn btn-outline-secondary"
+                                        onclick="togglePassword('password')">
+                                    <i class="fas fa-eye" id="passwordToggle"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger fs-6 mt-1"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group mb-1">
+                            <label asp-for="ConfirmPassword" class="form-label fw-semibold fs-4">تأكيد كلمة المرور</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input asp-for="ConfirmPassword" type="password" class="form-control fs-5"
+                                       id="confirmPassword" placeholder="أعد إدخال كلمة المرور" dir="ltr" />
+                                <button type="button" class="btn btn-outline-secondary"
+                                        onclick="togglePassword('confirmPassword')">
+                                    <i class="fas fa-eye" id="confirmPasswordToggle"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger fs-6 mt-1"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group mb-1">
+                            <label asp-for="NationalId" class="form-label fw-semibold fs-4">رقم الهوية الوطنية</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                                <input asp-for="NationalId" class="form-control rounded-end fs-5"
+                                       placeholder="أدخل رقم الهوية الوطنية" dir="ltr" />
+                            </div>
+                            <span asp-validation-for="NationalId" class="text-danger fs-6 mt-1"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group mb-1">
+                            <label asp-for="RecipientFileNumber" class="form-label fw-semibold fs-4">رقم الملف</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="fas fa-folder"></i></span>
+                                <input asp-for="RecipientFileNumber" class="form-control rounded-end fs-5"
+                                       placeholder="أدخل رقم الملف" dir="ltr" />
+                            </div>
+                            <span asp-validation-for="RecipientFileNumber" class="text-danger fs-6 mt-1"></span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-4">
-                        <label asp-for="Password" class="form-label fw-semibold">Password</label>
-                        <input asp-for="Password" type="password" class="form-control rounded-3 shadow-sm" placeholder="Enter a strong password" />
-                        <span asp-validation-for="Password" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-md-6 mb-4">
-                        <label asp-for="ConfirmPassword" class="form-label fw-semibold">Confirm Password</label>
-                        <input asp-for="ConfirmPassword" type="password" class="form-control rounded-3 shadow-sm" placeholder="Re-enter password" />
-                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
-                    </div>
+                <div class="mt-5">
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold fs-4 shadow-sm">
+                        <i class="fas fa-user-plus me-2"></i> إنشاء الحساب
+                    </button>
                 </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-4">
-                        <label asp-for="NationalId" class="form-label fw-semibold">National ID</label>
-                        <input asp-for="NationalId" class="form-control rounded-3 shadow-sm" placeholder="Enter National ID" />
-                        <span asp-validation-for="NationalId" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-md-6 mb-4">
-                        <label asp-for="RecipientFileNumber" class="form-label fw-semibold">File Number</label>
-                        <input asp-for="RecipientFileNumber" class="form-control rounded-3 shadow-sm" placeholder="Enter file number" />
-                        <span asp-validation-for="RecipientFileNumber" class="text-danger small"></span>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary w-100 py-2 rounded-3 fw-bold shadow-sm">
-                    <i class="fas fa-user-plus me-2"></i> Register
-                </button>
             </form>
 
-            <p class="mt-3 text-center">
-                <span class="text-muted">Already have an account?</span>
-                <a asp-controller="Auth" asp-action="Login" class="text-decoration-none fw-semibold text-primary">Log in</a>
+            <p class="mt-4 text-center fs-5">
+                <span class="text-muted">لديك حساب بالفعل؟</span>
+                <a asp-controller="Auth" asp-action="Login" class="text-decoration-none fw-semibold text-primary">تسجيل الدخول</a>
             </p>
         </div>
     </div>
 </div>
+<style>
+    .register-container {
+        max-width: 800px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .card {
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        overflow: hidden;
+        animation: fadeIn 0.8s ease-in-out;
+    }
+
+    @@keyframes fadeIn {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    .form-control {
+        border-radius: 0 8px 8px 0;
+        padding: 12px;
+        transition: all 0.3s;
+    }
+
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+    .input-group-text {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+        border-radius: 8px 0 0 8px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(45deg, #2937f0, #9f1ae2);
+        border: none;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+            background: linear-gradient(45deg, #1e2bd1, #8614c0);
+        }
+
+    /* Fix for RTL with input fields */
+    input[dir="ltr"] {
+        text-align: left;
+    }
+
+    .validation-summary-errors ul {
+        list-style-type: none;
+        padding-right: 10px;
+    }
+
+    .validation-summary-errors li {
+        margin-bottom: 5px;
+    }
+
+    /* Fix for RTL input groups */
+    .input-group > .form-control:not(:last-child) {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+
+    .input-group > :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(.invalid-feedback) {
+        margin-right: -1px;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+    }
+</style>
+<script>
+    function togglePassword(fieldId) {
+        const passwordField = document.getElementById(fieldId);
+        const toggleIcon = document.getElementById(fieldId + 'Toggle');
+
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
+        }
+    }
+
+    // Show validation summary if it contains errors
+    document.addEventListener('DOMContentLoaded', function() {
+        const validationSummary = document.querySelector('.validation-summary-errors');
+        if (validationSummary) {
+            const alertContainer = validationSummary.closest('.alert');
+            if (alertContainer && alertContainer.classList.contains('d-none')) {
+                alertContainer.classList.remove('d-none');
+            }
+        }
+    });
+</script>
