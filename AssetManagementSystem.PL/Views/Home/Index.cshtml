@@ -1,44 +1,303 @@
-﻿@using System.Linq <!-- Add this line at the top of your view -->
+﻿@using System.Linq
 @model AssetManagementSystem.PL.Models.DashboardViewModel
 
 @{
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
 
-<section class="content">
+<style>
+    /* تعزيزات إبداعية بطابع عربي */
+    body {
+        font-family: 'Tajawal', sans-serif;
+        direction: rtl;
+    }
+
+    .dashboard-title {
+        font-family: 'Amiri', serif;
+        font-size: 2.4rem;
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+        .dashboard-title::after {
+            content: "";
+            display: block;
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(to left, #4CAF50, #2196F3);
+            margin: 10px auto;
+            border-radius: 5px;
+        }
+
+    .islamic-pattern {
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path fill="none" stroke="rgba(0,0,0,0.07)" stroke-width="1" d="M50 0 L100 50 L50 100 L0 50 Z M50 25 L75 50 L50 75 L25 50 Z"></path></svg>');
+        background-size: 100px 100px;
+    }
+
+    .stat-card {
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+        border: none;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+    .gradient-info {
+        background: linear-gradient(135deg, #36D1DC, #5B86E5);
+    }
+
+    .gradient-dark {
+        background: linear-gradient(135deg, #2C3E50, #4CA1AF);
+    }
+
+    .action-btn {
+        transition: all 0.3s ease;
+        border-radius: 50px;
+        margin: 5px;
+        border-width: 2px !important;
+    }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 3px solid #e9ecef;
+        padding: 15px;
+    }
+
+    .card-outline {
+        border-top: 3px solid #4CAF50;
+        transition: all 0.3s ease;
+    }
+
+        .card-outline:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+    .arabic-decoration {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><path fill="none" stroke="rgba(0,128,0,0.05)" stroke-width="1" d="M0,50 Q50,0 100,50 Q150,100 200,50 Q150,100 100,150 Q50,200 0,150 Q50,100 0,50 Z"></path></svg>');
+        background-size: 100px 100px;
+        opacity: 0.1;
+        z-index: -1;
+    }
+
+    .table-title {
+        position: relative;
+        display: inline-block;
+        padding-right: 15px;
+    }
+
+        .table-title:before {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 5px;
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 3px;
+        }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(76, 175, 80, 0.05);
+    }
+
+    .btn-tool {
+        color: #6c757d;
+        background-color: transparent;
+        border: none;
+        padding: 0.25rem 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+        .btn-tool:hover {
+            color: #4CAF50;
+            transform: rotate(15deg);
+        }
+
+    .view-all-link {
+        display: inline-block;
+        margin-top: 15px;
+        color: #4CAF50;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+        .view-all-link:hover {
+            color: #2C3E50;
+            transform: translateX(-5px);
+        }
+
+        .view-all-link i {
+            margin-right: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .view-all-link:hover i {
+            transform: translateX(-3px);
+        }
+
+    /* إضافة تأثير للجداول */
+    .table-container {
+        position: relative;
+        overflow: hidden;
+    }
+
+        .table-container::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+    /* تحسينات جديدة للتمرير الأفقي للجداول */
+    .scrollable-table-wrapper {
+        overflow-x: auto;
+        max-width: 100%;
+        margin-bottom: 15px;
+        border-radius: 10px;
+        box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+    }
+
+    /* مؤشرات التمرير */
+    .scrollable-hint {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(76, 175, 80, 0.5);
+        font-size: 20px;
+        z-index: 5;
+        pointer-events: none;
+        animation: pulse 2s infinite;
+        display: none;
+    }
+
+        .scrollable-hint.right {
+            left: 10px;
+        }
+
+        .scrollable-hint.left {
+            right: 10px;
+        }
+
+    .scrollable-table-wrapper:hover .scrollable-hint {
+        display: block;
+    }
+
+    @@keyframes pulse {
+        0%
+
+    {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+
+    100% {
+        opacity: 0.3;
+    }
+
+    }
+
+    /* تثبيت رؤوس الجداول */
+    .sticky-header th {
+        position: sticky;
+        top: 0;
+        background-color: #f0f0f0;
+        z-index: 2;
+        box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    }
+
+    /* تعزيز عرض الجدول لوضع RTL */
+    .table-wrapper-rtl {
+        direction: rtl;
+    }
+
+        .table-wrapper-rtl table {
+            width: auto !important;
+            min-width: 100%;
+        }
+
+    /* شريط التمرير المخصص */
+    .scrollable-table-wrapper::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .scrollable-table-wrapper::-webkit-scrollbar-thumb {
+        background: #4CAF50;
+        border-radius: 10px;
+    }
+
+    .scrollable-table-wrapper::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+</style>
+
+<!-- إضافة الخطوط العربية -->
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+
+<section class="content islamic-pattern">
     <div class="container-fluid">
+        <h1 class="dashboard-title">لوحة التحكم</h1>
+
         <div class="row">
-            <!-- Total Assets Card (Unchanged) -->
+            <!-- بطاقة إجمالي الأصول -->
             <div class="col-md-4">
-                <div class="small-box bg-gradient-info shadow-sm rounded-3 p-3">
+                <div class="stat-card gradient-info shadow-sm rounded-3 p-4 text-white">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h4 class="fw-bold mb-1">@Model.AssetCount</h4>
-                            <p class="mb-0 text-light">Total Assets</p>
+                            <h3 class="fw-bold mb-1">@Model.AssetCount</h3>
+                            <p class="mb-0">إجمالي الأصول</p>
                         </div>
-                        <i class="fas fa-box fa-2x text-white-50"></i>
+                        <i class="fas fa-box fa-3x text-white-50"></i>
                     </div>
-                    <a href="@Url.Action("Index", "Asset")" class="small-box-footer text-light text-decoration-none d-block mt-2">
-                        More info <i class="fas fa-arrow-right"></i>
+                    <a href="@Url.Action("Index", "Asset")" class="text-white text-decoration-none d-block mt-3">
+                        عرض التفاصيل <i class="fas fa-arrow-left me-1"></i>
                     </a>
                 </div>
             </div>
 
-            <!-- Quick Actions Card (Unchanged) -->
+            <!-- بطاقة الإجراءات السريعة -->
             <div class="col-md-8">
-                <div class="card bg-dark text-white shadow-lg border-0 rounded-4">
-                    <div class="card-body text-center">
-                        <h4 class="fw-bold"><i class="fas fa-bolt me-2"></i> Quick Actions</h4>
-                        <p class="text-secondary mb-4">Manage assets efficiently with these shortcuts</p>
+                <div class="stat-card gradient-dark text-white shadow-lg rounded-4 p-2">
+                    <div class="card-body text-center position-relative">
+                        <div class="arabic-decoration"></div>
+                        <h3 class="fw-bold mb-3"><i class="fas fa-bolt me-2"></i> الإجراءات السريعة</h3>
+                        <p class="text-white-50 mb-4">إدارة الأصول بكفاءة من خلال هذه الاختصارات السريعة</p>
                         <div class="d-flex flex-wrap justify-content-center gap-3">
-                            <a href="@Url.Action("Index", "Asset")" class="btn btn-outline-light px-4 py-2 d-flex align-items-center gap-2 shadow-sm">
-                                <i class="fas fa-box"></i> <span>Manage Assets</span>
+                            <a href="@Url.Action("Index", "Asset")" class="action-btn btn btn-outline-light px-4 py-2 d-flex align-items-center gap-2">
+                                <i class="fas fa-box"></i> <span>إدارة الأصول</span>
                             </a>
-                            <a href="@Url.Action("Index", "AssetTransfer")" class="btn btn-outline-warning px-4 py-2 d-flex align-items-center gap-2 shadow-sm">
-                                <i class="fas fa-exchange-alt"></i> <span>Asset Transfers</span>
+                            <a href="@Url.Action("Index", "AssetTransfer")" class="action-btn btn btn-outline-warning px-4 py-2 d-flex align-items-center gap-2">
+                                <i class="fas fa-exchange-alt"></i> <span>نقل الأصول</span>
                             </a>
-                            <a href="@Url.Action("Index", "Disposal")" class="btn btn-outline-danger px-4 py-2 d-flex align-items-center gap-2 shadow-sm">
-                                <i class="fas fa-trash-alt"></i> <span>Disposal</span>
+                            <a href="@Url.Action("Index", "Disposal")" class="action-btn btn btn-outline-danger px-4 py-2 d-flex align-items-center gap-2">
+                                <i class="fas fa-trash-alt"></i> <span>التخلص من الأصول</span>
                             </a>
                         </div>
                     </div>
@@ -46,150 +305,313 @@
             </div>
         </div>
 
-        <!-- Dynamic Data Sections -->
-        <div class="row mt-4">
+        <!-- أقسام البيانات الديناميكية -->
+        <div class="row mt-5">
+            @{
+                var arabicSections = new Dictionary<string, string> {
+            { "Assets", "الأصول" },
+            { "AssetTransfers", "عمليات النقل" },
+            { "Buildings", "المباني" },
+            { "Facilities", "المرافق" },
+            { "Departments", "الأقسام" },
+            { "Disposals", "عمليات التخلص" },
+            { "Rooms", "الغرف" },
+            { "Users", "المستخدمون" }
+            };
+            }
+
             @foreach (var section in new[] { "Assets", "AssetTransfers", "Buildings", "Facilities", "Departments", "Disposals", "Rooms", "Users" })
             {
-                var formattedSection = section.Replace("AssetTransfers", "Asset Transfers");
+                var formattedSection = arabicSections[section];
                 var propertyInfo = Model.GetType().GetProperty(section);
                 var data = propertyInfo?.GetValue(Model) as IEnumerable<dynamic>;
+
+                // أخذ آخر خمسة عناصر فقط
+                var limitedData = data?.Take(5);
                 var hasData = data?.Any() == true;
+                var totalCount = data?.Count() ?? 0;
+                var cardId = $"card-{section}"; // معرف فريد لكل بطاقة
 
                 <div class="col-md-6 mb-4">
-                    <div class="card card-primary card-outline">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-database mr-2"></i> @formattedSection
+                    <div class="card stat-card card-outline">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3 class="table-title mb-0">
+                                @formattedSection
+                                @if (totalCount > 0)
+                                {
+                                    <span class="badge bg-primary ms-2">@totalCount</span>
+                                }
                             </h3>
-                            <div class="card-tools">
-                                <button type="button" class="btn btn-tool" onclick="location.reload();">
+                            <div>
+                                <button type="button" class="btn-tool" onclick="location.reload();" title="تحديث">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <button type="button" class="btn-tool collapse-btn" title="تصغير/توسيع"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#@cardId"
+                                        aria-expanded="true">
                                     <i class="fas fa-minus"></i>
                                 </button>
                             </div>
                         </div>
-                        <div class="card-body">
-                            @if (hasData)
-                            {
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-hover">
-                                        <thead class="thead-light">
-                                            <tr>
-                                                @foreach (var prop in propertyInfo.PropertyType.GetGenericArguments().First().GetProperties())
-                                                {
-                                                    <th>@prop.Name</th>
-                                                }
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var item in data)
-                                            {
-                                                <tr>
-                                                    @foreach (var prop in item.GetType().GetProperties())
-                                                    {
-                                                        var value = prop.GetValue(item);
-                                                        <td>
-                                                            @if (value == null)
-                                                            {
-                                                                <text>-</text>
-                                                            }
-                                                            else if (value.GetType().IsPrimitive || value is string || value is DateTime)
-                                                            {
-                                                                <text>@value</text>
-                                                            }
-                                                            else if (value is IEnumerable<dynamic> list)
-                                                            {
-                                                                <text>@string.Join(", ", list.Select(v => v?.GetType().GetProperty("Name")?.GetValue(v)?.ToString() ?? v.ToString()))</text>
-                                                            }
-                                                            else
-                                                            {
-                                                                if (value?.GetType().FullName == "AssetManagementSystem.DAL.Entities.Asset")
-                                                                {
-                                                                    var asset = (AssetManagementSystem.DAL.Entities.Asset)value;
-                                                                    <text>@asset.AssetDescription</text>
-                                                                }
-                                                                else
-                                                                {
-                                                                    var nameProp = value?.GetType().GetProperty("Name")
-                                                                    ?? value?.GetType().GetProperty("Title")
-                                                                    ?? value?.GetType().GetProperty("Description");
+                        <div class="collapse show" id="@cardId">
+                            <div class="card-body">
+                                @if (hasData)
+                                {
+                                    <div class="table-container position-relative">
+                                        <!-- غلاف للتمرير الأفقي -->
+                                        <div class="scrollable-table-wrapper table-wrapper-rtl">
+                                            <!-- مؤشرات التمرير -->
+                                            <div class="scrollable-hint right">
+                                                <i class="fas fa-arrow-left"></i>
+                                            </div>
+                                            <div class="scrollable-hint left">
+                                                <i class="fas fa-arrow-right"></i>
+                                            </div>
 
-                                                                    @(nameProp != null ? nameProp.GetValue(value) : value?.ToString())
-                                                                }
+                                            <table class="table table-bordered table-hover">
+                                                <thead class="table-light sticky-header">
+                                                    <tr>
+                                                        @{
+                                                            var properties = propertyInfo.PropertyType.GetGenericArguments().First().GetProperties();
+                                                            var arabicHeaders = properties.Select(p =>
+                                                            {
+                                                                return p.Name switch
+                                                                {
+                                                                    "Id" => "المعرف",
+                                                                    "Name" => "الاسم",
+                                                                    "Description" => "الوصف",
+                                                                    "AssetTag" => "رقم الأصل",
+                                                                    "AssetDescription" => "وصف الأصل",
+                                                                    "Department" => "القسم",
+                                                                    "Building" => "المبنى",
+                                                                    "Floor" => "الطابق",
+                                                                    "Room" => "الغرفة",
+                                                                    "User" => "المستخدم",
+                                                                    "FullName" => "الاسم الكامل",
+                                                                    "Email" => "البريد الإلكتروني",
+                                                                    "FromDepartment" => "من قسم",
+                                                                    "ToDepartment" => "إلى قسم",
+                                                                    "TransferDate" => "تاريخ النقل",
+                                                                    "DisposalDate" => "تاريخ التخلص",
+                                                                    "DisposalType" => "نوع التخلص",
+                                                                    "SaleValue" => "قيمة البيع",
+                                                                    "EntityName" => "اسم الكيان",
+                                                                    "ActionType" => "نوع الإجراء",
+                                                                    "ChangeDate" => "تاريخ التغيير",
+                                                                    _ => p.Name
+                                                                };
+                                                            }).ToList();
+                                                        }
+
+                                                        @foreach (var header in arabicHeaders)
+                                                        {
+                                                            <th class="text-center">@header</th>
+                                                        }
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var item in limitedData)
+                                                    {
+                                                        <tr>
+                                                            @foreach (var prop in item.GetType().GetProperties())
+                                                            {
+                                                                var value = prop.GetValue(item);
+                                                                <td class="text-center">
+                                                                    @if (value == null)
+                                                                    {
+                                                                        <text>-</text>
+                                                                    }
+                                                                    else if (value.GetType().IsPrimitive || value is string || value is DateTime)
+                                                                    {
+                                                                        @if (value is DateTime dateTime)
+                                                                        {
+                                                                            <text>@dateTime.ToString("yyyy/MM/dd")</text>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <text>@value</text>
+                                                                        }
+                                                                    }
+                                                                    else if (value is IEnumerable<dynamic> list)
+                                                                    {
+                                                                        <text>@string.Join("، ", list.Select(v => v?.GetType().GetProperty("Name")?.GetValue(v)?.ToString() ?? v.ToString()))</text>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        if (value?.GetType().FullName == "AssetManagementSystem.DAL.Entities.Asset")
+                                                                        {
+                                                                            var asset = (AssetManagementSystem.DAL.Entities.Asset)value;
+                                                                            <text>@asset.AssetDescription</text>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            var nameProp = value?.GetType().GetProperty("Name")
+                                                                            ?? value?.GetType().GetProperty("Title")
+                                                                            ?? value?.GetType().GetProperty("Description");
+
+                                                                            @(nameProp != null ? nameProp.GetValue(value) : value?.ToString())
+                                                                        }
+                                                                    }
+                                                                </td>
                                                             }
-                                                        </td>
+                                                        </tr>
                                                     }
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                </div>
-                            }
-                            else
-                            {
-                                <p class="text-muted text-center">No @formattedSection.ToLower() found.</p>
-                            }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <!-- إضافة رابط "عرض الكل" إذا كان هناك أكثر من 5 عناصر -->
+                                    @if (totalCount > 5)
+                                    {
+                                        <div class="text-center">
+                                            <a href="@Url.Action("Index", section)" class="view-all-link">
+                                                <i class="fas fa-arrow-left ms-1"></i> عرض جميع @formattedSection (@totalCount)
+                                            </a>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-info-circle fa-2x text-muted mb-3"></i>
+                                        <p class="text-muted">لم يتم العثور على بيانات في @formattedSection</p>
+                                    </div>
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
             }
         </div>
 
-        <!-- Change Log Card -->
+        <!-- بطاقة سجل التغييرات -->
         <div class="row mt-4">
             <div class="col-12">
-                <div class="card card-success card-outline">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-clock mr-2"></i> Recent Changes
+                <div class="card stat-card card-outline">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="table-title mb-0">
+                            التغييرات الأخيرة
+                            @if (Model.RecentChangelogs?.Any() == true)
+                            {
+                                <span class="badge bg-primary ms-2">@(Model.RecentChangelogs.Count())</span>
+                            }
                         </h3>
-                        <div class="card-tools">
-                            <a href="@Url.Action("Index", "ChangeLog")" class="btn btn-tool">
-                                <i class="fas fa-external-link-alt"></i> View All
+                        <div>
+                            <a href="@Url.Action("Index", "ChangeLog")" class="btn-tool me-2" title="عرض الكل">
+                                <i class="fas fa-external-link-alt"></i>
                             </a>
-                            <button type="button" class="btn btn-tool" onclick="location.reload();">
+                            <button type="button" class="btn-tool" onclick="location.reload();" title="تحديث">
                                 <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button type="button" class="btn-tool collapse-btn" title="تصغير/توسيع"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#card-changelog"
+                                    aria-expanded="true">
+                                <i class="fas fa-minus"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="card-body">
-                        @if (Model.RecentChangelogs?.Any() == true)
-                        {
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Entity</th>
-                                            <th>Action</th>
-                                            <th>Date</th>
-                                            <th>User</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var log in Model.RecentChangelogs)
-                                        {
-                                            <tr>
-                                                <td>@log.EntityName</td>
-                                                <td>@log.ActionType</td>
-                                                <td>@log.ChangeDate.ToString("yyyy-MM-dd HH:mm")</td>
-                                                <td>@(log.User?.FullName ?? "System")</td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="text-center mt-3">
-                                <a href="@Url.Action("Index", "ChangeLog")" class="btn btn-outline-primary">
-                                    View All Changes
-                                </a>
-                            </div>
-                        }
-                        else
-                        {
-                            <p class="text-muted text-center">No recent changes found.</p>
-                        }
+                    <div class="collapse show" id="card-changelog">
+                        <div class="card-body">
+                            @if (Model.RecentChangelogs?.Any() == true)
+                            {
+                                var limitedChangelogs = Model.RecentChangelogs.Take(5);
+                                var totalChangelogs = Model.RecentChangelogs.Count();
+
+                                <div class="table-container position-relative">
+                                    <div class="scrollable-table-wrapper table-wrapper-rtl">
+                                        <!-- مؤشرات التمرير -->
+                                        <div class="scrollable-hint right">
+                                            <i class="fas fa-arrow-left"></i>
+                                        </div>
+                                        <div class="scrollable-hint left">
+                                            <i class="fas fa-arrow-right"></i>
+                                        </div>
+
+                                        <table class="table table-hover">
+                                            <thead class="table-light sticky-header">
+                                                <tr>
+                                                    <th class="text-center">الكيان</th>
+                                                    <th class="text-center">الإجراء</th>
+                                                    <th class="text-center">التاريخ</th>
+                                                    <th class="text-center">المستخدم</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var log in limitedChangelogs)
+                                                {
+                                                    <tr>
+                                                        <td class="text-center">
+                                                            @{
+                                                                var entityMapping = new Dictionary<string, string> {
+                                                    { "Asset", "أصل" },
+                                                    { "User", "مستخدم" },
+                                                    { "Department", "قسم" },
+                                                    { "Building", "مبنى" },
+                                                    { "Floor", "طابق" },
+                                                    { "Room", "غرفة" },
+                                                    { "Disposal", "تخلص" },
+                                                    { "AssetTransfer", "نقل أصل" }
+                                                    };
+
+                                                                string arabicEntity = entityMapping.ContainsKey(log.EntityName) ?
+                                                                entityMapping[log.EntityName] : log.EntityName;
+                                                            }
+                                                            @arabicEntity
+                                                        </td>
+                                                        <td class="text-center">
+                                                            @{
+                                                                var actionMapping = new Dictionary<string, string> {
+                                                    { "Added", "إضافة" },
+                                                    { "Modified", "تعديل" },
+                                                    { "Deleted", "حذف" }
+                                                    };
+
+                                                                string arabicAction = actionMapping.ContainsKey(log.ActionType) ?
+                                                                actionMapping[log.ActionType] : log.ActionType;
+                                                            }
+                                                            <span class="badge @(log.ActionType == "Added" ? "bg-success" :
+                                                                                log.ActionType == "Modified" ? "bg-warning" :
+                                                                                log.ActionType == "Deleted" ? "bg-danger" : "bg-primary")">
+                                                                @arabicAction
+                                                            </span>
+                                                        </td>
+                                                        <td class="text-center" dir="ltr">@log.ChangeDate.ToString("yyyy/MM/dd HH:mm")</td>
+                                                        <td class="text-center">@(log.User?.FullName ?? "النظام")</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                @if (totalChangelogs > 5)
+                                {
+                                    <div class="text-center">
+                                        <a href="@Url.Action("Index", "ChangeLog")" class="view-all-link">
+                                            <i class="fas fa-arrow-left ms-1"></i> عرض جميع التغييرات (@totalChangelogs)
+                                        </a>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-center mt-3">
+                                        <a href="@Url.Action("Index", "ChangeLog")" class="action-btn btn btn-outline-primary px-4">
+                                            <i class="fas fa-list me-2"></i> عرض جميع التغييرات
+                                        </a>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center py-4">
+                                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">لم يتم العثور على تغييرات حديثة</p>
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
@@ -197,43 +619,88 @@
     </div>
 </section>
 
-<!-- Modal for Viewing JSON Data -->
+<!-- نافذة عرض بيانات JSON -->
 <div class="modal fade" id="jsonModal" tabindex="-1" aria-labelledby="jsonModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-secondary text-white">
-                <h5 class="modal-title"><i class="fas fa-file-alt"></i> Change Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-file-alt me-2"></i> تفاصيل التغيير</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
             </div>
             <div class="modal-body">
-                <pre id="jsonData" class="p-3 bg-light border rounded text-wrap"></pre>
+                <pre id="jsonData" class="p-3 bg-light border rounded text-wrap" dir="ltr"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap5.min.css">
+ @*    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap5.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script> *@
 
     <script>
         $(document).ready(function () {
-            
-
-            // Initialize all tooltips
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl)
+            // تبديل أيقونة زر الطي عند النقر
+            $('.collapse-btn').on('click', function() {
+                $(this).find('i').toggleClass('fa-minus fa-plus');
             });
+
+            // تهيئة التلميحات
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // إضافة متابعة التمرير الأفقي وإظهار/إخفاء مؤشرات التمرير
+            $('.scrollable-table-wrapper').each(function() {
+                var $wrapper = $(this);
+                var $leftHint = $wrapper.find('.scrollable-hint.left');
+                var $rightHint = $wrapper.find('.scrollable-hint.right');
+
+                $wrapper.on('scroll', function() {
+                    var scrollLeft = $wrapper.scrollLeft();
+                    var maxScrollLeft = $wrapper[0].scrollWidth - $wrapper.width();
+
+                    // تحديث ظهور مؤشرات التمرير
+                    if (scrollLeft <= 10) {
+                        $rightHint.fadeIn();
+                        $leftHint.fadeOut();
+                    } else if (scrollLeft >= maxScrollLeft - 10) {
+                        $leftHint.fadeIn();
+                        $rightHint.fadeOut();
+                    } else {
+                        $leftHint.fadeIn();
+                        $rightHint.fadeIn();
+                    }
+                });
+
+                // التحقق مما إذا كان التمرير مطلوبًا
+                setTimeout(function() {
+                    if ($wrapper[0].scrollWidth > $wrapper.width()) {
+                        $rightHint.fadeIn();
+                    } else {
+                        $leftHint.hide();
+                        $rightHint.hide();
+                    }
+                }, 500);
+            });
+
+            // تهيئة جدول سجلات التغيير
             $('#changeLogsTable').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: {
                     url: '@Url.Action("GetChangeLogs", "ChangeLog")',
                     type: 'POST'
+                },
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json"
                 },
                 columns: [
                     { data: 'entityName', className: "text-center" },
@@ -243,47 +710,55 @@
                         data: 'oldValues',
                         className: "text-center",
                         render: function (data) {
-                            return formatJsonButton(data, 'Old Values');
+                            return formatJsonButton(data, 'القيم القديمة');
                         }
                     },
                     {
                         data: 'newValues',
                         className: "text-center",
                         render: function (data) {
-                            return formatJsonButton(data, 'New Values');
+                            return formatJsonButton(data, 'القيم الجديدة');
                         }
                     },
                     { data: 'changeDate', className: "text-center" },
                     { data: 'userFullName', className: "text-center" }
                 ]
             });
-             $('#notificationIcon').on('click', function(e) {
+
+            // التعامل مع أيقونة الإشعارات
+            $('#notificationIcon').on('click', function(e) {
                 e.preventDefault();
                 $(this).next('.dropdown-menu').toggleClass('show');
             });
 
-            // Ensure profile dropdown works
+            // التأكد من عمل القائمة المنسدلة للملف الشخصي
             $('#navbarDropdown').on('click', function(e) {
                 e.preventDefault();
                 $(this).next('.dropdown-menu').toggleClass('show');
             });
 
-            // Close dropdowns when clicking outside
+            // إغلاق القوائم المنسدلة عند النقر خارجها
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('.dropdown').length) {
                     $('.dropdown-menu').removeClass('show');
                 }
             });
+
+            // إضافة تأثيرات حركية للبطاقات
+            $('.stat-card').each(function(index) {
+                $(this).css('animation-delay', (index * 0.1) + 's');
+                $(this).addClass('animate__fadeInUp');
+            });
         });
 
         function formatJsonButton(json, title) {
-            if (!json) return '<span class="text-muted">No Data</span>';
+            if (!json) return '<span class="text-muted">لا توجد بيانات</span>';
             try {
-                return `<button class="btn btn-sm btn-outline-info rounded-pill" onclick='showJsonModal(${JSON.stringify(json)}, "${title}")'>
-                            <i class="fas fa-eye"></i> View
+                return `<button class="action-btn btn btn-sm btn-outline-info" onclick='showJsonModal(${JSON.stringify(json)}, "${title}")'>
+                            <i class="fas fa-eye me-1"></i> عرض
                         </button>`;
             } catch (error) {
-                return '<span class="text-danger">Invalid Data</span>';
+                return '<span class="text-danger">بيانات غير صالحة</span>';
             }
         }
 
@@ -294,8 +769,8 @@
                 let modal = new bootstrap.Modal(document.getElementById("jsonModal"));
                 modal.show();
             } catch (error) {
-                console.error("JSON Parsing Error:", error);
-                alert("Invalid JSON format!");
+                console.error("خطأ في تحليل JSON:", error);
+                alert("تنسيق JSON غير صالح!");
             }
         }
     </script>
