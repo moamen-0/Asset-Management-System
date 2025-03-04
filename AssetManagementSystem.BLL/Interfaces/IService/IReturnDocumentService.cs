@@ -11,7 +11,7 @@ namespace AssetManagementSystem.BLL.Interfaces.IService
 	{
 		Task<IEnumerable<ReturnDocument>> GetAllDocumentsAsync();
 		Task<ReturnDocument> GetDocumentByIdAsync(int id);
-		Task<Dictionary<int, ReturnDocument>> CreateReturnDocumentsAsync(List<string> assetTags, string returnReason);
+		Task<Dictionary<int, ReturnDocument>> CreateReturnDocumentsAsync(List<string> assetTags, string returnReason, string returnCommittee);
 		Task UpdateReturnDocumentAsync(ReturnDocument document);
 		Task DeleteReturnDocumentAsync(int id);
 		Task<byte[]> GeneratePdfAsync(int documentId);

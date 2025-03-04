@@ -80,7 +80,17 @@ C3-101-0003328 C3-101-0004841"></textarea>
                                 </div>
                             </div>
                         </div>
-
+                        <!-- Add this after departmentSummary section or in a relevant location -->
+                        <div id="returnCommitteeSection" class="mt-4" style="display: none;">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0"><i class="bi bi-people"></i> لجنة فحص الرجيع</h5>
+                                </div>
+                                <div class="card-body" id="returnCommitteeContent">
+                                    <!-- Will be populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
                         <!-- Selected Assets Section -->
                         <div class="row mt-3">
                             <div class="col-md-12">
@@ -125,59 +135,86 @@ C3-101-0003328 C3-101-0004841"></textarea>
         $(document).ready(function() {
             let selectedAssetTags = [];
 
-            // Verify asset tags button click
-            $('#verifyAssetTags').click(function() {
-                const tagsInput = $('#bulkAssetTags').val();
-                const tags = processTags(tagsInput);
+                   $('#verifyAssetTags').click(function() {
+            const tagsInput = $('#bulkAssetTags').val();
+            const tags = processTags(tagsInput);
 
-                if (tags.length === 0) {
-                    alert('الرجاء إدخال رموز أصول صالحة');
-                    return;
-                }
+            if (tags.length === 0) {
+                alert('الرجاء إدخال رموز أصول صالحة');
+                return;
+            }
 
-                // Show loading
-                $('#selectedAssets').html('<li class="list-group-item text-center"><div class="spinner-border text-primary" role="status"></div> جاري التحقق...</li>');
+            // Show loading
+            $('#selectedAssets').html('<li class="list-group-item text-center"><div class="spinner-border text-primary" role="status"></div> جاري التحقق...</li>');
 
-                // Call API to verify tags
-                $.ajax({
-                    url: '@Url.Action("VerifyAssetTags")',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(tags),
-                    success: function(response) {
-                        if (response.success) {
-                            // Update selected assets
-                            selectedAssetTags = response.foundAssets.map(a => a.assetTag);
-                            updateSelectedAssets(response.foundAssets);
+            // Call API to verify tags
+            $.ajax({
+                url: '@Url.Action("VerifyAssetTags")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(tags),
+                success: function(response) {
+                    if (response.success) {
+                        // Update selected assets
+                        selectedAssetTags = response.foundAssets.map(a => a.assetTag);
+                        updateSelectedAssets(response.foundAssets);
 
-                            // Show department summary
-                            if (response.assetsByDepartment.length > 0) {
-                                showDepartmentSummary(response.assetsByDepartment);
+                        // Show department summary
+                        if (response.assetsByDepartment.length > 0) {
+                            showDepartmentSummary(response.assetsByDepartment);
 
-                                // Show warning if multiple departments
-                                if (response.assetsByDepartment.length > 1) {
-                                    $('#warningMessage').show();
-                                } else {
-                                    $('#warningMessage').hide();
-                                }
+                            // Show warning if multiple departments
+                            if (response.assetsByDepartment.length > 1) {
+                                $('#warningMessage').show();
+                            } else {
+                                $('#warningMessage').hide();
                             }
-
-                            // Show not found tags if any
-                            if (response.notFoundTags.length > 0) {
-                                showNotFoundTags(response.notFoundTags);
-                            }
-
-                            // Update hidden input with selected tags
-                            updateHiddenInputs();
-                        } else {
-                            $('#selectedAssets').html(`<li class="list-group-item text-danger text-center">${response.error}</li>`);
                         }
-                    },
-                    error: function() {
-                        $('#selectedAssets').html('<li class="list-group-item text-danger text-center">حدث خطأ أثناء التحقق من الأصول</li>');
+
+                        // Show committee members
+                        if (response.returnCommittee) {
+                            showReturnCommittee(response.returnCommittee);
+                        }
+
+                        // Show not found tags if any
+                        if (response.notFoundTags.length > 0) {
+                            showNotFoundTags(response.notFoundTags);
+                        }
+
+                        // Update hidden input with selected tags
+                        updateHiddenInputs();
+                    } else {
+                        $('#selectedAssets').html(`<li class="list-group-item text-danger text-center">${response.error}</li>`);
                     }
-                });
+                },
+                error: function() {
+                    $('#selectedAssets').html('<li class="list-group-item text-danger text-center">حدث خطأ أثناء التحقق من الأصول</li>');
+                }
             });
+        });
+
+        // Add this function to display the return committee
+        function showReturnCommittee(committee) {
+            const $content = $('#returnCommitteeContent').empty();
+
+            $content.append(`
+                <div class="mb-3">
+                    <h6><i class="bi bi-people-fill"></i> المشرفين المسؤولين:</h6>
+                    <p class="mb-0">${committee.split('\n').join('<br>')}</p>
+                </div>
+            `);
+
+            $('#returnCommitteeSection').show();
+        }
+
+        // Update clear all selected button to also hide the committee section
+        $('#clearAllSelectedButton').click(function() {
+            selectedAssetTags = [];
+            updateSelectedAssets([]);
+            updateHiddenInputs();
+            $('#departmentSummary').hide();
+            $('#returnCommitteeSection').hide();
+        });
 
             // Process tags from textarea
             function processTags(input) {
@@ -274,13 +311,7 @@ C3-101-0003328 C3-101-0004841"></textarea>
                 return true;
             });
 
-            // Clear all selected assets
-            $('#clearAllSelectedButton').click(function() {
-                selectedAssetTags = [];
-                updateSelectedAssets([]);
-                updateHiddenInputs();
-                $('#departmentSummary').hide();
-            });
+             
         });
     </script>
 }

@@ -45,7 +45,7 @@ namespace AssetManagementSystem.BLL.Services
 			return await _returnDocumentRepository.GetByIdAsync(id);
 		}
 
-		public async Task<Dictionary<int, ReturnDocument>> CreateReturnDocumentsAsync(List<string> assetTags, string returnReason)
+		public async Task<Dictionary<int, ReturnDocument>> CreateReturnDocumentsAsync(List<string> assetTags, string returnReason, string returnCommittee)
 		{
 			// Group assets by department
 			var assetsByDepartment = await GroupAssetsByDepartmentAsync(assetTags);
@@ -64,9 +64,6 @@ namespace AssetManagementSystem.BLL.Services
 					continue;
 				}
 
-				// Determine the committee members based on asset tags
-				string committeeMembers = await DetermineCommitteeMembersAsync(departmentAssetTags);
-
 				// Create new return document
 				var returnDocument = new ReturnDocument
 				{
@@ -76,7 +73,7 @@ namespace AssetManagementSystem.BLL.Services
 					ReturningDepartment = firstAsset.Department.Name,
 					ResponsiblePerson = "محمد عبدالكريم الحميد", // Static for now, could be dynamic
 					StoreKeeper = "ناصر العمري", // Static
-					ReturnCommittee = committeeMembers,
+					ReturnCommittee = returnCommittee, // Use the provided committee (supervisors)
 					ReturnReason = returnReason,
 					Items = new List<ReturnDocumentItem>()
 				};
@@ -91,7 +88,8 @@ namespace AssetManagementSystem.BLL.Services
 						{
 							AssetTag = asset.AssetTag,
 							AssetDescription = asset.AssetDescription ?? "No Description",
-							Quantity = 1
+							Quantity = 1,
+							Unit = "الوحدة"
 						});
 					}
 				}
@@ -103,7 +101,7 @@ namespace AssetManagementSystem.BLL.Services
 
 			return createdDocuments;
 		}
-
+		
 		public async Task UpdateReturnDocumentAsync(ReturnDocument document)
 		{
 			await _returnDocumentRepository.UpdateAsync(document);
@@ -132,53 +130,56 @@ namespace AssetManagementSystem.BLL.Services
 				container.Page(page =>
 				{
 					page.Size(PageSizes.A4.Landscape());
-					page.Margin(20);
-					page.DefaultTextStyle(x => x.FontSize(12).FontFamily("Arial"));
+					page.Margin(15); // Reduced margin
+					page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial")); // Smaller default font
 
-					// Header Section
+					// Header Section with compact layout
 					page.Header().Row(row =>
 					{
-						// Title - Right Side (Arabic text flows right-to-left)
-						row.RelativeItem().Column(col =>
+						// Logo/Right side
+						row.ConstantItem(100).Column(col =>
 						{
-							col.Item().Text("المملكة العربية السعودية")
-								.FontSize(14).Bold().FontColor(Colors.Black).AlignRight();
-							col.Item().Text("وزارة الصحة")
-								.FontSize(14).Bold().FontColor(Colors.Black).AlignRight();
-							col.Item().Text("مستشفى بريدة المركزي")
-								.FontSize(14).Bold().FontColor(Colors.Black).AlignRight();
-							col.Item().Text($"الجهة المرجعة/ {document.ReturningDepartment}")
-								.FontSize(12).AlignRight();
+							col.Item().AlignRight().Text("المملكة العربية السعودية")
+								.FontSize(12).Bold().FontColor(Colors.Black);
+							col.Item().AlignRight().Text("وزارة الصحة")
+								.FontSize(11).FontColor(Colors.Black);
+							col.Item().AlignRight().Text("مستشفى بريدة المركزي")
+								.FontSize(11).FontColor(Colors.Black);
 						});
 
-						// Report Title - Center
-						row.RelativeItem().Column(col =>
+						// Center title
+						row.RelativeItem().AlignCenter().Column(col =>
 						{
-							col.Item().Text("مستند ارجاع")
-								.FontSize(22).Bold().AlignCenter();
+							col.Item().AlignCenter().Text("مستند ارجاع")
+								.FontSize(18).Bold().FontColor(Colors.Blue.Medium);
+							col.Item().AlignCenter().Text("RETURN DOCUMENT")
+								.FontSize(12).FontColor(Colors.Grey.Medium);
+							col.Item().AlignCenter().Text($"الجهة المرجعة: {document.ReturningDepartment}")
+								.FontSize(10);
 						});
 
-						// Document Info - Left Side
-						row.RelativeItem().Column(col =>
+						// Document info
+						row.ConstantItem(120).Column(col =>
 						{
-							col.Item().Text($"الرقم المتسلسل:")
-								.FontSize(12).AlignLeft();
-							col.Item().Text($"التاريخ: {document.DocumentNumber}")
-								.FontSize(12).AlignLeft();
-							col.Item().Text("عدد الصفحات")
-								.FontSize(12).AlignLeft();
+							col.Item().AlignLeft().Text($"رقم المستند: {document.DocumentNumber}")
+								.FontSize(10);
+							col.Item().AlignLeft().Text($"التاريخ: {document.ReturnDate:yyyy-MM-dd}")
+								.FontSize(10);
+							col.Item().AlignLeft().Text($"رقم الصفحة: 1/1")
+								.FontSize(10);
 						});
 					});
 
-					// Content Section - All content goes here in a single Content() call
+					// Content Section with compact styling
 					page.Content().PaddingVertical(10).Column(col =>
 					{
-						// Store Name
-						col.Item().Text("مستودع الرجيع")
-							.Bold().FontSize(14).AlignCenter();
+						// Store Name header - made more compact
+						col.Item().Background(Colors.Grey.Lighten3).Border(1).BorderColor(Colors.Grey.Medium)
+							.Padding(5).AlignCenter().Text("مستودع الرجيع")
+							.Bold().FontSize(12);
 
-						// Return Reasons Table
-						col.Item().PaddingTop(10).Table(table =>
+						// Return Reasons Table with compact styling
+						col.Item().PaddingTop(8).Table(table =>
 						{
 							table.ColumnsDefinition(cols =>
 							{
@@ -191,19 +192,43 @@ namespace AssetManagementSystem.BLL.Services
 							// Header
 							table.Header(header =>
 							{
-								header.Cell().Text("أسباب الارجاع").AlignCenter().Bold();
-								header.Cell().Column(2).Row(1).Element(c => c.Background(Colors.Grey.Lighten3));
+								header.Cell().ColumnSpan(4).Element(cell => cell
+									.Border(1).BorderColor(Colors.Grey.Medium)
+									.Background(Colors.Blue.Lighten4)
+									.Padding(4)
+									.AlignCenter()
+									.Text("أسباب الارجاع").SemiBold().FontSize(11));
 							});
 
-							// Reasons
-							table.Cell().Text("تالف").AlignCenter();
-							table.Cell().Text("فائض").AlignCenter();
-							table.Cell().Text("عدم الصلاحية").AlignCenter();
-							table.Cell().Text("انتهاء الغرض").AlignCenter();
+							// Reasons with compact checkbox styling
+							string[] reasons = { "تالف", "فائض", "عدم الصلاحية", "انتهاء الغرض" };
+							foreach (var reason in reasons)
+							{
+								table.Cell().Element(cell => cell
+									.Border(1).BorderColor(Colors.Grey.Medium)
+									.Padding(4)
+									.Row(row =>
+									{
+										row.RelativeItem().AlignCenter().Text(reason).FontSize(10);
+
+										// Add a styled checkmark if this is the selected reason
+										if (document.ReturnReason == reason)
+										{
+											row.ConstantItem(20).AlignCenter().Background(Colors.Green.Lighten4)
+												.Border(1).BorderColor(Colors.Green.Medium).Padding(1)
+												.Text("✓").FontSize(12).Bold().FontColor(Colors.Green.Medium);
+										}
+										else
+										{
+											row.ConstantItem(20).AlignCenter()
+												.Border(1).BorderColor(Colors.Grey.Lighten2).Padding(1);
+										}
+									}));
+							}
 						});
 
-						// Assets Table
-						col.Item().PaddingTop(20).Table(table =>
+						// Assets Table with compact styling
+						col.Item().PaddingTop(8).Table(table =>
 						{
 							table.ColumnsDefinition(cols =>
 							{
@@ -217,40 +242,104 @@ namespace AssetManagementSystem.BLL.Services
 								cols.RelativeColumn(1); // للإتلاف
 							});
 
-							// Headers
+							// Headers with compact styling
 							table.Header(header =>
 							{
-								header.Cell().Element(CellStyle).Text("الرقم").AlignCenter();
-								header.Cell().Element(CellStyle).Text("رقم الصنف").AlignCenter();
-								header.Cell().Element(CellStyle).Text("اسم الصنف").AlignCenter();
-								header.Cell().Element(CellStyle).Text("الوحدة").AlignCenter();
-								header.Cell().Element(CellStyle).Text("الكمية").AlignCenter();
-								header.Cell().Element(CellStyle).Text("للإصلاح").AlignCenter();
-								header.Cell().Element(CellStyle).Text("للبيع").AlignCenter();
-								header.Cell().Element(CellStyle).Text("للإتلاف").AlignCenter();
+								string[] headerTitles = { "الرقم", "رقم الصنف", "اسم الصنف", "الوحدة", "الكمية", "للإصلاح", "للبيع", "للإتلاف" };
+
+								foreach (var title in headerTitles)
+								{
+									header.Cell().Element(cell => cell
+										.Border(1).BorderColor(Colors.Grey.Medium)
+										.Background(Colors.Blue.Lighten4)
+										.Padding(4)
+										.AlignCenter()
+										.Text(title).SemiBold().FontSize(10));
+								}
 							});
 
-							// Assets
+							// Compact assets rows
 							int index = 1;
 							foreach (var item in document.Items)
 							{
-								table.Cell().Element(CellStyle).Text(index.ToString()).AlignCenter();
-								table.Cell().Element(CellStyle).Text(item.AssetTag).AlignCenter();
-								table.Cell().Element(CellStyle).Text(item.AssetDescription).AlignCenter();
-								table.Cell().Element(CellStyle).Text(item.Unit).AlignCenter();
-								table.Cell().Element(CellStyle).Text(item.Quantity.ToString()).AlignCenter();
+								var rowBackground = index % 2 == 0 ? Colors.White : Colors.Grey.Lighten5;
 
-								// Add empty cells for checkboxes
-								table.Cell().Element(CellStyle).Text("");
-								table.Cell().Element(CellStyle).Text("");
-								table.Cell().Element(CellStyle).Text("");
+								// Number column
+								table.Cell().Element(cell => cell
+									.Border(1).BorderColor(Colors.Grey.Medium)
+									.Background(rowBackground)
+									.Padding(3)
+									.AlignCenter()
+									.Text(index.ToString()).FontSize(9));
+
+								// Asset Tag column
+								table.Cell().Element(cell => cell
+									.Border(1).BorderColor(Colors.Grey.Medium)
+									.Background(rowBackground)
+									.Padding(3)
+									.AlignCenter()
+									.Text(item.AssetTag).FontSize(9));
+
+								// Description column - truncate if too long
+								table.Cell().Element(cell => cell
+									.Border(1).BorderColor(Colors.Grey.Medium)
+									.Background(rowBackground)
+									.Padding(3)
+									.AlignCenter()
+									.Text(TruncateText(item.AssetDescription, 40)).FontSize(9));
+
+								// Unit column
+								table.Cell().Element(cell => cell
+									.Border(1).BorderColor(Colors.Grey.Medium)
+									.Background(rowBackground)
+									.Padding(3)
+									.AlignCenter()
+									.Text(item.Unit).FontSize(9));
+
+								// Quantity column
+								table.Cell().Element(cell => cell
+									.Border(1).BorderColor(Colors.Grey.Medium)
+									.Background(rowBackground)
+									.Padding(3)
+									.AlignCenter()
+									.Text(item.Quantity.ToString()).FontSize(9));
+
+								// Create checkmark cells based on reason
+								string reason = document.ReturnReason?.ToLower();
+
+								// للإصلاح (For repair) column
+								table.Cell().Element(cell => cell
+									.Border(1).BorderColor(Colors.Grey.Medium)
+									.Background(rowBackground)
+									.Padding(3)
+									.AlignCenter()
+									.Text(reason == "تالف" ? "✓" : "")
+									.FontSize(12).Bold());
+
+								// للبيع (For sale) column
+								table.Cell().Element(cell => cell
+									.Border(1).BorderColor(Colors.Grey.Medium)
+									.Background(rowBackground)
+									.Padding(3)
+									.AlignCenter()
+									.Text(reason == "فائض" ? "✓" : "")
+									.FontSize(12).Bold());
+
+								// للإتلاف (For disposal) column
+								table.Cell().Element(cell => cell
+									.Border(1).BorderColor(Colors.Grey.Medium)
+									.Background(rowBackground)
+									.Padding(3)
+									.AlignCenter()
+									.Text((reason == "عدم الصلاحية" || reason == "انتهاء الغرض") ? "✓" : "")
+									.FontSize(12).Bold());
 
 								index++;
 							}
 						});
 
-						// Signatures Section
-						col.Item().PaddingTop(40).Table(table =>
+						// Signatures section with compact styling
+						col.Item().PaddingTop(10).Table(table =>
 						{
 							table.ColumnsDefinition(cols =>
 							{
@@ -258,51 +347,127 @@ namespace AssetManagementSystem.BLL.Services
 								cols.RelativeColumn();
 								cols.RelativeColumn();
 								cols.RelativeColumn();
-								cols.RelativeColumn();
 							});
 
 							// Headers
-							table.Cell().Element(CellStyle).Text("المسؤول في الجهة المرجعة").AlignCenter();
-							table.Cell().Element(CellStyle).Text("المستلم/امين المستودع").AlignCenter();
-							table.Cell().Element(CellStyle).Text("مدير إدارة المستودعات").AlignCenter();
-							table.Cell().Element(CellStyle).Text("لجنة فحص الرجيع").AlignCenter();
-							table.Cell().Element(CellStyle).Text("صاحب الصلاحية").AlignCenter();
+							string[] signatureHeaders = {
+						"المسؤول في الجهة المرجعة",
+						"المستلم/امين المستودع",
+						"مدير إدارة المستودعات",
+						"لجنة فحص الرجيع"
+					};
 
-							// Names
-							table.Cell().Element(CellStyle).Text("الاسم").AlignCenter();
-							table.Cell().Element(CellStyle).Text(document.ResponsiblePerson).AlignCenter();
-							table.Cell().Element(CellStyle).Text(document.StoreKeeper).AlignCenter();
-							table.Cell().Element(CellStyle).Text(document.WarehouseManager).AlignCenter();
-							table.Cell().Element(CellStyle).Text(document.ReturnCommittee).AlignCenter();
-							table.Cell().Element(CellStyle).Text(document.AuthorityPerson).AlignCenter();
+							foreach (var header in signatureHeaders)
+							{
+								table.Cell().Element(cell => cell
+									.Border(1).BorderColor(Colors.Grey.Medium)
+									.Background(Colors.Blue.Lighten4)
+									.Padding(4)
+									.AlignCenter()
+									.Text(header).SemiBold().FontSize(9));
+							}
 
-							// Signatures
-							table.Cell().Element(CellStyle).Text("التوقيع").AlignCenter();
-							table.Cell().Element(CellStyle).Text("1431343").AlignCenter(); // Sample ID/Signature
-							table.Cell().Element(CellStyle).Text("").AlignCenter();
-							table.Cell().Element(CellStyle).Text("").AlignCenter();
-							table.Cell().Element(CellStyle).Text("").AlignCenter();
-							table.Cell().Element(CellStyle).Text("").AlignCenter();
+							// Names row
+							table.Cell().Element(cell => cell
+								.Border(1).BorderColor(Colors.Grey.Medium)
+								.Padding(4)
+								.AlignCenter()
+								.Text("الاسم").SemiBold().FontSize(9));
 
-							// Dates
-							table.Cell().Element(CellStyle).Text("التاريخ").AlignCenter();
-							table.Cell().Element(CellStyle).Text("").AlignCenter();
-							table.Cell().Element(CellStyle).Text("").AlignCenter();
-							table.Cell().Element(CellStyle).Text("").AlignCenter();
-							table.Cell().Element(CellStyle).Text("").AlignCenter();
+							table.Cell().Element(cell => cell
+								.Border(1).BorderColor(Colors.Grey.Medium)
+								.Padding(4)
+								.AlignCenter()
+								.Text(document.ResponsiblePerson).FontSize(9));
+
+							table.Cell().Element(cell => cell
+								.Border(1).BorderColor(Colors.Grey.Medium)
+								.Padding(4)
+								.AlignCenter()
+								.Text(document.StoreKeeper).FontSize(9));
+
+							// Committee members in a compact style
+							table.Cell().Element(cell => cell
+								.Border(1).BorderColor(Colors.Grey.Medium)
+								.Padding(4)
+								.Column(column =>
+								{
+									if (!string.IsNullOrEmpty(document.ReturnCommittee))
+									{
+										var lines = document.ReturnCommittee.Split('\n');
+										foreach (var line in lines)
+										{
+											column.Item().AlignCenter().Text(line).FontSize(9);
+										}
+									}
+								}));
+
+							// Signature row with minimal height
+							table.Cell().Element(cell => cell
+								.Border(1).BorderColor(Colors.Grey.Medium)
+								.Padding(4)
+								.AlignCenter()
+								.Text("التوقيع").SemiBold().FontSize(9));
+
+							// Empty signature cells
+							for (int i = 0; i < 3; i++)
+							{
+								table.Cell().Element(cell => cell
+									.Border(1).BorderColor(Colors.Grey.Medium)
+									.MinHeight(25)); // Reduced height
+							}
+
+							// Date row
+							table.Cell().Element(cell => cell
+								.Border(1).BorderColor(Colors.Grey.Medium)
+								.Padding(4)
+								.AlignCenter()
+								.Text("التاريخ").SemiBold().FontSize(9));
+
+							// Empty date cells
+							for (int i = 0; i < 3; i++)
+							{
+								table.Cell().Element(cell => cell
+									.Border(1).BorderColor(Colors.Grey.Medium)
+									.MinHeight(20)); // Reduced height
+							}
 						});
 
-						// Authority Title
-						col.Item().PaddingTop(20).Text($"مدير مستشفى بريدة المركزي\n{document.AuthorityPerson}")
-							.AlignCenter().Bold();
+						// Hospital Manager section in a compact format
+						col.Item().PaddingTop(10).AlignCenter().Row(row =>
+						{
+							row.RelativeItem(2);
+							row.RelativeItem(4).Border(1).BorderColor(Colors.Grey.Medium)
+								.Background(Colors.Blue.Lighten5)
+								.Padding(5)
+								.Column(column =>
+								{
+									column.Item().AlignCenter().Text("مدير مستشفى بريدة المركزي").SemiBold().FontSize(10);
+									column.Item().AlignCenter().Text(document.AuthorityPerson).FontSize(10);
+								});
+							row.RelativeItem(2);
+						});
 
-						// Inventory Control Signature - Now part of the Content section
-						col.Item().PaddingTop(20).Text("مراقبة المخزون").Bold().FontSize(12);
-						col.Item().Text("ناصر العميري").Bold().FontSize(12);
+						// Inventory Control section at the bottom in a compact format
+						col.Item().PaddingTop(8).Row(row =>
+						{
+							row.RelativeItem().AlignRight().Column(column =>
+							{
+								column.Item().Text("مراقبة المخزون").SemiBold().FontSize(9);
+								column.Item().Text("ناصر العميري").FontSize(9);
+							});
+						});
 					});
 
-					// Footer could be defined here if needed
-					// page.Footer()...
+					// Footer with compact styling
+					page.Footer().AlignCenter().Text(text =>
+					{
+						text.Span("صفحة 1 من 1 | تم الإنشاء في: ")
+							.FontSize(8).FontColor(Colors.Grey.Medium);
+
+						text.Span(DateTime.Now.ToString("yyyy-MM-dd HH:mm"))
+							.FontSize(8).FontColor(Colors.Grey.Medium);
+					});
 				});
 			});
 
@@ -310,6 +475,24 @@ namespace AssetManagementSystem.BLL.Services
 			using var stream = new MemoryStream();
 			pdfDocument.GeneratePdf(stream);
 			return stream.ToArray();
+		}
+
+		// Helper method to truncate text if it's too long
+		private string TruncateText(string text, int maxLength)
+		{
+			if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+				return text ?? string.Empty;
+
+			return text.Substring(0, maxLength) + "...";
+		}
+
+		// Cell styling helper
+		private IContainer CellStyle(IContainer container)
+		{
+			return container
+				.Border(1)
+				.BorderColor(Colors.Grey.Medium)
+				.Padding(5);
 		}
 
 		public async Task<Dictionary<int, List<string>>> GroupAssetsByDepartmentAsync(List<string> assetTags)
@@ -369,13 +552,6 @@ namespace AssetManagementSystem.BLL.Services
 			return assetTag;
 		}
 
-		// Cell styling helper
-		private IContainer CellStyle(IContainer container)
-		{
-			return container
-				.Border(1)
-				.BorderColor(Colors.Grey.Medium)
-				.Padding(5);
-		}
+		 
 	}
 }
