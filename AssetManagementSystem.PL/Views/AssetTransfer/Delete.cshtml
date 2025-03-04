@@ -1,47 +1,114 @@
 ﻿@model AssetManagementSystem.DAL.Entities.AssetTransfer
-
 @{
-    ViewData["Title"] = "Delete Asset Transfer";
+    ViewData["Title"] = "حذف مناقلة أصل";
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
 
-@if (Model == null)
-{
-    <h2>Error: Asset Transfer not found.</h2>
-    <a asp-action="Index" class="btn btn-primary">Back to List</a>
-}
-else
-{
-    <h2>حذف مناقلة</h2>
-    <h4>هل انت متأكد؟</h4>
-    <div class="card">
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-4">Transfer Type</dt>
-                <dd class="col-sm-8">@Model.TransferType</dd>
-
-                <dt class="col-sm-4">Transfer Date</dt>
-                <dd class="col-sm-8">@Model.TransferDate.ToString("yyyy-MM-dd")</dd>
-
-                <dt class="col-sm-4">From Department</dt>
-                <dd class="col-sm-8">@Model.FromDepartment</dd>
-
-                <dt class="col-sm-4">To Department</dt>
-                <dd class="col-sm-8">@Model.ToDepartment</dd>
-
-                <dt class="col-sm-4">Asset Description</dt>
-                <dd class="col-sm-8">@Model.Asset?.AssetDescription</dd>
-
-                <dt class="col-sm-4">Asset Tag</dt>
-                <dd class="col-sm-8">@Model.AssetTag</dd>
-            </dl>
+<div class="container mt-4">
+    @if (Model == null)
+    {
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <i class="bi bi-exclamation-triangle me-2"></i> خطأ: لم يتم العثور على المناقلة
+            </div>
+            <div class="card-body">
+                <p class="text-danger">عذراً، لم يتم العثور على بيانات المناقلة المطلوبة.</p>
+                <a asp-action="Index" class="btn btn-primary">
+                    <i class="bi bi-list-ul me-1"></i> العودة للقائمة
+                </a>
+            </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="card shadow-lg border-danger">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">
+                    <i class="bi bi-trash me-2"></i> تأكيد حذف المناقلة
+                </h2>
+                <a asp-action="Index" class="btn btn-light">
+                    <i class="bi bi-arrow-left"></i> العودة للقائمة
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    هل أنت متأكد من رغبتك في حذف هذه المناقلة؟
+                    لا يمكن التراجع عن هذا الإجراء.
+                </div>
 
-    <form asp-action="DeleteConfirmed" method="post">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="id" value="@Model.Id" />
-        <button type="submit" class="btn btn-danger">حذف</button>
-        <a asp-action="Index" class="btn btn-secondary">الرجوع</a>
-    </form>
-}
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="text-primary mb-3">
+                            <i class="bi bi-info-circle me-2"></i> تفاصيل المناقلة
+                        </h5>
+                        <dl class="row">
+                            <dt class="col-sm-5">نوع المناقلة</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge bg-info">@Model.TransferType</span>
+                            </dd>
+
+                            <dt class="col-sm-5">تاريخ المناقلة</dt>
+                            <dd class="col-sm-7">
+                                <i class="bi bi-calendar me-1"></i>
+                                @Model.TransferDate.ToString("yyyy-MM-dd HH:mm")
+                            </dd>
+
+                            <dt class="col-sm-5">القسم المصدر</dt>
+                            <dd class="col-sm-7">
+                                <i class="bi bi-building-down me-1"></i>
+                                @Model.FromDepartment
+                            </dd>
+
+                            <dt class="col-sm-5">القسم المستهدف</dt>
+                            <dd class="col-sm-7">
+                                <i class="bi bi-building-up me-1"></i>
+                                @Model.ToDepartment
+                            </dd>
+                        </dl>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h5 class="text-primary mb-3">
+                            <i class="bi bi-box-seam me-2"></i> تفاصيل الأصل
+                        </h5>
+                        <dl class="row">
+                            <dt class="col-sm-5">وصف الأصل</dt>
+                            <dd class="col-sm-7">
+                                @(Model.Asset?.AssetDescription ?? "غير محدد")
+                            </dd>
+
+                            <dt class="col-sm-5">رمز الأصل</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge bg-secondary">@Model.AssetTag</span>
+                            </dd>
+
+                            
+                        </dl>
+                    </div>
+                </div>
+
+                <form asp-action="DeleteConfirmed" method="post" class="mt-4">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i> إلغاء
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i> تأكيد الحذف
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .badge {
+        font-size: 0.9em;
+        padding: 0.3em 0.6em;
+    }
+</style>

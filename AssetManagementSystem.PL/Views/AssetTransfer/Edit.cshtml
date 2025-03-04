@@ -1,29 +1,209 @@
-﻿<!-- Edit.cshtml -->
-@model AssetManagementSystem.DAL.Entities.AssetTransfer
+﻿@model AssetManagementSystem.DAL.Entities.AssetTransfer
 @{
-	ViewData["Title"] = "Edit Asset Transfer";
-	Layout = "~/Views/Shared/_Dashboard.cshtml";
+    ViewData["Title"] = "تعديل مناقلة أصل";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
-<h2>تعديل مناقلة</h2>
 
-<form asp-action="Edit" method="post">
-    <input type="hidden" asp-for="Id" />
-    <div class="form-group">
-        <label asp-for="TransferType"></label>
-        <input asp-for="TransferType" class="form-control" />
+<div class="container mt-4">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">
+                <i class="bi bi-pencil-square me-2"></i> تعديل مناقلة أصل
+            </h2>
+            <a asp-action="Index" class="btn btn-light">
+                <i class="bi bi-arrow-left"></i> العودة للقائمة
+            </a>
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit" method="post" class="needs-validation" novalidate>
+                <input type="hidden" asp-for="Id" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="AssetTag" class="form-label">
+                            <i class="bi bi-tag me-1"></i> رمز الأصل
+                        </label>
+                        <div class="input-group">
+                            <input asp-for="AssetTag" class="form-control" required
+                                   placeholder="أدخل رمز الأصل" />
+                            <button type="button" class="btn btn-secondary" id="searchAssetBtn">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback">الرجاء إدخال رمز الأصل</div>
+                        <small id="assetDetails" class="form-text text-muted"></small>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="TransferType" class="form-label">
+                            <i class="bi bi-list-task me-1"></i> نوع المناقلة
+                        </label>
+                        <select asp-for="TransferType" class="form-select" required>
+                            <option value="">اختر نوع المناقلة</option>
+                            <option value="داخلي">داخلي</option>
+                            <option value="خارجي">خارجي</option>
+                        </select>
+                        <div class="invalid-feedback">الرجاء اختيار نوع المناقلة</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-person-fill me-1"></i> المستخدم الحالي
+                        </label>
+                        <select name="CurrentUserId" class="form-select" id="currentUserSelect" required>
+                            <option value="">اختر المستخدم الحالي</option>
+                            @foreach (var user in ViewBag.Users ?? new List<dynamic>())
+                            {
+                                <option value="@user.Id"
+                                        selected="@(user.Id == Model.Asset?.UserId ? "selected" : "")">
+                                    @user.FullName
+                                </option>
+                            }
+                        </select>
+                        <div class="invalid-feedback">الرجاء اختيار المستخدم الحالي</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-person-plus-fill me-1"></i> المستخدم المستهدف
+                        </label>
+                        <select name="TargetUserId" class="form-select" id="targetUserSelect" required>
+                            <option value="">اختر المستخدم المستهدف</option>
+                            @foreach (var user in ViewBag.Users ?? new List<dynamic>())
+                            {
+                                <option value="@user.Id">@user.FullName</option>
+                            }
+                        </select>
+                        <div class="invalid-feedback">الرجاء اختيار المستخدم المستهدف</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="FromDepartment" class="form-label">
+                            <i class="bi bi-building-fill-down me-1"></i> القسم المصدر
+                        </label>
+                        <select asp-for="FromDepartment" class="form-select" id="fromDepartmentSelect" required>
+                            <option value="">اختر القسم المصدر</option>
+                            @foreach (var department in ViewBag.Departments ?? new List<dynamic>())
+                            {
+                                <option value="@department.Name"
+                                        selected="@(department.Name == Model.FromDepartment ? "selected" : "")">
+                                    @department.Name
+                                </option>
+                            }
+                        </select>
+                        <div class="invalid-feedback">الرجاء اختيار القسم المصدر</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="ToDepartment" class="form-label">
+                            <i class="bi bi-building-fill-up me-1"></i> القسم المستهدف
+                        </label>
+                        <select asp-for="ToDepartment" class="form-select" id="toDepartmentSelect" required>
+                            <option value="">اختر القسم المستهدف</option>
+                            @foreach (var department in ViewBag.Departments ?? new List<dynamic>())
+                            {
+                                <option value="@department.Name">@department.Name</option>
+                            }
+                        </select>
+                        <div class="invalid-feedback">الرجاء اختيار القسم المستهدف</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-clock-history me-1"></i> تاريخ المناقلة
+                        </label>
+                        <input type="datetime-local" name="TransferDate"
+                               class="form-control"
+                               value="@(Model.TransferDate.ToString("yyyy-MM-ddTHH:mm"))"
+                               required />
+                        <div class="invalid-feedback">الرجاء إدخال تاريخ المناقلة</div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> إلغاء
+                    </a>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-check-circle"></i> تحديث المناقلة
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-    <div class="form-group">
-        <label asp-for="FromDepartment"></label>
-        <input asp-for="FromDepartment" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label asp-for="ToDepartment"></label>
-        <input asp-for="ToDepartment" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label asp-for="AssetTag"></label>
-        <input asp-for="AssetTag" class="form-control" />
-    </div>
-    <button type="submit" class="btn btn-primary">حفظ</button>
-    <a asp-action="Index" class="btn btn-secondary">الغاء</a>
-</form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Asset Search Functionality
+            $('#searchAssetBtn').click(function() {
+                const assetTag = $('#AssetTag').val();
+                if (!assetTag) {
+                    alert('الرجاء إدخال رمز الأصل');
+                    return;
+                }
+
+                // AJAX call to get asset details
+                $.ajax({
+                    url: '@Url.Action("GetAssetDetails", "Asset")',
+                    type: 'GET',
+                    data: { assetTag: assetTag },
+                    success: function(response) {
+                        if (response.success) {
+                            const asset = response.data;
+                            $('#assetDetails').html(`
+                                <strong>الوصف:</strong> ${asset.assetDescription || 'غير محدد'}
+                                | <strong>القسم الحالي:</strong> ${asset.department?.name || 'غير محدد'}
+                            `);
+
+                            // Set the current department and user
+                            $('#fromDepartmentSelect').val(asset.department?.name || '');
+
+                            // Set the current user if the asset has a user assigned
+                            if (asset.user && asset.user.id) {
+                                $('#currentUserSelect').val(asset.user.id);
+                            }
+                        } else {
+                            $('#assetDetails').html(`
+                                <span class="text-danger">
+                                    <i class="bi bi-exclamation-triangle"></i> ${response.error}
+                                </span>
+                            `);
+                        }
+                    },
+                    error: function() {
+                        $('#assetDetails').html(`
+                            <span class="text-danger">
+                                <i class="bi bi-exclamation-triangle"></i> خطأ في جلب تفاصيل الأصل
+                            </span>
+                        `);
+                    }
+                });
+            });
+
+            // Form validation
+            (function() {
+                'use strict';
+                window.addEventListener('load', function() {
+                    var forms = document.getElementsByClassName('needs-validation');
+                    var validation = Array.prototype.filter.call(forms, function(form) {
+                        form.addEventListener('submit', function(event) {
+                            if (form.checkValidity() === false) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                            }
+                            form.classList.add('was-validated');
+                        }, false);
+                    });
+                }, false);
+            })();
+        });
+    </script>
+}

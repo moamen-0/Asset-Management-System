@@ -1,0 +1,100 @@
+﻿@model IEnumerable<AssetManagementSystem.DAL.Entities.AssetTransfer>
+
+@{
+    ViewData["Title"] = "نقل الأصول";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">
+                <i class="bi bi-arrow-left-right me-2"></i> سجل نقل الأصول
+            </h2>
+            <a asp-action="Create" class="btn btn-light">
+                <i class="bi bi-plus-circle-fill me-2"></i> إنشاء نقل جديد
+            </a>
+        </div>
+
+        <div class="card-body">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="table-responsive">
+                <table id="assetTransfersTable" class="table table-striped table-hover table-bordered align-middle">
+                    <thead class="table-dark text-center">
+                        <tr>
+                            <th><i class="bi bi-hash"></i> الرقم المسلسل</th>
+                            <th><i class="bi bi-upc-scan"></i> رمز الأصل</th>
+                            <th><i class="bi bi-arrow-left-right"></i> نوع النقل</th>
+                            <th><i class="bi bi-calendar-event"></i> تاريخ النقل</th>
+                            <th><i class="bi bi-signpost-split"></i> القسم المصدر</th>
+                            <th><i class="bi bi-signpost"></i> القسم المستهدف</th>
+                            <th><i class="bi bi-gear"></i> الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var transfer in Model)
+                        {
+                            <tr>
+                                <td class="text-center">@transfer.Id</td>
+                                <td class="text-center">@transfer.AssetTag</td>
+                                <td class="text-center">@(transfer.TransferType ?? "غير محدد")</td>
+                                <td class="text-center">@transfer.TransferDate.ToString("yyyy-MM-dd")</td>
+                                <td class="text-center">@(transfer.FromDepartment ?? "غير محدد")</td>
+                                <td class="text-center">@(transfer.ToDepartment ?? "غير محدد")</td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Details" asp-route-id="@transfer.Id" class="btn btn-sm btn-info" title="عرض التفاصيل">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@transfer.Id" class="btn btn-sm btn-warning" title="تعديل النقل">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@transfer.Id" class="btn btn-sm btn-danger" title="حذف النقل">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#assetTransfersTable').DataTable({
+                "order": [[3, "desc"]], // الترتيب حسب تاريخ النقل تنازليًا
+                "language": {
+                    "lengthMenu": "عرض _MENU_ عملية نقل",
+                    "search": "بحث سريع:",
+                    "info": "عرض _START_ إلى _END_ من أصل _TOTAL_ عملية نقل",
+                    "paginate": {
+                        "first": "الأول",
+                        "last": "الأخير",
+                        "next": "التالي",
+                        "previous": "السابق"
+                    }
+                },
+                responsive: true,
+                columnDefs: [
+                    { orderable: false, targets: 6 } // تعطيل الترتيب على عمود الإجراءات
+                ]
+            });
+        });
+    </script>
+}
