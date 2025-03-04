@@ -308,6 +308,12 @@ namespace AssetManagementSystem.DAL.Data
 	.HasForeignKey(n => n.UserId)
 	.OnDelete(DeleteBehavior.Cascade);
 
+
+			modelBuilder.Entity<Asset>()
+	.HasOne(a => a.Supervisor)
+	.WithMany(u => u.SupervisedAssets)
+	.HasForeignKey(a => a.SupervisorId)
+	.OnDelete(DeleteBehavior.Restrict);
 		}
 	}
 }

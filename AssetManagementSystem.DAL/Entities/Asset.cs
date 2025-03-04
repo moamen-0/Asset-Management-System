@@ -47,6 +47,12 @@ namespace AssetManagementSystem.DAL.Entities
 		public string? InsertUser { get; set; } =string.Empty;
 		public string? Details { get; set; }
 
+
+		// New supervisor relationship
+		public string? SupervisorId { get; set; }
+		[ForeignKey("SupervisorId")]
+		public virtual User? Supervisor { get; set; }
+
 		public string? AssetClass1 { get; set; }
 		public string? AssetClass2 { get; set; }
 		public string? AssetClass3 { get; set; }
