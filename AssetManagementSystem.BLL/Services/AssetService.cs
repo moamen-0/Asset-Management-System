@@ -149,5 +149,31 @@ namespace AssetManagementSystem.BLL.Services
 			var allAssets = await _assetRepository.GetAllAsync();
 			return allAssets.Where(a => assetTags.Contains(a.AssetTag));
 		}
+
+		public async Task AssignSupervisorToAssetAsync(string assetTag, string supervisorId)
+		{
+			var asset = await _assetRepository.GetByIdAsync(assetTag);
+			if (asset == null)
+				throw new InvalidOperationException($"Asset with tag {assetTag} not found");
+
+			asset.SupervisorId = supervisorId;
+			await _assetRepository.UpdateAsync(asset);
+		}
+
+		public async Task<IEnumerable<User>> GetSupervisorsAsync()
+		{
+			// Depending on your implementation, you might want to query users with the Supervisor role
+			// For now, we'll just return all users as potential supervisors
+			return await _assetRepository.GetUsersAsync();
+		}
+
+		public async Task<IEnumerable<Asset>> GetAssetsBySupervisorIdAsync(string supervisorId)
+		{
+			if (string.IsNullOrEmpty(supervisorId))
+				throw new ArgumentException("Supervisor ID cannot be null or empty");
+
+			var allAssets = await _assetRepository.GetAllAsync();
+			return allAssets.Where(a => a.SupervisorId == supervisorId).ToList();
+		}
 	}
 }
