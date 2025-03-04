@@ -876,10 +876,10 @@ namespace AssetManagementSystem.PL.Controllers
 		}
 
 
-		static IContainer CellStyle(IContainer container)
-		{
-			return container.Padding(5);
-		}
+		//static IContainer CellStyle(IContainer container)
+		//{
+		//	return container.Padding(5);
+		//}
 
 		[HttpPost]
 		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
@@ -996,11 +996,11 @@ namespace AssetManagementSystem.PL.Controllers
 		}
 
 		private async Task<byte[]> GenerateDisposalDocumentAsync(
-			IEnumerable<Asset> assets,
-			BulkOperationRequest request,
-			User currentUser)
+		IEnumerable<Asset> assets,
+		BulkOperationRequest request,
+		User currentUser)
 		{
-			// Set QuestPDF license
+			// تعيين ترخيص QuestPDF
 			QuestPDF.Settings.License = LicenseType.Community;
 
 			var department = assets.FirstOrDefault()?.Department;
@@ -1008,38 +1008,73 @@ namespace AssetManagementSystem.PL.Controllers
 			{
 				container.Page(page =>
 				{
+					// إعدادات الصفحة
 					page.Size(PageSizes.A4);
 					page.Margin(20);
-					page.DefaultTextStyle(x => x.FontSize(12));
+					page.DefaultTextStyle(x => x.FontSize(12).FontFamily("Arial"));
 
-					// Header
+					// الرأس - ترويسة المستند
 					page.Header().Row(row =>
 					{
-						// Logo
+						// شعار الموقع
 						var logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "logo.png");
 						if (System.IO.File.Exists(logoPath))
 						{
 							row.ConstantItem(100).Image(logoPath).FitWidth();
 						}
 
-						// Title and Date
+// عنوان المستند - في المنتصف
 						row.RelativeItem().Column(col =>
 						{
-							col.Item().Text("Disposal Document")
-								.FontSize(20)
-								.SemiBold()
-								.FontColor(Colors.Blue.Medium);
+							col.Item().Text("مستند تكهين أصول")
+								.FontSize(24)
+								.Bold()
+								.FontColor(Colors.Red.Medium)
+								.AlignRight();
 
-							col.Item().Text($"Date: {DateTime.Now:dd/MM/yyyy}");
-							col.Item().Text($"Department: {department?.Name ?? "N/A"}");
+							col.Item().PaddingTop(5).Text($"التاريخ: {DateTime.Now.ToString("yyyy/MM/dd")}")
+								.FontSize(12)
+								.AlignRight();
+
+							col.Item().Text($" DISP-{DateTime.Now.ToString("yyyyMMdd")}-{Guid.NewGuid().ToString().Substring(0, 4)}:رقم المستند")
+								.FontSize(12)
+								.AlignRight();
 						});
+
+						// معلومات المستند - على اليمين (النص العربي من اليمين لليسار)
+						row.RelativeItem().Column(col =>
+						{
+							col.Item().Text("المملكة العربية السعودية")
+								.FontSize(16)
+								.Bold()
+								.FontColor(Colors.Black)
+								.AlignRight();
+
+							col.Item().Text("وزارة الصحة")
+								.FontSize(14)
+								.Bold()
+								.FontColor(Colors.Black)
+								.AlignRight();
+
+							col.Item().Text(" ")
+								.FontSize(14)
+								.Bold()
+								 
+								.AlignRight();
+
+							col.Item().Text($" {department?.Name ?? "غير محدد"}:القسم")
+								.FontSize(12)
+								.AlignRight();
+						});
+
+						
 					});
 
-					// Main Content
-					page.Content().Column(col =>
+					// المحتوى الرئيسي
+					page.Content().PaddingVertical(10).Column(col =>
 					{
-						// Disposal Details
-						col.Item().Table(table =>
+						// تفاصيل التكهين
+						col.Item().Border(1).BorderColor(Colors.Grey.Medium).Padding(10).Table(table =>
 						{
 							table.ColumnsDefinition(columns =>
 							{
@@ -1047,77 +1082,173 @@ namespace AssetManagementSystem.PL.Controllers
 								columns.RelativeColumn();
 							});
 
-							// Add disposal details
-							AddTableRow(table, "Disposal Type:", request.DisposalType);
-							AddTableRow(table, "Sale Value:", request.SaleValue?.ToString("C") ?? "N/A");
-							AddTableRow(table, "Disposed By:", currentUser.FullName);
-							AddTableRow(table, "Disposal Date:", DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
+							// إضافة تفاصيل التكهين
+							AddArabicTableRow(table, request.DisposalType, ":نوع التكهين");
+							AddArabicTableRow(table, request.SaleValue?.ToString("N2") + " ريال" ?? "غير محدد" , ":القيمة المالية");
+							AddArabicTableRow(table, currentUser.FullName ,":تم التكهين بواسطة" );
+							AddArabicTableRow(table,DateTime.Now.ToString("yyyy/MM/dd HH:mm"),":تاريخ التكهين");
+							 
 						});
 
-						// Assets Table
-						col.Item().Padding(10).Table(table =>
+						// عنوان جدول الأصول
+						col.Item().PaddingTop(15).Background(Colors.Grey.Lighten4).Padding(5)
+							.Text("قائمة الأصول المكهنة")
+							.FontSize(14)
+							.Bold()
+							.FontColor(Colors.Blue.Medium)
+							.AlignCenter();
+
+						// جدول الأصول
+						col.Item().PaddingTop(5).Table(table =>
+						{
+							table.ColumnsDefinition(columns =>
+							{
+								columns.ConstantColumn(30);  // رقم
+								columns.RelativeColumn(2);   // رمز الأصل
+								columns.RelativeColumn(3);   // الوصف
+								
+								columns.RelativeColumn(2);   // الموقع
+								
+							});
+
+							// ترويسة الجدول
+							table.Header(header =>
+							{
+								header.Cell().Element(CellStyle).Text("#").AlignCenter();
+								header.Cell().Element(CellStyle).Text("رمز الأصل").AlignCenter();
+								header.Cell().Element(CellStyle).Text("الوصف").AlignCenter();
+								 
+								header.Cell().Element(CellStyle).Text("الموقع").AlignCenter();
+							 
+							});
+
+							// صفوف الأصول
+							int index = 1;
+							foreach (var asset in assets)
+							{
+								table.Cell().Element(CellStyle).Text(index.ToString()).AlignCenter();
+								table.Cell().Element(CellStyle).Text(asset.AssetTag).AlignCenter();
+								table.Cell().Element(CellStyle).Text(asset.AssetDescription ?? "بدون وصف").AlignCenter();
+								 
+								table.Cell().Element(CellStyle).Text(GetArabicAssetLocation(asset)).AlignCenter();
+								 
+
+								index++;
+							}
+
+							// إجماليات
+							table.Footer(footer => {
+								footer.Cell().Element(FooterCellStyle).Text(assets.Count().ToString()).Bold().AlignCenter().FontSize(12);
+								footer.Cell().ColumnSpan(3).Element(FooterCellStyle).Text("عدد الأصول المكهنة").AlignRight().FontSize(12);
+							});
+						});
+
+						// تفاصيل الموافقة
+						col.Item().PaddingTop(15).Background(Colors.Grey.Lighten4).Padding(5)
+							.Text("موافقات التكهين")
+							.FontSize(14)
+							.Bold()
+							.FontColor(Colors.Blue.Medium)
+							.AlignCenter();
+
+						// قسم التوقيعات
+						col.Item().PaddingTop(10).Table(table =>
 						{
 							table.ColumnsDefinition(columns =>
 							{
 								columns.RelativeColumn();
 								columns.RelativeColumn();
 								columns.RelativeColumn();
-								columns.RelativeColumn();
 							});
 
-							// Table Header
-							table.Header(header =>
-							{
-								header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Asset Tag");
-								header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Description");
-								header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Serial Number");
-								header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Location");
-							});
+							// ترويسة التوقيعات
+							table.Cell().Padding(5).Border(1).BorderColor(Colors.Grey.Medium)
+								.Text("الموظف المسؤول عن التكهين").AlignCenter().Bold();
 
-							// Table Rows
-							foreach (var asset in assets)
-							{
-								table.Cell().Padding(5).Text(asset.AssetTag);
-								table.Cell().Padding(5).Text(asset.AssetDescription);
-								table.Cell().Padding(5).Text(asset.SerialNumber ?? "N/A");
-								table.Cell().Padding(5).Text(GetAssetLocation(asset));
-							}
+							table.Cell().Padding(5).Border(1).BorderColor(Colors.Grey.Medium)
+								.Text("اسم التجمع الصحي").AlignCenter().Bold();
+
+							table.Cell().Padding(5).Border(1).BorderColor(Colors.Grey.Medium)
+								.Text("اسم المرفق الصحي").AlignCenter().Bold();
+
+							// مكان التوقيع
+							table.Cell().Padding(20).Border(1).BorderColor(Colors.Grey.Medium).Text("").AlignCenter();
+							table.Cell().Padding(20).Border(1).BorderColor(Colors.Grey.Medium).Text("").AlignCenter();
+							table.Cell().Padding(20).Border(1).BorderColor(Colors.Grey.Medium).Text("").AlignCenter();
+
+							// الأسماء
+							table.Cell().Padding(5).Border(1).BorderColor(Colors.Grey.Medium)
+								.Text(currentUser.FullName).AlignCenter();
+
+							table.Cell().Padding(5).Border(1).BorderColor(Colors.Grey.Medium)
+								.Text("------------").AlignCenter();
+
+							table.Cell().Padding(5).Border(1).BorderColor(Colors.Grey.Medium)
+								.Text("------------").AlignCenter();
 						});
 
-						// Signatures Section
-						col.Item().PaddingTop(50).Row(row =>
-						{
-							row.RelativeItem().Column(col =>
-							{
-								col.Item().Text("Disposed By:").Bold();
-								col.Item().PaddingTop(20).Text("_________________");
-								col.Item().Text(currentUser.FullName);
-							});
+						// الختم الرسمي
+						col.Item().PaddingTop(30).AlignRight().Width(200).Height(100).Placeholder("الختم الرسمي");
 
-							row.RelativeItem().Column(col =>
-							{
-								col.Item().Text("Approved By:").Bold();
-								col.Item().PaddingTop(20).Text("_________________");
-								col.Item().Text("Name and Signature");
-							});
-						});
+						
 					});
 
-					// Footer
+					// التذييل
 					page.Footer()
 						.AlignCenter()
 						.Text(x =>
 						{
-							x.Span("Generated on: ").FontSize(10);
-							x.Span(DateTime.Now.ToString("dd/MM/yyyy HH:mm")).FontSize(10);
+							x.Span("تم إنشاء هذا المستند بواسطة نظام إدارة الأصول - ").FontSize(9);
+							x.Span(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")).FontSize(9);
+							x.Span(" - صفحة ").FontSize(9);
+							x.CurrentPageNumber().FontSize(9);
+							x.Span(" من ").FontSize(9);
+							x.TotalPages().FontSize(9);
 						});
 				});
 			});
 
-			// Generate PDF
+			// إنشاء ملف PDF
 			using var stream = new MemoryStream();
 			document.GeneratePdf(stream);
 			return stream.ToArray();
+		}
+
+		private void AddArabicTableRow(TableDescriptor table, string label, string value)
+		{
+			table.Cell().Padding(5).Text(label).Bold().AlignRight();
+			table.Cell().Padding(5).Text(value).Bold().AlignRight();
+		}
+
+		private string GetArabicAssetLocation(Asset asset)
+		{
+			var locations = new[]
+			{
+		asset.Facility?.Name,
+		asset.Building?.Name,
+		asset.Floor?.Name,
+		asset.Room?.Name
+	};
+
+			return string.Join(" / ", locations.Where(l => !string.IsNullOrEmpty(l)));
+		}
+
+		private IContainer CellStyle(IContainer container)
+		{
+			return container
+				.Border(1)
+				.BorderColor(Colors.Grey.Medium)
+				.Background(Colors.Grey.Lighten3)
+				.Padding(5);
+		}
+
+		private IContainer FooterCellStyle(IContainer container)
+		{
+			return container
+				.Border(1)
+				.BorderColor(Colors.Grey.Medium)
+				.Background(Colors.Blue.Lighten4)
+				.Padding(5);
 		}
 
 		private void AddTableRow(TableDescriptor table, string label, string value)
