@@ -1114,8 +1114,9 @@ AST004⟶AST005"></textarea>
             });
 
             // Process bulk asset tags from textarea
-                 $('#processAssetTags').click(function () {
-            const tags = processAssetTags($('#bulkAssetTags').val());
+                      $('#processAssetTags').click(function () {
+            const tagsInput = $('#bulkAssetTags').val();
+            const tags = processAssetTags(tagsInput);
 
             if (tags.length === 0) {
                 Swal.fire({
@@ -1127,82 +1128,100 @@ AST004⟶AST005"></textarea>
                 return;
             }
 
-            // Clear existing selections
-            $('.row-checkbox').prop('checked', false);
-            selectedAssets.clear();
-
-            // Search and select matching rows
-            let found = 0;
-            let foundTags = [];
-
-            table.rows().every(function () {
-                const rowData = this.data();
-                if (tags.includes(rowData.assetTag)) {
-                    found++;
-                    foundTags.push(rowData.assetTag);
-                    selectedAssets.add(rowData.assetTag);
-                    $(this.node()).find('.row-checkbox').prop('checked', true);
+            // Show loading indicator
+            Swal.fire({
+                title: 'جاري التحقق...',
+                text: 'يتم البحث عن الأصول في قاعدة البيانات',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
                 }
             });
 
-            // Calculate not found tags
-            const notFoundTags = tags.filter(tag => !foundTags.includes(tag));
-            const notFound = notFoundTags.length;
+            // Make AJAX call to verify tags against the full database
+            $.ajax({
+                url: '/Asset/VerifyAssetTags',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(tags),
+                success: function(response) {
+                    Swal.close();
 
-            // Show results feedback with specific missing tags
-            if (found > 0) {
-                let messageHtml = `<p>✅ تم العثور وتحديد ${found} أصل</p>`;
+                    if (response.success) {
+                        // Clear existing selections
+                        $('.row-checkbox').prop('checked', false);
+                        selectedAssets.clear();
 
-                if (notFound > 0) {
-                    messageHtml += `<p>⚠️ ${notFound} أصل غير موجود في العرض الحالي:</p>`;
-                    messageHtml += '<div class="not-found-tags-container" style="max-height: 150px; overflow-y: auto; margin-top: 10px; margin-bottom: 10px;">';
-                    messageHtml += '<ul style="text-align: left; padding-left: 20px;">';
+                        // Add the found assets to our selection
+                        if (response.foundTags && response.foundTags.length > 0) {
+                            response.foundTags.forEach(tag => {
+                                selectedAssets.add(tag);
+                            });
 
-                    notFoundTags.forEach(tag => {
-                        messageHtml += `<li style="margin-bottom: 5px;"><code>${tag}</code></li>`;
+                            // Select checkboxes for assets that are currently visible in the table
+                            table.rows().every(function() {
+                                const rowData = this.data();
+                                if (selectedAssets.has(rowData.assetTag)) {
+                                    $(this.node()).find('.row-checkbox').prop('checked', true);
+                                }
+                            });
+                        }
+
+                        // Format the result message
+                        const found = response.foundTags.length;
+                        const notFoundTags = response.notFoundTags || [];
+                        const notFound = notFoundTags.length;
+
+                        let messageHtml = '';
+                        if (found > 0) {
+                            messageHtml += `<p>✅ تم العثور وتحديد ${found} أصل</p>`;
+                        }
+
+                        if (notFound > 0) {
+                            messageHtml += `<p>⚠️ ${notFound} أصل غير موجود في قاعدة البيانات:</p>`;
+                            messageHtml += '<div class="not-found-tags-container" style="max-height: 150px; overflow-y: auto; margin-top: 10px; margin-bottom: 10px; text-align: left;">';
+                            messageHtml += '<ul style="padding-left: 20px;">';
+
+                            notFoundTags.forEach(tag => {
+                                messageHtml += `<li style="margin-bottom: 5px;"><code>${tag}</code></li>`;
+                            });
+
+                            messageHtml += '</ul></div>';
+                        }
+
+                        // Show results to user
+                        Swal.fire({
+                            icon: found > 0 ? (notFound > 0 ? 'info' : 'success') : 'error',
+                            title: found > 0 ? 'تم تحديد الأصول' : 'لم يتم العثور على أي أصول',
+                            html: messageHtml,
+                            confirmButtonText: 'حسناً',
+                            width: notFound > 0 ? '500px' : '400px'
+                        });
+
+                        // Update bulk operation controls
+                        updateBulkControls();
+
+                        // Clear the textarea
+                        $('#bulkAssetTags').val('');
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'خطأ!',
+                            text: response.error || 'حدث خطأ أثناء التحقق من الأصول',
+                            confirmButtonText: 'حسناً'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'خطأ!',
+                        text: 'فشل الاتصال بالخادم، يرجى المحاولة مرة أخرى',
+                        confirmButtonText: 'حسناً'
                     });
-
-                    messageHtml += '</ul></div>';
-
-                    // Add suggestion
-                    messageHtml += '<p style="font-size: 0.9rem; color: #666;">يمكنك استخدام تصفية العرض أو تحميل بيانات جديدة للعثور على هذه الأصول.</p>';
+                    console.error("Error verifying asset tags:", error);
                 }
-
-                Swal.fire({
-                    icon: notFound > 0 ? 'info' : 'success',
-                    title: 'تم تحديد الأصول',
-                    html: messageHtml,
-                    confirmButtonText: 'حسناً',
-                    width: notFound > 0 ? '500px' : '400px'
-                });
-            } else {
-                let messageHtml = '<p>لم يتم العثور على أي من الأصول المدخلة في العرض الحالي:</p>';
-                messageHtml += '<div class="not-found-tags-container" style="max-height: 150px; overflow-y: auto; margin-top: 10px; margin-bottom: 10px;">';
-                messageHtml += '<ul style="text-align: left; padding-left: 20px;">';
-
-                notFoundTags.forEach(tag => {
-                    messageHtml += `<li style="margin-bottom: 5px;"><code>${tag}</code></li>`;
-                });
-
-                messageHtml += '</ul></div>';
-
-                // Add suggestion
-                messageHtml += '<p style="font-size: 0.9rem; color: #666;">يمكنك استخدام زر تصفية الجدول لرؤية جميع الأصول، أو التأكد من صحة رموز الأصول المدخلة.</p>';
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'لم يتم العثور على أي أصول',
-                    html: messageHtml,
-                    confirmButtonText: 'حسناً',
-                    width: '500px'
-                });
-            }
-
-            // Update bulk operation controls
-            updateBulkControls();
-
-            // Clear the textarea
-            $('#bulkAssetTags').val('');
+            });
         });
 
             // Clear Selection Button

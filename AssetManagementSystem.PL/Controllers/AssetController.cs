@@ -1656,6 +1656,41 @@ namespace AssetManagementSystem.PL.Controllers
 				return StatusCode(500, new { error = "Failed to load users" });
 			}
 		}
+		[HttpPost]
+		public async Task<IActionResult> VerifyAssetTags([FromBody] List<string> assetTags)
+		{
+			try
+			{
+				if (assetTags == null || !assetTags.Any())
+				{
+					return Json(new { success = false, error = "No asset tags provided" });
+				}
+
+				// Get all assets from the database
+				var allAssets = await _assetService.GetAllAssetsAsync();
+
+				// Filter to find matching assets
+				var foundAssets = allAssets.Where(a => assetTags.Contains(a.AssetTag)).ToList();
+
+				// Get the list of found and not found tags
+				var foundTags = foundAssets.Select(a => a.AssetTag).ToList();
+				var notFoundTags = assetTags.Except(foundTags, StringComparer.OrdinalIgnoreCase).ToList();
+
+				return Json(new
+				{
+					success = true,
+					foundTags = foundTags,
+					notFoundTags = notFoundTags,
+					totalFound = foundTags.Count,
+					totalNotFound = notFoundTags.Count
+				});
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error verifying asset tags");
+				return Json(new { success = false, error = "An error occurred while verifying asset tags" });
+			}
+		}
 
 	}
 public class BulkSupervisorAssignRequest
