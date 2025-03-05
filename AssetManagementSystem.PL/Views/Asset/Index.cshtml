@@ -317,6 +317,7 @@ AST004⟶AST005"></textarea>
                         <th>الموديل <i class="fas fa-info-circle ms-1"></i></th>
                         <th>الحالة <i class="fas fa-tasks ms-1"></i></th>
                         <th>العمليات <i class="fas fa-cogs ms-1"></i></th>
+
                     </tr>
                 </thead>
                 <tbody>
@@ -376,6 +377,7 @@ AST004⟶AST005"></textarea>
                         <th>الماركة <i class="fas fa-copyright text-muted ms-1"></i></th>
                         <th>الموديل <i class="fas fa-info text-muted ms-1"></i></th>
                         <th>المستلم <i class="fas fa-user text-muted ms-1"></i></th>
+                        <th>المشرف <i class="fas fa-user-shield text-muted ms-1"></i></th>
                         <th>الحالة <i class="fas fa-circle text-muted ms-1"></i></th>
                         <th>تاريخ الإدخال <i class="fas fa-calendar text-muted ms-1"></i></th>
                     </tr>
@@ -462,10 +464,17 @@ AST004⟶AST005"></textarea>
                         </select>
                         <div class="invalid-feedback">يرجى اختيار القسم الهدف</div>
                     </div>
-                    
+
                     <div class="mb-4">
-                        <label class="form-label fw-bold">المستلم الهدف (اختياري)</label>
+                        <label class="form-label fw-bold">المستلم الهدف (جميع المستخدمين)</label>
                         <select id="targetUser" class="form-select form-select-lg">
+                            <option value="">-- غير محدد --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">المستلم الهدف (مستخدمي القسم المحدد)</label>
+                        <select id="targetDepartmentUser" class="form-select form-select-lg">
                             <option value="">-- غير محدد --</option>
                         </select>
                     </div>
@@ -796,38 +805,44 @@ AST004⟶AST005"></textarea>
                             return `<span class="badge bg-light text-dark p-2 fw-normal">${data}</span>`;
                         }
                     },
-                    { data: 'facility.name' },
-                    { data: 'building.name' },
-                    { data: 'department.name' },
-                    { data: 'assetDescription' },
-                    { data: 'brand' },
-                    { data: 'model' },
-                    { 
-                        data: 'user.fullName',
-                        render: function(data) {
-                            return data || '<span class="text-muted">غير محدد</span>';
-                        }
-                    },
-                    { 
-                        data: 'status',
-                        render: function(data) {
-                            let statusClass = '';
-                            switch(data) {
-                                case 'Available': statusClass = 'status-available'; data="متاح"; break;
-                                case 'In Use': statusClass = 'status-inuse'; break;
-                                case 'Under Maintenance': statusClass = 'status-maintenance'; break;
-                                case 'Disposed': statusClass = 'status-disposed'; data="مكهن"; break;
-                            }
-                            return `<span class="${statusClass}"><i class="fas fa-circle me-1"></i>${data}</span>`;
-                        }
-                    },
-                    { 
-                        data: 'insertDate',
-                        render: function(data) {
-                            return new Date(data).toLocaleDateString('ar-SA');
-                        }
+                        { data: 'facility.name' },
+            { data: 'building.name' },
+            { data: 'department.name' },
+            { data: 'assetDescription' },
+            { data: 'brand' },
+            { data: 'model' },
+            {
+                data: 'user.fullName',
+                render: function(data) {
+                    return data || '<span class="text-muted">غير محدد</span>';
+                }
+            },
+            {
+                data: 'supervisor.fullName', // New supervisor column
+                render: function(data) {
+                    return data || '<span class="text-muted">غير محدد</span>';
+                }
+            },
+            {
+                data: 'status',
+                render: function(data) {
+                    let statusClass = '';
+                    switch(data) {
+                        case 'Available': statusClass = 'status-available'; data="متاح"; break;
+                        case 'In Use': statusClass = 'status-inuse'; break;
+                        case 'Under Maintenance': statusClass = 'status-maintenance'; break;
+                        case 'Disposed': statusClass = 'status-disposed'; data="مكهن"; break;
                     }
-                ],
+                    return `<span class="${statusClass}"><i class="fas fa-circle me-1"></i>${data}</span>`;
+                }
+            },
+            {
+                data: 'insertDate',
+                render: function(data) {
+                    return new Date(data).toLocaleDateString('en');
+                }
+            }
+        ],
                 initComplete: function() {
                     $('#assetsTable_filter input').addClass('form-control-sm');
                     $('#assetsTable_length select').addClass('form-select-sm');
@@ -1099,62 +1114,96 @@ AST004⟶AST005"></textarea>
             });
 
             // Process bulk asset tags from textarea
-            $('#processAssetTags').click(function () {
-                const tags = processAssetTags($('#bulkAssetTags').val());
+                 $('#processAssetTags').click(function () {
+            const tags = processAssetTags($('#bulkAssetTags').val());
 
-                if (tags.length === 0) {
-                    Swal.fire({
-                        title: 'تنبيه!',
-                        text: 'الرجاء إدخال Asset Tag واحد على الأقل',
-                        icon: 'warning',
-                        confirmButtonText: 'حسناً'
+            if (tags.length === 0) {
+                Swal.fire({
+                    title: 'تنبيه!',
+                    text: 'الرجاء إدخال Asset Tag واحد على الأقل',
+                    icon: 'warning',
+                    confirmButtonText: 'حسناً'
+                });
+                return;
+            }
+
+            // Clear existing selections
+            $('.row-checkbox').prop('checked', false);
+            selectedAssets.clear();
+
+            // Search and select matching rows
+            let found = 0;
+            let foundTags = [];
+
+            table.rows().every(function () {
+                const rowData = this.data();
+                if (tags.includes(rowData.assetTag)) {
+                    found++;
+                    foundTags.push(rowData.assetTag);
+                    selectedAssets.add(rowData.assetTag);
+                    $(this.node()).find('.row-checkbox').prop('checked', true);
+                }
+            });
+
+            // Calculate not found tags
+            const notFoundTags = tags.filter(tag => !foundTags.includes(tag));
+            const notFound = notFoundTags.length;
+
+            // Show results feedback with specific missing tags
+            if (found > 0) {
+                let messageHtml = `<p>✅ تم العثور وتحديد ${found} أصل</p>`;
+
+                if (notFound > 0) {
+                    messageHtml += `<p>⚠️ ${notFound} أصل غير موجود في العرض الحالي:</p>`;
+                    messageHtml += '<div class="not-found-tags-container" style="max-height: 150px; overflow-y: auto; margin-top: 10px; margin-bottom: 10px;">';
+                    messageHtml += '<ul style="text-align: left; padding-left: 20px;">';
+
+                    notFoundTags.forEach(tag => {
+                        messageHtml += `<li style="margin-bottom: 5px;"><code>${tag}</code></li>`;
                     });
-                    return;
+
+                    messageHtml += '</ul></div>';
+
+                    // Add suggestion
+                    messageHtml += '<p style="font-size: 0.9rem; color: #666;">يمكنك استخدام تصفية العرض أو تحميل بيانات جديدة للعثور على هذه الأصول.</p>';
                 }
 
-                // Clear existing selections
-                $('.row-checkbox').prop('checked', false);
-                selectedAssets.clear();
+                Swal.fire({
+                    icon: notFound > 0 ? 'info' : 'success',
+                    title: 'تم تحديد الأصول',
+                    html: messageHtml,
+                    confirmButtonText: 'حسناً',
+                    width: notFound > 0 ? '500px' : '400px'
+                });
+            } else {
+                let messageHtml = '<p>لم يتم العثور على أي من الأصول المدخلة في العرض الحالي:</p>';
+                messageHtml += '<div class="not-found-tags-container" style="max-height: 150px; overflow-y: auto; margin-top: 10px; margin-bottom: 10px;">';
+                messageHtml += '<ul style="text-align: left; padding-left: 20px;">';
 
-                // Search and select matching rows
-                let found = 0;
-                table.rows().every(function () {
-                    const rowData = this.data();
-                    if (tags.includes(rowData.assetTag)) {
-                        found++;
-                        selectedAssets.add(rowData.assetTag);
-                        $(this.node()).find('.row-checkbox').prop('checked', true);
-                    }
+                notFoundTags.forEach(tag => {
+                    messageHtml += `<li style="margin-bottom: 5px;"><code>${tag}</code></li>`;
                 });
 
-                // Show results feedback
-                const notFound = tags.length - found;
-                
-                if (found > 0) {
-                    Swal.fire({
-                        icon: notFound > 0 ? 'info' : 'success',
-                        title: 'تم تحديد الأصول',
-                        html: `
-                            <p>✅ تم العثور وتحديد ${found} أصل</p>
-                            ${notFound > 0 ? `<p>⚠️ ${notFound} أصل غير موجود في العرض الحالي</p>` : ''}
-                        `,
-                        confirmButtonText: 'حسناً'
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'لم يتم العثور على أي أصول',
-                        text: 'لم يتم العثور على أي من الأصول المدخلة في العرض الحالي',
-                        confirmButtonText: 'حسناً'
-                    });
-                }
+                messageHtml += '</ul></div>';
 
-                // Update bulk operation controls
-                updateBulkControls();
+                // Add suggestion
+                messageHtml += '<p style="font-size: 0.9rem; color: #666;">يمكنك استخدام زر تصفية الجدول لرؤية جميع الأصول، أو التأكد من صحة رموز الأصول المدخلة.</p>';
 
-                // Clear the textarea
-                $('#bulkAssetTags').val('');
-            });
+                Swal.fire({
+                    icon: 'error',
+                    title: 'لم يتم العثور على أي أصول',
+                    html: messageHtml,
+                    confirmButtonText: 'حسناً',
+                    width: '500px'
+                });
+            }
+
+            // Update bulk operation controls
+            updateBulkControls();
+
+            // Clear the textarea
+            $('#bulkAssetTags').val('');
+        });
 
             // Clear Selection Button
             $('#clearSelectionBtn').click(function() {
@@ -1250,7 +1299,7 @@ AST004⟶AST005"></textarea>
                 e.preventDefault();
 
                 const targetDepartmentId = parseInt($('#targetDepartment').val());
-                const targetUserId = $('#targetUser').val();
+                 const targetUserId = $('#targetDepartmentUser').val() || $('#targetUser').val();
 
                 if (!targetDepartmentId) {
                     Swal.fire({
@@ -1304,6 +1353,61 @@ AST004⟶AST005"></textarea>
                 });
             });
 
+                    $('#targetUser').on('change', function() {
+            if ($(this).val()) {
+                $('#targetDepartmentUser').val('');
+            }
+        });
+
+        $('#targetDepartmentUser').on('change', function() {
+            if ($(this).val()) {
+                $('#targetUser').val('');
+            }
+        });
+                    $('#targetDepartment').on('change', function() {
+            const departmentId = $(this).val();
+            const deptUserSelect = $('#targetDepartmentUser');
+
+            if (!departmentId) {
+                // If no department selected, clear and disable department user dropdown
+                deptUserSelect.prop('disabled', true)
+                    .empty()
+                    .append('<option value="">-- غير محدد --</option>');
+                return;
+            }
+
+            // Show loading indicator
+            deptUserSelect.prop('disabled', true)
+                .empty()
+                .append('<option>جاري تحميل المستلمين...</option>');
+
+            // Fetch users for the selected department
+            $.ajax({
+                url: '/Asset/GetUsersByDepartment',
+                type: 'GET',
+                data: { departmentId: departmentId },
+                success: function(response) {
+                    deptUserSelect.empty().prop('disabled', false);
+                    deptUserSelect.append('<option value="">-- غير محدد --</option>');
+
+                    if (response && response.length > 0) {
+                        response.forEach(user => {
+                            deptUserSelect.append(`<option value="${user.id}">${user.name}</option>`);
+                        });
+                    } else {
+                        deptUserSelect.append('<option disabled>لا يوجد مستخدمين في هذا القسم</option>');
+                    }
+                },
+                error: function(xhr) {
+                    deptUserSelect.prop('disabled', false)
+                        .empty()
+                        .append('<option value="">-- غير محدد --</option>')
+                        .append('<option disabled>خطأ في تحميل المستلمين</option>');
+
+                    console.error('Error loading department users:', xhr);
+                }
+            });
+        });
             // Bulk disposal form submission
             $('#bulkDisposalForm').on('submit', function (e) {
                 e.preventDefault();

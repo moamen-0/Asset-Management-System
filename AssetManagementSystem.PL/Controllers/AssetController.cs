@@ -217,6 +217,7 @@ namespace AssetManagementSystem.PL.Controllers
 					brand = a.Brand,
 					model = a.Model,
 					user = a.User != null ? new { fullName = a.User.FullName ?? "N/A" } : new { fullName = "N/A" },
+					supervisor = a.Supervisor != null ? new { fullName = a.Supervisor.FullName ?? "N/A" } : new { fullName = "N/A" }, // Add supervisor info
 					assetType = a.AssetType,
 					status = a.Status,
 					isDisposed = a.IsDisposed,
@@ -1331,9 +1332,9 @@ namespace AssetManagementSystem.PL.Controllers
 		{
 			var name = !string.IsNullOrEmpty(user.FullName) ? user.FullName : "No Name";
 			var email = !string.IsNullOrEmpty(user.Email) ? user.Email : "No Email";
-			var department = user.Department?.Name ?? "No Department";
+			//var department = user.Department?.Name ?? "No Department";
 
-			return $"{name} ({email}) - {department}";
+			return $"{name} ({email})";
 		}
 		[HttpGet]
 		[Route("Asset/GetBuildingsByFacilityAsync/{facilityId}")]
@@ -1635,7 +1636,26 @@ namespace AssetManagementSystem.PL.Controllers
 				return Json(new { success = false, error = "حدث خطأ في استرجاع قائمة المشرفين" });
 			}
 		}
+		[HttpGet]
+		public async Task<IActionResult> GetUsersByDepartment(int departmentId)
+		{
+			try
+			{
+				var users = await _unitOfWork.user.GetUsersByDepartmentAsync(departmentId);
 
+				var result = users.Select(u => new {
+					id = u.Id,
+					name = BuildUserDisplayName(u)
+				}).ToList();
+
+				return Json(result);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error loading users by department");
+				return StatusCode(500, new { error = "Failed to load users" });
+			}
+		}
 
 	}
 public class BulkSupervisorAssignRequest
