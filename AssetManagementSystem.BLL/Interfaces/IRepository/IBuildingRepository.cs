@@ -14,6 +14,8 @@ namespace AssetManagementSystem.BLL.Interfaces.IRepository
 		Task AddAsync(Building building);
 		Task UpdateAsync(Building building);
 		Task DeleteAsync(int id);
+		Task AddRangeAsync(IEnumerable<Building> buildings);
+		Task<Building> GetByNameAndFacilityAsync(string buildingName, int facilityId);
 
 	}
 }

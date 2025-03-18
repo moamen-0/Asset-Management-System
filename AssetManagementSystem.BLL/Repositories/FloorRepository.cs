@@ -65,5 +65,17 @@ namespace AssetManagementSystem.BLL.Repositories
 			_context.Floors.Update(floor);
 			await _context.SaveChangesAsync();
 		}
+		public async Task AddRangeAsync(IEnumerable<Floor> floors)
+		{
+			await _context.Floors.AddRangeAsync(floors);
+			await _context.SaveChangesAsync();
+		}
+		public async Task<Floor> GetByNameAndBuildingAsync(string floorName, int buildingId)
+		{
+			return await _context.Floors
+				.FirstOrDefaultAsync(f =>
+					f.Name.Trim().Equals(floorName.Trim(), StringComparison.OrdinalIgnoreCase) &&
+					f.BuildingId == buildingId);
+		}
 	}
 }

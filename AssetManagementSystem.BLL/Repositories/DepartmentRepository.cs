@@ -67,5 +67,15 @@ namespace AssetManagementSystem.BLL.Repositories
 			_context.Departments.Update(department);
 			await _context.SaveChangesAsync();
 		}
+		public async Task<Department> GetByNameAsync(string name)
+		{
+			return await _context.Departments
+				.FirstOrDefaultAsync(d => d.Name.Trim().Equals(name.Trim(), StringComparison.OrdinalIgnoreCase));
+		}
+		public async Task AddRangeAsync(IEnumerable<Department> departments)
+		{
+			await _context.Departments.AddRangeAsync(departments);
+			await _context.SaveChangesAsync();
+		}
 	}
 }

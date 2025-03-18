@@ -63,5 +63,15 @@ namespace AssetManagementSystem.BLL.Repositories
 			_context.Update(facility);
 			await _context.SaveChangesAsync();
 		}
+		public async Task AddRangeAsync(IEnumerable<Facility> facilities)
+		{
+			await _context.Facilities.AddRangeAsync(facilities);
+			await _context.SaveChangesAsync();
+		}
+		public async Task<Facility> GetByNameAsync(string name)
+		{
+			return await _context.Facilities
+				.FirstOrDefaultAsync(f => f.Name.Trim().Equals(name.Trim(), StringComparison.OrdinalIgnoreCase));
+		}
 	}
 }

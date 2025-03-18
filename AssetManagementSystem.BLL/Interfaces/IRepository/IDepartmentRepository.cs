@@ -14,5 +14,7 @@ namespace AssetManagementSystem.BLL.Interfaces.IRepository
 		Task AddAsync(Department department);
 		Task UpdateAsync(Department department);
 		Task DeleteAsync(int id);
+		Task<Department> GetByNameAsync(string name);
+		Task AddRangeAsync(IEnumerable<Department> departments);
 	}
 }

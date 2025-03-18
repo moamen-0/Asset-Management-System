@@ -46,16 +46,11 @@
                هل انت متأمد من حذف <strong class="text-dark">@Model.FullName</strong>؟
             </p>
 
-            <form asp-action="DeleteConfirmed">
-                <input type="hidden" asp-for="Id" />
-
-                <button type="submit" class="btn btn-danger me-2">
-                    <i class="bi bi-trash"></i> حذف
+            <form asp-controller="User" asp-action="Delete" asp-route-id="@Model.Id" method="post" style="display: inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this user?');">
+                    <i class="fas fa-trash"></i> Delete
                 </button>
-
-                <a asp-action="DepartmentUsers" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> عودة
-                </a>
             </form>
         </div>
     </div>

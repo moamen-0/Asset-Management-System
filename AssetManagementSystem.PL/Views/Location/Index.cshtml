@@ -3,7 +3,42 @@
     ViewData["Title"] = "إدارة المواقع";
     Layout = "~/Views/Shared/_Dashboard.cshtml";
 }
+<div class="card shadow-lg rounded-4 mb-4 border-0">
+    <div class="card-body p-2">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div class="d-flex align-items-center">
+                <h4 class="text-primary mb-0 ms-2"><i class="fas fa-file-import"></i> استيراد المواقع</h4>
+            </div>
+            <div class="quick-actions">
+                <div class="dropdown d-inline-block">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="importDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-file-import me-1"></i> استيراد
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="importDropdown">
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#importModal" data-location-type="facility">المنشآت</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#importModal" data-location-type="department">الأقسام</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#importModal" data-location-type="building">المباني</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#importModal" data-location-type="floor">الطوابق</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#importModal" data-location-type="room">الغرف</a></li>
+                    </ul>
+                </div>
 
+                <div class="dropdown d-inline-block">
+                    <button class="btn btn-success dropdown-toggle" type="button" id="templateDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-download me-1"></i> تنزيل نموذج
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="templateDropdown">
+                        <li><a class="dropdown-item" href="@Url.Action("DownloadLocationTemplate", "Location", new { locationType = "facility" })">نموذج المنشآت</a></li>
+                        <li><a class="dropdown-item" href="@Url.Action("DownloadLocationTemplate", "Location", new { locationType = "department" })">نموذج الأقسام</a></li>
+                        <li><a class="dropdown-item" href="@Url.Action("DownloadLocationTemplate", "Location", new { locationType = "building" })">نموذج المباني</a></li>
+                        <li><a class="dropdown-item" href="@Url.Action("DownloadLocationTemplate", "Location", new { locationType = "floor" })">نموذج الطوابق</a></li>
+                        <li><a class="dropdown-item" href="@Url.Action("DownloadLocationTemplate", "Location", new { locationType = "room" })">نموذج الغرف</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="container-fluid mt-4">
     <div class="card shadow-lg border-0 rounded-4">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -220,10 +255,120 @@
         </div>
     </div>
 </div>
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-file-import me-2"></i> استيراد <span id="importLocationType">المواقع</span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div class="import-icon-container mb-3">
+                        <i class="fas fa-file-excel fa-4x text-success"></i>
+                        <i class="fas fa-arrow-right fa-2x text-primary mx-3"></i>
+                        <i class="fas fa-database fa-4x text-primary"></i>
+                    </div>
+                    <h5>استيراد من ملف Excel</h5>
+                    <p class="text-muted">قم بتحميل ملف Excel يحتوي على البيانات</p>
+                </div>
 
+                <form action="@Url.Action("ImportLocations", "Location")" method="post" enctype="multipart/form-data" id="importForm">
+                    <input type="hidden" name="locationType" id="locationTypeInput" value="facility" />
+
+                    <div class="mb-3">
+                        <div class="custom-file-upload">
+                            <div class="input-group">
+                                <input type="file" name="file" id="importFile" class="form-control" accept=".xlsx,.xls" required />
+                                <label for="importFile" class="input-group-text">
+                                    <i class="fas fa-upload"></i>
+                                </label>
+                            </div>
+                            <small class="form-text text-muted">الملفات المدعومة: .xlsx, .xls</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span>تأكد من أن الملف يحتوي على الأعمدة الصحيحة المطابقة لنموذج النظام</span>
+                    </div>
+
+                    <div id="templateLinkContainer" class="mb-3">
+                        <a href="#" id="downloadTemplate" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-download me-1"></i> تنزيل نموذج للاستيراد
+                        </a>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i> إلغاء
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-file-import me-1"></i> استيراد
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @section Scripts {
     <script>
         $(document).ready(function() {
+
+              $('#importModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var locationType = button.data('location-type');
+                var locationTypeDisplay = '';
+
+                switch(locationType) {
+                    case 'facility':
+                        locationTypeDisplay = 'المنشآت';
+                        break;
+                    case 'department':
+            locationTypeDisplay = 'الأقسام';
+            break;
+                    case 'building':
+                        locationTypeDisplay = 'المباني';
+                        break;
+                    case 'floor':
+                        locationTypeDisplay = 'الطوابق';
+                        break;
+                    case 'room':
+                        locationTypeDisplay = 'الغرف';
+                        break;
+                    default:
+                        locationTypeDisplay = 'المواقع';
+                }
+
+                $('#importLocationType').text(locationTypeDisplay);
+                $('#locationTypeInput').val(locationType);
+
+                // Update template download link
+                $('#downloadTemplate').attr('href', '@Url.Action("DownloadLocationTemplate", "Location")?locationType=' + locationType);
+            });
+
+            // Form validation
+            $('#importForm').on('submit', function(e) {
+                var fileInput = $('#importFile')[0];
+                if (fileInput.files.length === 0) {
+                    e.preventDefault();
+                    alert('الرجاء اختيار ملف للاستيراد');
+                    return false;
+                }
+
+                var fileName = fileInput.files[0].name;
+                var fileExt = fileName.split('.').pop().toLowerCase();
+
+                if (fileExt !== 'xlsx' && fileExt !== 'xls') {
+                    e.preventDefault();
+                    alert('الرجاء اختيار ملف Excel صالح (.xlsx or .xls)');
+                    return false;
+                }
+
+                return true;
+            });
             // تبديل مباني المنشأة
             $(".facility-item").click(function(e) {
                 e.preventDefault();

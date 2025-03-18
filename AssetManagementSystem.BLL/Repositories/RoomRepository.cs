@@ -56,5 +56,10 @@ namespace AssetManagementSystem.BLL.Repositories
 			_context.Rooms.Update(room);
 			await _context.SaveChangesAsync();
 		}
+		public async Task AddRangeAsync(IEnumerable<Room> rooms)
+		{
+			await _context.Rooms.AddRangeAsync(rooms);
+			await _context.SaveChangesAsync();
+		}
 	}
 }

@@ -95,14 +95,64 @@ namespace AssetManagementSystem.BLL.Repositories
 
 		public async Task<User> DeleteUserAsync(string id)
 		{
-			var user = await _context.Users.FindAsync(id);
-			if (user == null) return null;
+			// Create a strategy for executing the operations
+			var strategy = _context.Database.CreateExecutionStrategy();
 
-			_context.Users.Remove(user);
-			await _context.SaveChangesAsync();
-			return user;
+			return await strategy.ExecuteAsync(async () =>
+			{
+				// All transaction work goes inside this lambda
+				using var transaction = await _context.Database.BeginTransactionAsync();
+				try
+				{
+					var user = await _context.Users
+						.Include(u => u.Assets)
+						.Include(u => u.SupervisedAssets)
+						.FirstOrDefaultAsync(u => u.Id == id);
+
+					if (user == null) return null;
+
+					// Clear all references in Assets table
+					var userAssets = await _context.Assets.Where(a => a.UserId == id).ToListAsync();
+					foreach (var asset in userAssets)
+					{
+						asset.UserId = null;
+					}
+
+					// Clear all supervisor references in Assets table
+					var supervisedAssets = await _context.Assets.Where(a => a.SupervisorId == id).ToListAsync();
+					foreach (var asset in supervisedAssets)
+					{
+						asset.SupervisorId = null;
+					}
+
+					// Update ChangeLogs
+					var changelogs = await _context.changeLogs.Where(c => c.UserId == id).ToListAsync();
+					foreach (var log in changelogs)
+					{
+						log.UserId = null;
+					}
+
+					// Delete related notifications
+					var notifications = await _context.Notifications.Where(n => n.UserId == id).ToListAsync();
+					_context.Notifications.RemoveRange(notifications);
+
+					// Save changes to update references
+					await _context.SaveChangesAsync();
+
+					// Now remove the user
+					_context.Users.Remove(user);
+					await _context.SaveChangesAsync();
+
+					await transaction.CommitAsync();
+					return user;
+				}
+				catch (Exception ex)
+				{
+					await transaction.RollbackAsync();
+					throw new Exception($"Error deleting user: {ex.Message}", ex);
+				}
+			});
 		}
-
 
 		public async Task<bool> UserExistsAsync(string id)
 		{

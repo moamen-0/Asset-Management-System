@@ -186,17 +186,36 @@ public class UserController : Controller
 	[Authorize(Roles = Roles.Admin)]
 	public async Task<IActionResult> Delete(string id)
 	{
+		if (id == null)
+		{
+			return NotFound();
+		}
+
 		var user = await _unitOfWork.user.GetUserByIdAsync(id);
-		if (user == null) return NotFound();
+		if (user == null)
+		{
+			return NotFound();
+		}
+
 		return View(user);
 	}
 
-	// Delete user (POST)
-	[HttpPost, ActionName("Delete")]
+	 
+	[HttpPost]
+	[Route("User/Delete/{id}")]   
 	[ValidateAntiForgeryToken]
 	public async Task<IActionResult> DeleteConfirmed(string id)
 	{
-		await _unitOfWork.user.DeleteUserAsync(id);
+		try
+		{
+			await _unitOfWork.user.DeleteUserAsync(id);
+			TempData["SuccessMessage"] = "User deleted successfully";
+		}
+		catch (Exception ex)
+		{
+			TempData["ErrorMessage"] = $"Error deleting user: {ex.Message}";
+		}
+
 		return RedirectToAction(nameof(DepartmentUsers));
 	}
 

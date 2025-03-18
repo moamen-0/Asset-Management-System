@@ -14,5 +14,6 @@ namespace AssetManagementSystem.BLL.Interfaces.IRepository
 		Task AddAsync(Facility facility);
 		Task UpdateAsync(Facility facility);
 		Task DeleteAsync(int id);
+		Task AddRangeAsync(IEnumerable<Facility> facilities);
 	}
 }
