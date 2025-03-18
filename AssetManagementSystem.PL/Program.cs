@@ -156,7 +156,7 @@ namespace AssetManagementSystem.PL
 			builder.Services.AddHttpContextAccessor();
 
 
-			//builder.Services.AddAutoMapper(typeof(AssetProfile));
+	
 			builder.Services.AddRazorPages().AddRazorRuntimeCompilation(); 
 
             builder.Services.AddControllersWithViews()

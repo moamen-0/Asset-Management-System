@@ -12,6 +12,8 @@ using AssetManagementSystem.PL.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using AssetManagementSystem.DAL.Utilities;
 using AssetManagementSystem.BLL.Repositories;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 
 [Authorize]
 public class UserController : Controller
@@ -20,12 +22,14 @@ public class UserController : Controller
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly IUserService _userService;
 	private readonly RoleManager<IdentityRole> _roleManager;
-	public UserController(UserManager<User> userManager,IUnitOfWork unitOfWork, IUserService userService, RoleManager<IdentityRole> roleManager)
+	private readonly ILogger<UserController> _logger;
+	public UserController(UserManager<User> userManager,IUnitOfWork unitOfWork, IUserService userService, RoleManager<IdentityRole> roleManager,ILogger<UserController>logger)
 	{
 		_userManager = userManager;
 		_unitOfWork = unitOfWork;
 		_userService = userService;
 		_roleManager = roleManager;
+		_logger = logger;
 	}
 
 	[HttpGet]
@@ -460,5 +464,258 @@ public class UserController : Controller
 		ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
 		return View(paginatedUsers);
+	}
+	[HttpPost]
+	[Authorize(Roles = $"{Roles.Admin},{Roles.Manager}")]
+	public async Task<IActionResult> ImportUsers(IFormFile file)
+	{
+		if (file == null || file.Length == 0)
+		{
+			TempData["Error"] = "Please upload a valid Excel file.";
+			return RedirectToAction("DepartmentUsers");
+		}
+
+		List<User> usersToAdd = new List<User>();
+		HashSet<string> errors = new HashSet<string>();
+		int successCount = 0;
+
+		try
+		{
+			// Cache all departments to avoid multiple database calls
+			var allDepartments = (await _unitOfWork.DepartmentRepository.GetAllAsync()).ToList();
+
+			using (var stream = new MemoryStream())
+			{
+				file.CopyTo(stream);
+				using (var package = new ExcelPackage(stream))
+				{
+					var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+					if (worksheet == null)
+					{
+						TempData["Error"] = "Invalid Excel file.";
+						return RedirectToAction("DepartmentUsers");
+					}
+
+					int rowCount = worksheet.Dimension.Rows;
+
+					// Skip header row
+					for (int row = 2; row <= rowCount; row++)
+					{
+						try
+						{
+							string email = worksheet.Cells[row, 1].Value?.ToString();
+							string fullName = worksheet.Cells[row, 2].Value?.ToString();
+							string nationalId = worksheet.Cells[row, 3].Value?.ToString();
+							string fileNumber = worksheet.Cells[row, 4].Value?.ToString();
+							string departmentName = worksheet.Cells[row, 5].Value?.ToString();
+							string password = worksheet.Cells[row, 6].Value?.ToString() ?? "Password123!"; // Default password if none provided
+							string roles = worksheet.Cells[row, 7].Value?.ToString();
+
+							// Validate required fields
+							if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(fullName))
+							{
+								errors.Add($"Row {row}: Email and Full Name are required.");
+								continue;
+							}
+
+							// Check if user already exists
+							var existingUser = await _userManager.FindByEmailAsync(email);
+							if (existingUser != null)
+							{
+								errors.Add($"Row {row}: User with email {email} already exists.");
+								continue;
+							}
+
+							// Find department by name if provided
+							int? departmentId = null;
+							if (!string.IsNullOrEmpty(departmentName))
+							{
+								var department = allDepartments.FirstOrDefault(d =>
+									d.Name.Equals(departmentName, StringComparison.OrdinalIgnoreCase));
+
+								if (department == null)
+								{
+									errors.Add($"Row {row}: Department '{departmentName}' does not exist.");
+									continue;
+								}
+								departmentId = department.Id;
+							}
+
+							// Create new user
+							var user = new User
+							{
+								Email = email,
+								UserName = email,
+								FullName = fullName,
+								NationalId = nationalId,
+								RecipientFileNumber = fileNumber,
+								DepartmentId = departmentId,
+								EmailConfirmed = true
+							};
+
+							// Create user in database
+							var result = await _userManager.CreateAsync(user, password);
+
+							if (result.Succeeded)
+							{
+								// Assign roles if provided
+								if (!string.IsNullOrEmpty(roles))
+								{
+									var roleList = roles.Split(',').Select(r => r.Trim());
+									foreach (var role in roleList)
+									{
+										// Check if role exists
+										if (await _roleManager.RoleExistsAsync(role))
+										{
+											await _userManager.AddToRoleAsync(user, role);
+										}
+										else
+										{
+											errors.Add($"Row {row}: Role '{role}' does not exist.");
+										}
+									}
+								}
+								else
+								{
+									// Assign default User role
+									await _userManager.AddToRoleAsync(user, Roles.User);
+								}
+
+								successCount++;
+							}
+							else
+							{
+								errors.Add($"Row {row}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+							}
+						}
+						catch (Exception ex)
+						{
+							errors.Add($"Row {row}: {ex.Message}");
+						}
+					}
+				}
+			}
+
+			if (successCount > 0)
+			{
+				TempData["Success"] = $"Successfully imported {successCount} users.";
+			}
+
+			if (errors.Any())
+			{
+				TempData["ImportErrors"] = string.Join("<br>", errors);
+			}
+		}
+		catch (Exception ex)
+		{
+			TempData["Error"] = $"Error importing users: {ex.Message}";
+		}
+
+		return RedirectToAction("DepartmentUsers");
+	}
+
+	[HttpGet]
+	[Authorize(Roles = $"{Roles.Admin},{Roles.Manager}")]
+	public async Task<IActionResult> DownloadUserTemplate()
+	{
+		using (var package = new ExcelPackage())
+		{
+			var worksheet = package.Workbook.Worksheets.Add("Users");
+
+			// Add headers
+			string[] headers =
+			{
+			"Email (Required)",
+			"Full Name (Required)",
+			"National ID",
+			"File Number",
+			"Department Name",
+			"Password (Default: Password123!)",
+			"Roles (comma separated)"
+		};
+
+			for (int i = 0; i < headers.Length; i++)
+			{
+				worksheet.Cells[1, i + 1].Value = headers[i];
+				worksheet.Cells[1, i + 1].Style.Font.Bold = true;
+				worksheet.Cells[1, i + 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+				worksheet.Cells[1, i + 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+			}
+
+			// Try to get available department names for dropdown
+			try
+			{
+				// Get all departments to provide examples in the template
+				var departments = await _unitOfWork.DepartmentRepository.GetAllAsync();
+				var departmentNames = departments.Select(d => d.Name).Take(3).ToList();
+
+				// Add example roles
+				var availableRoles = new List<string> {
+	Roles.User,
+	Roles.Supervisor,
+	Roles.Manager,
+	Roles.DataEntry,
+	Roles.Admin
+};
+
+				// Add sample data
+				worksheet.Cells[2, 1].Value = "user@example.com";
+				worksheet.Cells[2, 2].Value = "Example User";
+				worksheet.Cells[2, 3].Value = "1234567890";
+				worksheet.Cells[2, 4].Value = "FILE001";
+				worksheet.Cells[2, 5].Value = departmentNames.FirstOrDefault() ?? "Department Name";
+				worksheet.Cells[2, 6].Value = "Password123!";
+				worksheet.Cells[2, 7].Value = Roles.User;
+
+				// Add data validation for department column if we have departments
+				if (departmentNames.Any())
+				{
+					var validation = worksheet.DataValidations.AddListValidation(worksheet.Cells["E2:E1000"].Address);
+					foreach (var dept in departmentNames)
+					{
+						validation.Formula.Values.Add(dept);
+					}
+					validation.ShowErrorMessage = true;
+					validation.ErrorTitle = "Invalid Department";
+					validation.Error = "Please select a department from the list";
+				}
+
+				// Add data validation for roles
+				var roleValidation = worksheet.DataValidations.AddListValidation(worksheet.Cells["G2:G1000"].Address);
+				foreach (var role in availableRoles)
+				{
+					roleValidation.Formula.Values.Add(role);
+				}
+				roleValidation.AllowBlank = true;
+				roleValidation.ShowErrorMessage = true;
+				roleValidation.ErrorTitle = "Invalid Role";
+				roleValidation.Error = "Please select valid roles (comma separated): " + string.Join(", ", availableRoles);
+
+				// Add an informational note
+				worksheet.Cells[3, 1].Value = "Note: Available departments: " + string.Join(", ", departmentNames);
+				worksheet.Cells[3, 1].Style.Font.Italic = true;
+				worksheet.Cells[3, 1].Style.Font.Color.SetColor(System.Drawing.Color.Blue);
+				worksheet.Cells[3, 1, 3, 7].Merge = true;
+
+				worksheet.Cells[4, 1].Value = "Note: Available roles: " + string.Join(", ", availableRoles);
+				worksheet.Cells[4, 1].Style.Font.Italic = true;
+				worksheet.Cells[4, 1].Style.Font.Color.SetColor(System.Drawing.Color.Blue);
+				worksheet.Cells[4, 1, 4, 7].Merge = true;
+			}
+			catch
+			{
+				// If there's an error accessing departments, just use a placeholder
+				worksheet.Cells[2, 5].Value = "Department Name";
+			}
+
+			// Auto-fit columns
+			worksheet.Cells.AutoFitColumns();
+
+			var stream = new MemoryStream();
+			package.SaveAs(stream);
+			stream.Position = 0;
+
+			return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "UserImportTemplate.xlsx");
+		}
 	}
 }

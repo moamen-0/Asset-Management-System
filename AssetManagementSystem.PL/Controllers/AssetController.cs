@@ -602,77 +602,261 @@ namespace AssetManagementSystem.PL.Controllers
 		{
 			if (file == null || file.Length == 0)
 			{
-				TempData["Error"] = "Please upload a valid Excel file.";
+				TempData["Error"] = "الرجاء تحميل ملف Excel صالح.";
 				return RedirectToAction("Index");
 			}
 
-			var assets = new List<Asset>();
+			var successCount = 0;
+			var errorCount = 0;
+			var errors = new List<string>();
+			var currentUser = await GetCurrentUserAsync();
 
 			try
 			{
+				// Set EPPlus license
+				ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
 				using (var stream = new MemoryStream())
 				{
-					file.CopyTo(stream);
+					await file.CopyToAsync(stream);
 					using (var package = new ExcelPackage(stream))
 					{
 						var worksheet = package.Workbook.Worksheets.FirstOrDefault();
 						if (worksheet == null)
 						{
-							TempData["Error"] = "Invalid Excel file.";
+							TempData["Error"] = "ملف Excel غير صالح.";
 							return RedirectToAction("Index");
 						}
 
 						int rowCount = worksheet.Dimension.Rows;
-
-						for (int row = 2; row <= rowCount; row++) // Skip header
+						if (rowCount <= 1) // Only header row
 						{
-							var asset = new Asset
-							{
-								AssetTag = worksheet.Cells[row, 1].Value?.ToString() ?? "Unknown",
-								Cluster = worksheet.Cells[row, 2].Value?.ToString(),
-								FacilityId = Convert.ToInt32(worksheet.Cells[row, 3].Value ?? 0),
-								BuildingId = Convert.ToInt32(worksheet.Cells[row, 4].Value ?? 0),
-								FloorId = Convert.ToInt32(worksheet.Cells[row, 5].Value ?? 0),
-								RoomTag = worksheet.Cells[row, 6].Value?.ToString(),
-								DepartmentId = Convert.ToInt32(worksheet.Cells[row, 7].Value ?? 0),
-								AssetDescription = worksheet.Cells[row, 8].Value?.ToString(),
-								Brand = worksheet.Cells[row, 9].Value?.ToString(),
-								Model = worksheet.Cells[row, 10].Value?.ToString(),
-								UserId = worksheet.Cells[row, 11].Value?.ToString(),
-								AssetType = worksheet.Cells[row, 12].Value?.ToString(),
-								Status = worksheet.Cells[row, 13].Value?.ToString(),
-								IsDisposed = worksheet.Cells[row, 14].Value?.ToString()?.ToLower() == "true",
-								SerialNumber = worksheet.Cells[row, 15].Value?.ToString(),
-								InsertDate = DateTime.UtcNow,
-								InsertUser = worksheet.Cells[row, 16].Value?.ToString(),
-								Details = worksheet.Cells[row, 17].Value?.ToString(),
-								AssetClass1 = worksheet.Cells[row, 18].Value?.ToString(),
-								AssetClass2 = worksheet.Cells[row, 19].Value?.ToString(),
-								AssetClass3 = worksheet.Cells[row, 20].Value?.ToString(),
-							};
+							TempData["Error"] = "ملف Excel فارغ. لا توجد بيانات للاستيراد.";
+							return RedirectToAction("Index");
+						}
 
-							assets.Add(asset);
+						// Get all required entities for name lookup
+						var facilities = await _assetService.GetAllFacilitiesAsync();
+						var departments = await _assetService.GetAllDepartmentsAsync();
+						var buildings = await _unitOfWork.buildingRepository.GetAllAsync();
+						var floors = await _unitOfWork.floorRepository.GetAllAsync();
+						var rooms = await _unitOfWork.RoomRepository.GetAllAsync();
+						var users = await _assetService.GetAllUsersAsync();
+
+						// Dictionary for name lookups (case insensitive)
+						var facilityDict = facilities.ToDictionary(f => f.Name.ToLower(), f => f);
+						var departmentDict = departments.ToDictionary(d => d.Name.ToLower(), d => d);
+						var buildingDict = buildings.ToDictionary(b => b.Name.ToLower(), b => b);
+						var floorDict = floors.ToDictionary(f => f.Name?.ToLower() ?? "", f => f);
+						var roomDict = rooms.ToDictionary(r => r.Name.ToLower(), r => r);
+						var userDict = users.ToDictionary(u => (u.FullName ?? "").ToLower(), u => u);
+
+						var assets = new List<Asset>();
+						var existingAssetTags = new HashSet<string>((await _assetService.GetAllAssetsAsync()).Select(a => a.AssetTag));
+
+						for (int row = 2; row <= rowCount; row++) // Skip header row
+						{
+							try
+							{
+								string assetTag = worksheet.Cells[row, 1].Value?.ToString()?.Trim();
+
+								// Skip empty rows
+								if (string.IsNullOrWhiteSpace(assetTag))
+									continue;
+
+								// Check if asset tag already exists
+								if (existingAssetTags.Contains(assetTag))
+								{
+									errors.Add($"سطر {row}: رمز الأصل '{assetTag}' موجود مسبقاً في النظام");
+									errorCount++;
+									continue;
+								}
+
+								// Extract values from the row
+								string facilityName = (worksheet.Cells[row, 3].Value?.ToString() ?? "").Trim();
+								string buildingName = (worksheet.Cells[row, 4].Value?.ToString() ?? "").Trim();
+								string floorName = (worksheet.Cells[row, 5].Value?.ToString() ?? "").Trim();
+								string roomName = (worksheet.Cells[row, 6].Value?.ToString() ?? "").Trim();
+								string departmentName = (worksheet.Cells[row, 7].Value?.ToString() ?? "").Trim();
+								string userName = (worksheet.Cells[row, 15].Value?.ToString() ?? "").Trim();
+
+								// Lookups by name
+								if (string.IsNullOrEmpty(facilityName))
+								{
+									errors.Add($"سطر {row}: اسم المنشأة مطلوب");
+									errorCount++;
+									continue;
+								}
+
+								if (string.IsNullOrEmpty(departmentName))
+								{
+									errors.Add($"سطر {row}: اسم القسم مطلوب");
+									errorCount++;
+									continue;
+								}
+
+								// Try to find entities by name (case insensitive)
+								if (!facilityDict.TryGetValue(facilityName.ToLower(), out var facility))
+								{
+									errors.Add($"سطر {row}: المنشأة '{facilityName}' غير موجودة في النظام");
+									errorCount++;
+									continue;
+								}
+
+								if (!departmentDict.TryGetValue(departmentName.ToLower(), out var department))
+								{
+									errors.Add($"سطر {row}: القسم '{departmentName}' غير موجود في النظام");
+									errorCount++;
+									continue;
+								}
+
+								// Optional lookups
+								Building building = null;
+								Floor floor = null;
+								Room room = null;
+								User user = null;
+
+								if (!string.IsNullOrEmpty(buildingName))
+									buildingDict.TryGetValue(buildingName.ToLower(), out building);
+
+								if (!string.IsNullOrEmpty(floorName))
+									floorDict.TryGetValue(floorName.ToLower(), out floor);
+
+								if (!string.IsNullOrEmpty(roomName))
+									roomDict.TryGetValue(roomName.ToLower(), out room);
+
+								if (!string.IsNullOrEmpty(userName))
+									userDict.TryGetValue(userName.ToLower(), out user);
+
+								// Create a new asset
+								var asset = new Asset
+								{
+									AssetTag = assetTag,
+									Cluster = worksheet.Cells[row, 2].Value?.ToString(),
+									FacilityId = facility.Id,
+									BuildingId = building?.Id ?? facility.Buildings.FirstOrDefault()?.Id ?? 0,
+									FloorId = floor?.Id ?? (building != null ? building.Floors.FirstOrDefault()?.Id ?? 0 : 0),
+									RoomTag = room?.RoomTag,
+									DepartmentId = department.Id,
+									AssetDescription = worksheet.Cells[row, 8].Value?.ToString(),
+									Brand = worksheet.Cells[row, 9].Value?.ToString(),
+									Model = worksheet.Cells[row, 10].Value?.ToString(),
+									AssetType = worksheet.Cells[row, 11].Value?.ToString() ?? "Hardware",
+									Status = worksheet.Cells[row, 12].Value?.ToString() ?? "متاح",
+									IsDisposed = (worksheet.Cells[row, 13].Value?.ToString() ?? "").ToLower() == "true",
+									SerialNumber = worksheet.Cells[row, 14].Value?.ToString(),
+									UserId = user?.Id,
+									InsertDate = DateTime.UtcNow,
+									InsertUser = currentUser?.FullName ?? worksheet.Cells[row, 16].Value?.ToString() ?? "System",
+									Details = worksheet.Cells[row, 17].Value?.ToString(),
+									AssetClass1 = worksheet.Cells[row, 18].Value?.ToString(),
+									AssetClass2 = worksheet.Cells[row, 19].Value?.ToString(),
+									AssetClass3 = worksheet.Cells[row, 20].Value?.ToString(),
+								};
+
+								// Add to import list
+								assets.Add(asset);
+								successCount++;
+							}
+							catch (Exception ex)
+							{
+								errors.Add($"سطر {row}: {ex.Message}");
+								errorCount++;
+								_logger.LogError(ex, "Error processing import row {Row}", row);
+							}
+						}
+
+						// Save assets to database if we have any valid ones
+						if (assets.Any())
+						{
+							try
+							{
+								await _assetService.AddRange(assets);
+
+								// Create change logs
+								foreach (var asset in assets)
+								{
+									await _unitOfWork.ChangeLogRepository.AddAsync(new ChangeLog
+									{
+										EntityName = "Asset",
+										EntityId = asset.AssetTag,
+										ActionType = "Added",
+										NewValues = JsonConvert.SerializeObject(new
+										{
+											asset.AssetTag,
+											asset.AssetDescription,
+											asset.FacilityId,
+											asset.DepartmentId,
+											asset.Status
+										}),
+										ChangeDate = DateTime.UtcNow,
+										UserId = currentUser?.Id
+									});
+								}
+
+								await _unitOfWork.SaveChangesAsync();
+							}
+							catch (Exception ex)
+							{
+								_logger.LogError(ex, "Error saving imported assets to database");
+								TempData["Error"] = $"حدث خطأ أثناء حفظ الأصول المستوردة: {ex.Message}";
+								return RedirectToAction("Index");
+							}
 						}
 					}
 				}
 
-				// Save assets to the database
-				await _assetService.AddRange(assets); // Ensure this method is async and saves changes
-				await _unitOfWork.SaveChangesAsync(); // Commit changes to the database
+				// Create notification about the import
+				if (currentUser != null)
+				{
+					await CreateNotificationForRole(Roles.Admin,
+						"استيراد أصول جديدة",
+						$"قام {currentUser.FullName} باستيراد {successCount} أصول جديدة",
+						"BulkImport",
+						null,
+						Url.Action("Index", "Asset"));
 
-				TempData["Success"] = $"{assets.Count} assets imported successfully!";
+					await CreateNotificationForRole(Roles.Manager,
+						"استيراد أصول جديدة",
+						$"قام {currentUser.FullName} باستيراد {successCount} أصول جديدة",
+						"BulkImport",
+						null,
+						Url.Action("Index", "Asset"));
+				}
+
+				// Show results
+				if (errorCount > 0)
+				{
+					string errorSummary = string.Join("<br>", errors.Take(Math.Min(5, errors.Count)));
+					if (errors.Count > 5)
+						errorSummary += "<br>...والمزيد";
+
+					if (successCount > 0)
+					{
+						TempData["Warning"] = $"تم استيراد {successCount} أصول بنجاح، مع {errorCount} أخطاء:<br>{errorSummary}";
+					}
+					else
+					{
+						TempData["Error"] = $"فشل الاستيراد. {errorCount} أخطاء:<br>{errorSummary}";
+					}
+				}
+				else if (successCount > 0)
+				{
+					TempData["Success"] = $"تم استيراد {successCount} أصول بنجاح!";
+				}
+				else
+				{
+					TempData["Warning"] = "لم يتم استيراد أي أصول. تأكد من أن الملف يحتوي على بيانات صالحة.";
+				}
 			}
 			catch (Exception ex)
 			{
-				// Log the exception (you can use a logging framework like Serilog or NLog)
-				Console.WriteLine($"Error importing assets: {ex.Message}");
-				TempData["Error"] = "An error occurred while importing assets. Please check the file format and try again.";
+				_logger.LogError(ex, "Error importing assets");
+				TempData["Error"] = $"حدث خطأ أثناء استيراد الأصول: {ex.Message}";
 			}
 
 			return RedirectToAction("Index");
 		}
-
-
 		[HttpGet]
 		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
 		public async Task<ActionResult> ExportAssets()
@@ -1691,7 +1875,158 @@ namespace AssetManagementSystem.PL.Controllers
 				return Json(new { success = false, error = "An error occurred while verifying asset tags" });
 			}
 		}
+		[HttpGet]
+		[Authorize(Roles = $"{Roles.Admin},{Roles.Manager},{Roles.DataEntry}")]
+		public IActionResult DownloadTemplate()
+		{
+			// Set EPPlus license
+			ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
+			using (var package = new ExcelPackage())
+			{
+				var worksheet = package.Workbook.Worksheets.Add("Assets Template");
+
+				// Define column headers with names instead of IDs for location entities
+				string[] headers = {
+			"Asset Tag", "Cluster", "Facility", "Building", "Floor",
+			"Room", "Department", "Asset Description", "Brand", "Model",
+			"Asset Type", "Status", "Is Disposed", "Serial Number",
+			"اسم المستلم", "Details", "Asset Class 1", "Asset Class 2", "Asset Class 3"
+		};
+
+				// Set headers with styling
+				for (int i = 0; i < headers.Length; i++)
+				{
+					var cell = worksheet.Cells[1, i + 1];
+					cell.Value = headers[i];
+					cell.Style.Font.Bold = true;
+					cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+					cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+					cell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+				}
+
+				worksheet.Cells[2, 1].Value = "AST001"; // Example Asset Tag
+				worksheet.Cells[2, 2].Value = "ClusterA"; // Example Cluster
+				worksheet.Cells[2, 3].Value = "المستشفى الرئيسي"; // Example Facility (Arabic)
+				worksheet.Cells[2, 4].Value = "المبنى الإداري"; // Example Building (Arabic)
+				worksheet.Cells[2, 5].Value = "الطابق الأول"; // Example Floor (Arabic)
+				worksheet.Cells[2, 6].Value = "غرفة 101"; // Example Room (Arabic)
+				worksheet.Cells[2, 7].Value = "قسم تقنية المعلومات"; // Example Department (Arabic)
+				worksheet.Cells[2, 8].Value = "جهاز كمبيوتر"; // Example Asset Description (Arabic)
+				worksheet.Cells[2, 9].Value = "ديل"; // Example Brand (Arabic)
+				worksheet.Cells[2, 10].Value = "لاتيتيود 7400"; // Example Model
+				worksheet.Cells[2, 11].Value = "أجهزة"; // Example Asset Type (Arabic)
+				worksheet.Cells[2, 12].Value = "متاح"; // Example Status (Arabic)
+				worksheet.Cells[2, 13].Value = "FALSE"; // Example Is Disposed
+				worksheet.Cells[2, 14].Value = "SN12345"; // Example Serial Number
+				worksheet.Cells[2, 15].Value = "محمد أحمد"; // اسم المستلم example
+				worksheet.Cells[2, 16].Value = "تفاصيل الأصل"; // Example Details (Arabic)
+
+				// Add info row under example explaining this is sample data
+				worksheet.Cells[3, 1].Value = "ملاحظة:";
+				worksheet.Cells[3, 2].Value = "البيانات أعلاه هي مجرد أمثلة. يرجى استبدالها بمعلوماتك الفعلية.";
+				worksheet.Cells[3, 2, 3, 10].Merge = true;
+				worksheet.Cells[3, 2].Style.Font.Bold = true;
+				worksheet.Cells[3, 2].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+
+				// Add important notes
+				worksheet.Cells[5, 1].Value = "ملاحظات هامة:";
+				worksheet.Cells[5, 1].Style.Font.Bold = true;
+
+				worksheet.Cells[6, 1].Value = "1.";
+				worksheet.Cells[6, 2].Value = "استخدم أسماء المنشآت والمباني والطوابق والغرف والأقسام بدلاً من معرفاتها.";
+				worksheet.Cells[6, 2, 6, 10].Merge = true;
+
+				worksheet.Cells[7, 1].Value = "2.";
+				worksheet.Cells[7, 2].Value = "يجب أن تكون أسماء المنشآت والأقسام موجودة بالفعل في النظام.";
+				worksheet.Cells[7, 2, 7, 10].Merge = true;
+
+				worksheet.Cells[8, 1].Value = "3.";
+				worksheet.Cells[8, 2].Value = "خانة Asset Tag مطلوبة ويجب أن تكون فريدة لكل أصل.";
+				worksheet.Cells[8, 2, 8, 10].Merge = true;
+
+				worksheet.Cells[9, 1].Value = "4.";
+				worksheet.Cells[9, 2].Value = "اسم المستلم يجب أن يكون موجود في النظام.";
+				worksheet.Cells[9, 2, 9, 10].Merge = true;
+
+				// Add helper data tabs - create lists of valid Facilities, Departments, etc.
+				try
+				{
+					// Add Facilities reference sheet
+					var facilitiesSheet = package.Workbook.Worksheets.Add("Facilities");
+					facilitiesSheet.Cells[1, 1].Value = "Facility Name";
+					facilitiesSheet.Cells[1, 1].Style.Font.Bold = true;
+					facilitiesSheet.Cells[1, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+					facilitiesSheet.Cells[1, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+
+					// Add Departments reference sheet
+					var departmentsSheet = package.Workbook.Worksheets.Add("Departments");
+					departmentsSheet.Cells[1, 1].Value = "Department Name";
+					departmentsSheet.Cells[1, 2].Value = "Facility";
+					departmentsSheet.Cells[1, 1].Style.Font.Bold = true;
+					departmentsSheet.Cells[1, 2].Style.Font.Bold = true;
+					departmentsSheet.Cells[1, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+					departmentsSheet.Cells[1, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+					departmentsSheet.Cells[1, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+					departmentsSheet.Cells[1, 2].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+
+					// Add valid statuses and asset types
+					var referencesSheet = package.Workbook.Worksheets.Add("References");
+					referencesSheet.Cells[1, 1].Value = "Valid Status";
+					referencesSheet.Cells[1, 2].Value = "Valid Asset Types";
+					referencesSheet.Cells[1, 1].Style.Font.Bold = true;
+					referencesSheet.Cells[1, 2].Style.Font.Bold = true;
+					referencesSheet.Cells[1, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+					referencesSheet.Cells[1, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+					referencesSheet.Cells[1, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+					referencesSheet.Cells[1, 2].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+
+					string[] statuses = { "متاح", "قيد الاستخدام", "صيانة", "مكهن" };
+					for (int i = 0; i < statuses.Length; i++)
+					{
+						referencesSheet.Cells[i + 2, 1].Value = statuses[i];
+					}
+
+					string[] assetTypes = { "أجهزة", "برمجيات", "أثاث", "معدات", "مركبات", "مباني" };
+					for (int i = 0; i < assetTypes.Length; i++)
+					{
+						referencesSheet.Cells[i + 2, 2].Value = assetTypes[i];
+					}
+				}
+				catch (Exception ex)
+				{
+					// Handle error, but don't stop the template download
+					_logger.LogError(ex, "Error adding reference sheets to template");
+				}
+
+				// Apply column formatting
+				worksheet.Column(1).Width = 15; // Asset Tag
+				worksheet.Column(8).Width = 30; // Asset Description
+				worksheet.Column(12).Width = 15; // Status
+				worksheet.Column(15).Width = 20; // اسم المستلم
+				worksheet.Column(16).Width = 30; // Details
+
+
+				// Auto-size remaining columns
+				for (int col = 1; col <= headers.Length; col++)
+				{
+					if (col != 1 && col != 8 && col != 13 && col != 17)
+						worksheet.Column(col).AutoFit();
+				}
+
+				// Freeze the header row
+				worksheet.View.FreezePanes(2, 1);
+
+				// Prepare the stream
+				var stream = new MemoryStream();
+				package.SaveAs(stream);
+				stream.Position = 0;
+
+				// Return the Excel file
+				string excelName = $"Assets_Import_Template_{DateTime.Now:yyyyMMdd}.xlsx";
+				return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", excelName);
+			}
+		}
 	}
 public class BulkSupervisorAssignRequest
 		{

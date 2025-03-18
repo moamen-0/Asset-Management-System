@@ -11,8 +11,12 @@
                 <h2 class="mb-0"><i class="fas fa-users ml-2"></i> إدارة المستخدمين</h2>
                 <a asp-action="Create" class="btn btn-light">
                     <i class="fas fa-user-plus ml-2"></i> إضافة مستخدم جديد
-                </a>
+				</a> 
+                <button class="btn btn-light rounded-pill" data-bs-toggle="modal" data-bs-target="#importUsersModal">
+					<i class="fas fa-file-import"></i> استيراد مستخدمين
+				</button>
             </div>
+           
         </div>
 
         <div class="card-body p-4">
@@ -251,14 +255,146 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="importUsersModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-file-import me-2"></i> استيراد المستخدمين</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div class="import-icon-container mb-3">
+                        <i class="fas fa-file-excel fa-4x text-success"></i>
+                        <i class="fas fa-arrow-right fa-2x text-primary mx-3"></i>
+                        <i class="fas fa-users fa-4x text-primary"></i>
+                    </div>
+                    <h5>استيراد مستخدمين من ملف Excel</h5>
+                    <p class="text-muted">قم بتحميل ملف Excel يحتوي على بيانات المستخدمين</p>
+                </div>
 
+                @using (Html.BeginForm("ImportUsers", "User", FormMethod.Post, new { enctype = "multipart/form-data", id = "importUsersForm" }))
+                {
+                    <div class="mb-3">
+                        <div class="custom-file-upload">
+                            <div class="input-group">
+                                <input type="file" name="file" id="importUsersFile" class="form-control" accept=".xlsx,.xls" required />
+                                <label for="importUsersFile" class="input-group-text">
+                                    <i class="fas fa-upload"></i>
+                                </label>
+                            </div>
+                            <small class="form-text text-muted">الملفات المدعومة: .xlsx, .xls</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h6 class="fw-bold"><i class="fas fa-info-circle me-2"></i>بيانات الاستيراد</h6>
+                        <ul class="mb-0 small">
+                            <li><strong>البريد الإلكتروني (مطلوب)</strong>: يستخدم كاسم المستخدم أيضاً</li>
+                            <li><strong>الاسم الكامل (مطلوب)</strong></li>
+                            <li><strong>الرقم الوطني</strong>: اختياري</li>
+                            <li><strong>رقم الملف</strong>: اختياري</li>
+                            <li><strong>اسم القسم</strong>: يجب أن يتطابق مع قسم موجود في النظام</li>
+                            <li><strong>كلمة المرور</strong>: اختيارية (الافتراضية: Password123!)</li>
+                            <li><strong>الأدوار</strong>: مفصولة بفواصل (مثال: User, Supervisor)</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="@Url.Action("DownloadUserTemplate", "User")" class="btn btn-outline-primary">
+                            <i class="fas fa-download me-1"></i> تنزيل نموذج للاستيراد
+                        </a>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> إلغاء
+                </button>
+                <button type="submit" form="importUsersForm" class="btn btn-primary">
+                    <i class="fas fa-file-import me-1"></i> استيراد
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @section Scripts {
     <script>
         $(document).ready(function() {
             // Initialize tooltips
             const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
             const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+        @if (TempData["ImportErrors"] != null)
+        {
+            <text>
+                Swal.fire({
+                    title: 'تم استيراد المستخدمين مع بعض الأخطاء',
+                    html: '@Html.Raw(TempData["ImportErrors"])',
+                    icon: 'warning',
+                    confirmButtonText: 'حسناً'
+                });
+            </text>
+        }
 
+        // Show success message
+        @if (TempData["Success"] != null)
+        {
+            <text>
+                Swal.fire({
+                    title: 'تم بنجاح!',
+                    text: '@TempData["Success"]',
+                    icon: 'success',
+                    confirmButtonText: 'حسناً'
+                });
+            </text>
+        }
+
+        // Show error message
+        @if (TempData["Error"] != null)
+        {
+            <text>
+                Swal.fire({
+                    title: 'خطأ!',
+                    text: '@TempData["Error"]',
+                    icon: 'error',
+                    confirmButtonText: 'حسناً'
+                });
+            </text>
+        }
+
+        // Handle file selection feedback
+        $('#importUsersFile').on('change', function() {
+            const fileName = $(this).val().split('\\').pop();
+            if (fileName) {
+                $(this).next('.custom-file-label').html(fileName);
+                // Enable submit button
+                $('button[form="importUsersForm"]').prop('disabled', false);
+            } else {
+                $(this).next('.custom-file-label').html('Choose file');
+                // Disable submit button
+                $('button[form="importUsersForm"]').prop('disabled', true);
+            }
+        });
+
+        // Initialize with disabled submit button
+        $('button[form="importUsersForm"]').prop('disabled', true);
+
+        // Add loading overlay when form is submitted
+        $('#importUsersForm').on('submit', function() {
+            if (this.checkValidity()) {
+                const loadingOverlay = $(`
+                    <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+                         style="background-color: rgba(0,0,0,0.5); z-index: 9999;">
+                        <div class="card p-4 text-center">
+                            <div class="spinner-border text-primary mb-3" role="status"></div>
+                            <h5>جاري استيراد المستخدمين...</h5>
+                            <p class="text-muted mb-0">يرجى الانتظار</p>
+                        </div>
+                    </div>
+                `);
+                $('body').append(loadingOverlay);
+            }
+        });
             // Initialize DataTable with RTL support
             $('#departmentUsersTable').DataTable({
                 "paging": false, // Disable DataTables pagination since we're using server-side

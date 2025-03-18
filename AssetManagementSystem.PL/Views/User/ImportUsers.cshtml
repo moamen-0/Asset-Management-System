@@ -1,0 +1,252 @@
+﻿@{
+    ViewData["Title"] = "استيراد المستخدمين";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0"><i class="bi bi-people me-2"></i> استيراد المستخدمين من ملف Excel</h2>
+        </div>
+        <div class="card-body">
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (TempData["ImportErrors"] != null)
+            {
+                var errors = TempData["ImportErrors"] as List<string>;
+                <div class="alert alert-warning">
+                    <h5><i class="bi bi-exclamation-triangle-fill me-2"></i> حدثت @TempData["ErrorCount"] أخطاء أثناء الاستيراد:</h5>
+                    <ul class="mt-3">
+                        @foreach (var error in errors)
+                        {
+                            <li>@error</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="import-section p-4 rounded bg-light">
+                        <div class="text-center mb-4">
+                            <div class="import-icon-container mb-3">
+                                <i class="fas fa-file-excel fa-4x text-success"></i>
+                                <i class="fas fa-arrow-right fa-2x text-primary mx-3"></i>
+                                <i class="fas fa-users fa-4x text-primary"></i>
+                            </div>
+                            <h4 class="mb-3">استيراد المستخدمين</h4>
+                            <p class="text-muted">قم بتحميل ملف Excel يحتوي على بيانات المستخدمين للاستيراد بشكل جماعي</p>
+                        </div>
+
+                        <form asp-action="ImportUsers" method="post" enctype="multipart/form-data" id="importForm">
+                            <div class="mb-4">
+                                <div class="custom-file-upload p-4 border border-2 border-dashed rounded mb-3">
+                                    <div class="text-center mb-3">
+                                        <i class="bi bi-cloud-arrow-up fs-1 text-primary"></i>
+                                        <h5 class="mt-2">اسحب ملف Excel هنا أو انقر للتصفح</h5>
+                                    </div>
+                                    <input type="file" name="file" id="importFile" class="form-control" accept=".xlsx,.xls" required />
+                                </div>
+                                <small class="form-text text-muted d-block mb-2">
+                                    <i class="bi bi-info-circle me-1"></i> الملفات المدعومة: .xlsx, .xls
+                                </small>
+                                <div class="invalid-feedback file-validation-msg">
+                                    الرجاء تحميل ملف Excel صالح.
+                                </div>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-upload me-2"></i> استيراد المستخدمين
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="import-help p-4 rounded bg-light h-100">
+                        <h4><i class="bi bi-question-circle me-2"></i> تعليمات الاستيراد</h4>
+                        <hr>
+
+                        <div class="mb-4">
+                            <h5>الخطوات:</h5>
+                            <ol>
+                                <li>قم بتنزيل <a href="@Url.Action("DownloadUserTemplate", "User")" class="text-primary">نموذج الاستيراد</a></li>
+                                <li>املأ النموذج ببيانات المستخدمين</li>
+                                <li>قم بتحميل الملف من خلال النموذج المجاور</li>
+                                <li>اضغط على زر "استيراد المستخدمين"</li>
+                                <li>ستظهر نتائج الاستيراد وأي أخطاء محتملة</li>
+                            </ol>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-lightbulb me-2"></i> الحقول المطلوبة:</h6>
+                            <ul class="mb-0">
+                                <li><strong>Email</strong> - البريد الإلكتروني (مطلوب وفريد)</li>
+                                <li><strong>FullName</strong> - الاسم الكامل</li>
+                                <li><strong>Password</strong> - كلمة المرور</li>
+                                <li><strong>Role</strong> - الدور (Admin, Manager, Supervisor, DataEntry, User)</li>
+                                <li><strong>Department</strong> - اسم القسم</li>
+                            </ul>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            تأكد من أن الأقسام المذكورة في الملف موجودة بالفعل في النظام.
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <a href="@Url.Action("DownloadUserTemplate", "User")" class="btn btn-outline-primary">
+                                <i class="bi bi-download me-2"></i> تنزيل نموذج الاستيراد
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i> العودة إلى قائمة المستخدمين
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // File input styling and validation
+            $('.custom-file-upload').click(function () {
+                $('#importFile').click();
+            });
+
+            $('#importFile').change(function () {
+                if ($(this).val()) {
+                    // Get the file name
+                    var fileName = $(this).val().split('\\').pop();
+
+                    // Check if it's an Excel file
+                    if (!fileName.match(/\.(xlsx|xls)$/i)) {
+                        $(this).addClass('is-invalid');
+                        $('.file-validation-msg').show();
+                        return;
+                    }
+
+                    // Valid file
+                    $(this).removeClass('is-invalid');
+                    $('.file-validation-msg').hide();
+
+                    // Update the file upload area with the filename
+                    $('.custom-file-upload').addClass('border-primary');
+                    $('.custom-file-upload .bi').removeClass('bi-cloud-arrow-up').addClass('bi-file-earmark-check');
+                    $('.custom-file-upload h5').text(fileName);
+                }
+            });
+
+            // Drag and drop functionality
+            $('.custom-file-upload').on('dragover', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).addClass('border-primary');
+            });
+
+            $('.custom-file-upload').on('dragleave', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!$('#importFile').val()) {
+                    $(this).removeClass('border-primary');
+                }
+            });
+
+            $('.custom-file-upload').on('drop', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.files.length) {
+                    $('#importFile').prop('files', e.originalEvent.dataTransfer.files);
+                    $('#importFile').trigger('change');
+                }
+            });
+
+            // Form submission
+            $('#importForm').submit(function (e) {
+                if (!$('#importFile').val()) {
+                    e.preventDefault();
+                    $('#importFile').addClass('is-invalid');
+                    $('.file-validation-msg').show();
+                    return false;
+                }
+
+                // Show loading overlay
+                $('body').append(`
+                    <div class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-center align-items-center" style="z-index: 9999;" id="loadingOverlay">
+                        <div class="card p-4 rounded-4 shadow">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary mb-3" role="status"></div>
+                                <h5>جاري استيراد المستخدمين...</h5>
+                                <p class="text-muted mb-0">يرجى الانتظار حتى اكتمال العملية.</p>
+                            </div>
+                        </div>
+                    </div>
+                `);
+
+                return true;
+            });
+        });
+    </script>
+
+    <style>
+        .custom-file-upload {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+        }
+
+            .custom-file-upload:hover {
+                background-color: #e9ecef;
+            }
+
+        #importFile {
+            display: none;
+        }
+
+        .file-validation-msg {
+            display: none;
+        }
+
+        .import-icon-container {
+            animation: fadeInUp 1s ease;
+        }
+
+        @@keyframes fadeInUp {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+    </style>
+}
