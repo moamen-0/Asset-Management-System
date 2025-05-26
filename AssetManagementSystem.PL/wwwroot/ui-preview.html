@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Management System - UI Preview</title>
+    
+    <!-- Bootstrap 5 RTL -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.min.css">
+    
+    <style>
+        /* CSS Variables */
+        :root {
+            --primary-color: #667eea;
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-color: #6c757d;
+            --success-color: #1cc88a;
+            --warning-color: #f6c23e;
+            --danger-color: #e74a3b;
+            --info-color: #36b9cc;
+            --light-color: #f8f9fa;
+            --dark-color: #2d3748;
+            --border-radius: 15px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow-light: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --shadow-medium: 0 8px 25px rgba(0, 0, 0, 0.1);
+            --shadow-heavy: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        /* Page Header */
+        .page-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 30px 30px;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #ffffff 0%, #e8edff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Stats Cards */
+        .stats-card {
+            background: var(--primary-gradient);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            color: white;
+            transition: var(--transition);
+            box-shadow: var(--shadow-medium);
+            position: relative;
+            overflow: hidden;
+            animation: slideInUp 0.6s ease-out both;
+        }
+
+        .stats-card.success { background: linear-gradient(135deg, #1cc88a 0%, #17a673 100%); }
+        .stats-card.warning { background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%); }
+        .stats-card.danger { background: linear-gradient(135deg, #e74a3b 0%, #c0392b 100%); }
+
+        .stats-number {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        .stats-trend {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .stats-icon {
+            font-size: 4rem;
+            opacity: 0.3;
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+        }
+
+        /* Modern Cards */
+        .modern-card {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-light);
+            transition: var(--transition);
+        }
+
+        .modern-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        /* Buttons */
+        .btn-modern {
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        /* Animations */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stats-card:nth-child(1) { animation-delay: 0.1s; }
+        .stats-card:nth-child(2) { animation-delay: 0.2s; }
+        .stats-card:nth-child(3) { animation-delay: 0.3s; }
+        .stats-card:nth-child(4) { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+    <!-- Page Header -->
+    <div class="page-header mb-5">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-xl-6 col-lg-8 col-md-8">
+                    <div class="page-title-wrapper">
+                        <div class="d-flex align-items-center">
+                            <div class="page-icon me-4">
+                                <div class="icon-shape bg-gradient-primary rounded-circle p-3">
+                                    <i class="fas fa-cubes fa-2x text-white"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h1 class="page-title mb-1">
+                                    <span class="gradient-text">إدارة الأصول</span>
+                                </h1>
+                                <p class="page-subtitle mb-0 text-muted">
+                                    <i class="fas fa-layer-group me-2"></i>
+                                    نظام شامل لإدارة ومتابعة جميع الأصول المؤسسية
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-6 col-lg-4 col-md-4">
+                    <div class="page-actions text-end">
+                        <div class="btn-toolbar justify-content-end">
+                            <div class="btn-group me-2">
+                                <button class="btn btn-outline-light btn-modern">
+                                    <i class="fas fa-sync-alt me-2"></i>
+                                    تحديث البيانات
+                                </button>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-light btn-modern">
+                                    <i class="fas fa-plus me-2"></i>
+                                    إجراءات سريعة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Asset Overview Section -->
+    <div class="container-fluid mb-5">
+        <div class="row g-4">
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <div class="stats-card primary h-100 position-relative overflow-hidden">
+                    <div class="stats-icon">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <div class="stats-number">1,245</div>
+                    <div class="stats-label">إجمالي الأصول</div>
+                    <div class="stats-trend">
+                        <i class="fas fa-arrow-up me-1"></i>
+                        <span>+12% من الشهر الماضي</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <div class="stats-card success h-100 position-relative overflow-hidden">
+                    <div class="stats-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stats-number">987</div>
+                    <div class="stats-label">الأصول المتاحة</div>
+                    <div class="stats-trend">
+                        <i class="fas fa-check-circle me-1"></i>
+                        <span>جاهزة للاستخدام</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <div class="stats-card warning h-100 position-relative overflow-hidden">
+                    <div class="stats-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stats-number">198</div>
+                    <div class="stats-label">قيد الاستخدام</div>
+                    <div class="stats-trend">
+                        <i class="fas fa-user-check me-1"></i>
+                        <span>موزعة على الموظفين</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <div class="stats-card danger h-100 position-relative overflow-hidden">
+                    <div class="stats-icon">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <div class="stats-number">60</div>
+                    <div class="stats-label">تحت الصيانة</div>
+                    <div class="stats-trend">
+                        <i class="fas fa-tools me-1"></i>
+                        <span>تحتاج متابعة</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Section -->
+    <div class="container-fluid mb-5">
+        <div class="card modern-card border-0 shadow-lg">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-lg-6 col-md-8">
+                        <div class="actions-header">
+                            <h4 class="section-title mb-2">
+                                <i class="fas fa-bolt text-primary me-3"></i>
+                                <span class="gradient-text">عمليات سريعة</span>
+                            </h4>
+                            <p class="section-subtitle text-muted mb-0">قم بإجراء العمليات الأساسية بسرعة وسهولة</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-4">
+                        <div class="quick-actions d-flex justify-content-end flex-wrap gap-3">
+                            <button class="btn btn-primary btn-modern">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                إضافة أصل
+                            </button>
+                            <button class="btn btn-info btn-modern">
+                                <i class="fas fa-file-import me-2"></i>
+                                استيراد
+                            </button>
+                            <button class="btn btn-success btn-modern">
+                                <i class="fas fa-file-export me-2"></i>
+                                تصدير
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sample Table -->
+    <div class="container-fluid">
+        <div class="card modern-card border-0 shadow-lg">
+            <div class="card-header bg-white py-3">
+                <h4 class="text-primary mb-0">
+                    <i class="fas fa-box-open me-2"></i>
+                    قائمة الأصول - معاينة التصميم المحدث
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success border-0" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle fa-2x text-success me-3"></i>
+                        <div>
+                            <h5 class="alert-heading mb-1">تم تحديث التصميم بنجاح!</h5>
+                            <p class="mb-0">تم تطبيق جميع التحسينات على واجهة المستخدم للحصول على تجربة أكثر احترافية وحداثة.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">التحسينات المطبقة:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i> تصميم حديث للرأس والبطاقات</li>
+                            <li><i class="fas fa-check text-success me-2"></i> رسوم متحركة ناعمة</li>
+                            <li><i class="fas fa-check text-success me-2"></i> ألوان متدرجة احترافية</li>
+                            <li><i class="fas fa-check text-success me-2"></i> تأثيرات التفاعل المحسنة</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">الميزات الجديدة:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i> شاشات تحميل محسنة</li>
+                            <li><i class="fas fa-check text-success me-2"></i> إحصائيات تفاعلية</li>
+                            <li><i class="fas fa-check text-success me-2"></i> أزرار بتأثيرات الموجات</li>
+                            <li><i class="fas fa-check text-success me-2"></i> تصميم متجاوب محسن</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Add interactive hover effects
+            $('.btn-modern').hover(
+                function() {
+                    $(this).addClass('shadow');
+                },
+                function() {
+                    $(this).removeClass('shadow');
+                }
+            );
+
+            // Simulate number counting animation
+            $('.stats-number').each(function() {
+                const $this = $(this);
+                const target = parseInt($this.text().replace(/,/g, ''));
+                let current = 0;
+                const increment = target / 100;
+                
+                const timer = setInterval(function() {
+                    current += increment;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    $this.text(Math.floor(current).toLocaleString('ar'));
+                }, 20);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -402,3 +402,4 @@ wwwroot/
 appsettings.json
 appsettings.Development.json
 /AssetManagementSystem.PL/appsettings.json
+/AssetManagementSystem.PL/migrate-to-tabler.ps1

@@ -1,0 +1,405 @@
+/* ================================
+   Clean Asset Management UI
+   Professional & Lightweight
+   ================================ */
+
+:root {
+    --primary-color: #667eea;
+    --success-color: #48bb78;
+    --warning-color: #ed8936;
+    --danger-color: #f56565;
+    --info-color: #4299e1;
+    --light-bg: #f8fafc;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --border-radius: 8px;
+    --transition: all 0.3s ease;
+}
+
+/* ================================
+   Page Animations
+   ================================ */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ================================
+   Enhanced Cards
+   ================================ */
+.card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+    animation: fadeInUp 0.5s ease;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.zoom-on-hover {
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.zoom-on-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg) !important;
+}
+
+/* ================================
+   Statistics Cards Enhancement
+   ================================ */
+.card-sm .card-body {
+    padding: 1.5rem;
+}
+
+.avatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.bg-primary { background: var(--primary-color) !important; }
+.bg-success { background: var(--success-color) !important; }
+.bg-warning { background: var(--warning-color) !important; }
+.bg-danger { background: var(--danger-color) !important; }
+.bg-info { background: var(--info-color) !important; }
+
+/* ================================
+   Page Header Enhancement
+   ================================ */
+.page-header {
+    margin-bottom: 2rem;
+    padding: 1.5rem 0;
+    background: linear-gradient(135deg, var(--light-bg) 0%, #ffffff 100%);
+    border-radius: var(--border-radius);
+    animation: fadeIn 0.5s ease;
+}
+
+.page-pretitle {
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.page-title {
+    color: #1f2937;
+    font-weight: 700;
+    font-size: 1.875rem;
+    margin: 0;
+}
+
+/* ================================
+   Button Enhancements
+   ================================ */
+.btn {
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* ================================
+   Table Enhancements
+   ================================ */
+.table-responsive {
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.datatable {
+    animation: fadeIn 0.7s ease;
+}
+
+.datatable thead th {
+    background: var(--light-bg);
+    font-weight: 600;
+    color: #374151;
+    border: none;
+    padding: 1rem;
+}
+
+.datatable tbody td {
+    padding: 1rem;
+    border-color: #e5e7eb;
+    vertical-align: middle;
+}
+
+.datatable tbody tr:hover {
+    background: var(--light-bg);
+}
+
+/* ================================
+   Form Enhancements
+   ================================ */
+.form-control {
+    border-radius: var(--border-radius);
+    border: 1px solid #d1d5db;
+    transition: var(--transition);
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-select {
+    border-radius: var(--border-radius);
+    border: 1px solid #d1d5db;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* ================================
+   Badge Enhancements
+   ================================ */
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+    border-radius: var(--border-radius);
+}
+
+/* ================================
+   Modal Enhancements
+   ================================ */
+.modal-content {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    animation: fadeInUp 0.3s ease;
+}
+
+.modal-header {
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-footer {
+    border-top: 1px solid #e5e7eb;
+}
+
+/* ================================
+   Dropdown Enhancements
+   ================================ */
+.dropdown-menu {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    padding: 0.5rem 0;
+    animation: fadeIn 0.2s ease;
+}
+
+.dropdown-item {
+    padding: 0.75rem 1rem;
+    transition: var(--transition);
+}
+
+.dropdown-item:hover {
+    background: var(--light-bg);
+}
+
+/* ================================
+   Loading States
+   ================================ */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* ================================
+   DataTables Custom Styling
+   ================================ */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+    color: #6b7280;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 0.5rem 0.75rem;
+    margin: 0 2px;
+    border-radius: var(--border-radius);
+    border: 1px solid #d1d5db;
+    background: white;
+    color: #374151;
+    transition: var(--transition);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* ================================
+   Responsive Design
+   ================================ */
+@media (max-width: 768px) {
+    .page-header .container-xl {
+        padding: 0 1rem;
+    }
+    
+    .btn-list {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .btn-list .btn {
+        width: 100%;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .datatable thead th,
+    .datatable tbody td {
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .page-title {
+        font-size: 1.5rem;
+    }
+    
+    .avatar {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+    }
+    
+    .modal-dialog {
+        margin: 1rem;
+    }
+}
+
+/* ================================
+   Print Styles
+   ================================ */
+@media print {
+    .page-header,
+    .card-actions,
+    .btn-list,
+    .d-print-none {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+    
+    .table {
+        font-size: 0.75rem;
+    }
+}
+
+/* ================================
+   Accessibility Enhancements
+   ================================ */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .card {
+        border: 2px solid #000;
+    }
+    
+    .btn {
+        border-width: 2px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ================================
+   Performance Optimizations
+   ================================ */
+.card,
+.btn,
+.form-control,
+.modal-content {
+    will-change: transform;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Improve text rendering */
+body {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
