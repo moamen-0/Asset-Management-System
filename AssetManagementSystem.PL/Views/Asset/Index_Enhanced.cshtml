@@ -1,0 +1,696 @@
+@model IEnumerable<AssetManagementSystem.DAL.Entities.Asset>
+
+@{
+    ViewData["Title"] = "إدارة الأصول";
+    Layout = "~/Views/Shared/_Dashboard_Tabler.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/asset-index-clean.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.4.0/css/select.bootstrap5.min.css">
+}
+
+<!-- Main Content -->
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle">
+                        <i class="fas fa-boxes me-2"></i>إدارة النظام
+                    </div>
+                    <h2 class="page-title">
+                        إدارة الأصول
+                    </h2>
+                </div>
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <a href="/Asset/Create" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>
+                            إضافة أصل جديد
+                        </a>
+                        <button type="button" class="btn btn-outline-primary" id="exportBtn">
+                            <i class="fas fa-download me-2"></i>
+                            تصدير
+                        </button>
+                        <button type="button" class="btn btn-outline-info" id="advancedSearchBtn">
+                            <i class="fas fa-filter me-2"></i>
+                            فلترة متقدمة
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row mb-4" id="statsRow">
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm zoom-on-hover">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-primary text-white avatar">
+                                        <i class="fas fa-boxes"></i>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium" id="totalAssetCount">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </div>
+                                    <div class="text-muted">إجمالي الأصول</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm zoom-on-hover">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-success text-white avatar">
+                                        <i class="fas fa-check-circle"></i>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium" id="activeAssetCount">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </div>
+                                    <div class="text-muted">الأصول النشطة</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm zoom-on-hover">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-warning text-white avatar">
+                                        <i class="fas fa-tools"></i>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium" id="maintenanceAssetCount">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </div>
+                                    <div class="text-muted">قيد الصيانة</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm zoom-on-hover">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-secondary text-white avatar">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium" id="disposedAssetCount">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </div>
+                                    <div class="text-muted">تم التكهين</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Section -->
+            <div class="card mb-4" id="quickActionsCard" style="display: none;">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-bolt me-2"></i>العمليات السريعة
+                        <span class="badge bg-primary ms-2" id="selectedCountBadge">0</span>
+                    </h3>
+                    <div class="card-actions">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="clearSelectionBtn">
+                            <i class="fas fa-times me-1"></i>
+                            إلغاء التحديد
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-outline-info w-100 mb-2" id="bulkTransferBtn">
+                                <i class="fas fa-exchange-alt me-2"></i>
+                                نقل مجمع
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-outline-warning w-100 mb-2" id="bulkAssignBtn">
+                                <i class="fas fa-user-check me-2"></i>
+                                تخصيص مجمع
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-outline-danger w-100 mb-2" id="bulkDisposeBtn">
+                                <i class="fas fa-trash-alt me-2"></i>
+                                تكهين مجمع
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-outline-success w-100 mb-2" id="bulkExportBtn">
+                                <i class="fas fa-file-export me-2"></i>
+                                تصدير المحدد
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fast Selection Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-tags me-2"></i>التحديد السريع
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label class="form-label">أدخل Asset Tags (كل رقم في سطر منفصل أو مفصولة بفواصل)</label>
+                            <textarea id="bulkAssetTags" class="form-control" rows="3" 
+                                      placeholder="مثال:&#10;C3-101-0111899&#10;C3-101-0111900, C3-101-0111901&#10;C3-101-0111902 C3-101-0111903"></textarea>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary w-100" id="processAssetTagsBtn">
+                                <i class="fas fa-search me-2"></i>
+                                البحث والتحديد
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Filter Panel -->
+            <div class="card mb-4" id="advancedFilterPanel" style="display: none;">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-filter me-2"></i>المرشحات المتقدمة
+                    </h3>
+                    <div class="card-actions">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="clearFiltersBtn">
+                            <i class="fas fa-eraser me-1"></i>
+                            مسح المرشحات
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="closeFiltersBtn">
+                            <i class="fas fa-times me-1"></i>
+                            إغلاق
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Asset Tag</label>
+                            <input type="text" class="form-control" id="filterAssetTag" placeholder="ابحث برقم الأصل">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">القسم</label>
+                            <select class="form-select" id="filterDepartment">
+                                <option value="">جميع الأقسام</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">الحالة</label>
+                            <select class="form-select" id="filterStatus">
+                                <option value="">جميع الحالات</option>
+                                <option value="Available">متاح</option>
+                                <option value="In Use">قيد الاستخدام</option>
+                                <option value="Under Maintenance">تحت الصيانة</option>
+                                <option value="Disposed">مكهن</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">الماركة</label>
+                            <input type="text" class="form-control" id="filterBrand" placeholder="ابحث بالماركة">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">المنشأة</label>
+                            <select class="form-select" id="filterFacility">
+                                <option value="">جميع المنشآت</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">المبنى</label>
+                            <select class="form-select" id="filterBuilding">
+                                <option value="">جميع المباني</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">الطابق</label>
+                            <select class="form-select" id="filterFloor">
+                                <option value="">جميع الطوابق</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">الغرفة</label>
+                            <select class="form-select" id="filterRoom">
+                                <option value="">جميع الغرف</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button type="button" class="btn btn-primary" id="applyFiltersBtn">
+                                <i class="fas fa-search me-2"></i>
+                                تطبيق المرشحات
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary ms-2" id="exportFilteredBtn">
+                                <i class="fas fa-file-export me-2"></i>
+                                تصدير النتائج المفلترة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assets Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">قائمة الأصول</h3>
+                    <div class="card-actions">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="refreshBtn">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            تحديث
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body border-bottom py-3">
+                    <div class="d-flex">
+                        <div class="text-muted">
+                            عرض
+                            <div class="mx-2 d-inline-block">
+                                <select class="form-select form-select-sm" id="pageLength">
+                                    <option value="10">10</option>
+                                    <option value="25" selected>25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                            عنصر
+                        </div>
+                        <div class="ms-auto text-muted">
+                            البحث:
+                            <div class="ms-2 d-inline-block">
+                                <input type="text" class="form-control form-control-sm" id="globalSearch" 
+                                       placeholder="ابحث في جميع الحقول...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table card-table table-vcenter text-nowrap datatable" id="assetsTable">
+                        <thead>
+                            <tr>
+                                <th class="w-1">
+                                    <input class="form-check-input m-0 align-middle" type="checkbox" id="selectAll">
+                                </th>
+                                <th>الإجراءات</th>
+                                <th>رقم الأصل</th>
+                                <th>المجموعة</th>
+                                <th>المرفق</th>
+                                <th>المبنى</th>
+                                <th>الطابق</th>
+                                <th>الغرفة</th>
+                                <th>القسم</th>
+                                <th>المشرف</th>
+                                <th>الوصف</th>
+                                <th>الماركة</th>
+                                <th>الموديل</th>
+                                <th>النوع</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be loaded via DataTables -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تصدير البيانات</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-success w-100 mb-2" onclick="exportTable('excel')">
+                            <i class="fas fa-file-excel me-2"></i>Excel
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-danger w-100 mb-2" onclick="exportTable('pdf')">
+                            <i class="fas fa-file-pdf me-2"></i>PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Core Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- DataTables -->
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/select/1.4.0/js/dataTables.select.min.js"></script>
+
+    <!-- Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            console.log('🚀 Asset Management System - Enhanced UI Initialized');
+            
+            let selectedAssets = new Set();
+            
+            // Load statistics
+            fetchAssetStats();
+            
+            // Initialize DataTable
+            const table = $('#assetsTable').DataTable({
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                pageLength: 25,
+                select: {
+                    style: 'multi',
+                    selector: 'td:first-child input'
+                },
+                ajax: {
+                    url: '/Asset/GetAssets',
+                    type: 'POST',
+                    error: function(xhr, error, thrown) {
+                        console.error('DataTable error:', error);
+                        Swal.fire({
+                            title: 'خطأ!',
+                            text: 'فشل في تحميل البيانات',
+                            icon: 'error',
+                            confirmButtonText: 'حسناً'
+                        });
+                    }
+                },
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json",
+                    search: "",
+                    searchPlaceholder: "ابحث في الجدول...",
+                    lengthMenu: "عرض _MENU_ عنصر",
+                    info: "عرض _START_ إلى _END_ من أصل _TOTAL_ عنصر",
+                    processing: "جاري التحميل..."
+                },
+                columns: [
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "w-1",
+                        render: function() {
+                            return '<input type="checkbox" class="form-check-input row-checkbox">';
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: function(data, type, row) {
+                            return `
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="/Asset/Edit/${row.assetTag}" class="dropdown-item">
+                                            <i class="fas fa-edit text-warning me-2"></i>تعديل
+                                        </a></li>
+                                        <li><a href="/Asset/Details/${row.assetTag}" class="dropdown-item">
+                                            <i class="fas fa-info-circle text-info me-2"></i>تفاصيل
+                                        </a></li>
+                                        <li><a href="/Asset/Delete/${row.assetTag}" class="dropdown-item">
+                                            <i class="fas fa-trash text-danger me-2"></i>حذف
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a href="#" class="dropdown-item dispose-btn" data-asset-tag="${row.assetTag}">
+                                            <i class="fas fa-trash-alt text-secondary me-2"></i>تكهين
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            `;
+                        }
+                    },
+                    { data: 'assetTag' },
+                    { data: 'cluster' },
+                    { data: 'facility.name' },
+                    { data: 'building.name' },
+                    { data: 'floor.name' },
+                    { data: 'room.name' },
+                    { data: 'department.name' },
+                    { 
+                        data: 'supervisor.name',
+                        render: function(data) {
+                            return data || '<span class="text-muted">غير محدد</span>';
+                        }
+                    },
+                    { 
+                        data: 'assetDescription',
+                        render: function(data) {
+                            if (!data) return '<span class="text-muted">غير محدد</span>';
+                            return data.length > 30 ? data.substring(0, 30) + '...' : data;
+                        }
+                    },
+                    { data: 'brand' },
+                    { data: 'model' },
+                    { data: 'assetType' },
+                    {
+                        data: 'status',
+                        render: function(data) {
+                            const statusMap = {
+                                'Available': { text: 'متاح', class: 'badge bg-success' },
+                                'In Use': { text: 'قيد الاستخدام', class: 'badge bg-warning' },
+                                'Under Maintenance': { text: 'تحت الصيانة', class: 'badge bg-danger' },
+                                'Disposed': { text: 'مكهن', class: 'badge bg-secondary' }
+                            };
+                            const status = statusMap[data] || { text: data || 'غير محدد', class: 'badge bg-light' };
+                            return `<span class="${status.class}">${status.text}</span>`;
+                        }
+                    }
+                ]
+            });
+
+            // Handle row selection
+            $('#assetsTable tbody').on('click', '.row-checkbox', function() {
+                const row = $(this).closest('tr');
+                const rowData = table.row(row).data();
+                
+                if (this.checked) {
+                    selectedAssets.add(rowData.assetTag);
+                    row.addClass('table-primary');
+                } else {
+                    selectedAssets.delete(rowData.assetTag);
+                    row.removeClass('table-primary');
+                }
+                
+                updateSelectionUI();
+            });
+
+            // Select all functionality
+            $('#selectAll').on('change', function() {
+                const isChecked = this.checked;
+                $('.row-checkbox').prop('checked', isChecked);
+                
+                if (isChecked) {
+                    table.rows().every(function() {
+                        const data = this.data();
+                        selectedAssets.add(data.assetTag);
+                        $(this.node()).addClass('table-primary');
+                    });
+                } else {
+                    selectedAssets.clear();
+                    $('#assetsTable tbody tr').removeClass('table-primary');
+                }
+                
+                updateSelectionUI();
+            });
+
+            // Update selection UI
+            function updateSelectionUI() {
+                const count = selectedAssets.size;
+                $('#selectedCountBadge').text(count);
+                
+                if (count > 0) {
+                    $('#quickActionsCard').slideDown();
+                } else {
+                    $('#quickActionsCard').slideUp();
+                }
+                
+                // Update bulk operation buttons
+                $('.bulk-operation').prop('disabled', count === 0);
+            }
+
+            // Clear selection
+            $('#clearSelectionBtn').on('click', function() {
+                selectedAssets.clear();
+                $('.row-checkbox').prop('checked', false);
+                $('#selectAll').prop('checked', false);
+                $('#assetsTable tbody tr').removeClass('table-primary');
+                updateSelectionUI();
+            });
+
+            // Process asset tags for fast selection
+            $('#processAssetTagsBtn').on('click', function() {
+                const tagsInput = $('#bulkAssetTags').val().trim();
+                if (!tagsInput) {
+                    Swal.fire('تنبيه', 'الرجاء إدخال Asset Tags', 'warning');
+                    return;
+                }
+
+                // Parse tags (support multiple formats)
+                const tags = tagsInput.split(/[\n,\s]+/)
+                    .map(tag => tag.trim())
+                    .filter(tag => tag.length > 0);
+
+                if (tags.length === 0) {
+                    Swal.fire('تنبيه', 'لم يتم العثور على Asset Tags صحيحة', 'warning');
+                    return;
+                }
+
+                // Find and select rows with matching tags
+                let foundCount = 0;
+                table.rows().every(function() {
+                    const data = this.data();
+                    if (tags.includes(data.assetTag)) {
+                        selectedAssets.add(data.assetTag);
+                        $(this.node()).addClass('table-primary');
+                        $(this.node()).find('.row-checkbox').prop('checked', true);
+                        foundCount++;
+                    }
+                });
+
+                updateSelectionUI();
+                
+                Swal.fire({
+                    title: 'تمت العملية',
+                    text: `تم العثور على ${foundCount} من أصل ${tags.length} عنصر`,
+                    icon: foundCount > 0 ? 'success' : 'warning',
+                    confirmButtonText: 'حسناً'
+                });
+
+                $('#bulkAssetTags').val('');
+            });
+
+            // Advanced search toggle
+            $('#advancedSearchBtn').on('click', function() {
+                $('#advancedFilterPanel').slideToggle();
+            });
+
+            $('#closeFiltersBtn').on('click', function() {
+                $('#advancedFilterPanel').slideUp();
+            });
+
+            // Global search
+            $('#globalSearch').on('keyup', function() {
+                table.search(this.value).draw();
+            });
+
+            // Page length change
+            $('#pageLength').on('change', function() {
+                table.page.len(parseInt(this.value)).draw();
+            });
+
+            // Export button
+            $('#exportBtn').on('click', function() {
+                $('#exportModal').modal('show');
+            });
+
+            // Refresh button
+            $('#refreshBtn').on('click', function() {
+                table.ajax.reload();
+                fetchAssetStats();
+            });
+
+            // Load filter options
+            loadFilterOptions();
+        });
+
+        // Fetch asset statistics
+        function fetchAssetStats() {
+            $.get('/Asset/GetStats')
+                .done(function(data) {
+                    $('#totalAssetCount').text(data.totalCount || 0);
+                    $('#activeAssetCount').text(data.activeCount || 0);
+                    $('#maintenanceAssetCount').text(data.maintenanceCount || 0);
+                    $('#disposedAssetCount').text(data.disposedCount || 0);
+                })
+                .fail(function() {
+                    console.error('Failed to load asset statistics');
+                    $('#totalAssetCount, #activeAssetCount, #maintenanceAssetCount, #disposedAssetCount').text('--');
+                });
+        }
+
+        // Load filter options
+        function loadFilterOptions() {
+            // Load departments
+            $.get('/Asset/GetDepartments').done(function(data) {
+                const select = $('#filterDepartment');
+                data.forEach(dept => {
+                    select.append(`<option value="${dept.id}">${dept.name}</option>`);
+                });
+            });
+
+            // Load facilities
+            $.get('/Asset/GetFacilities').done(function(data) {
+                const select = $('#filterFacility');
+                data.forEach(facility => {
+                    select.append(`<option value="${facility.id}">${facility.name}</option>`);
+                });
+            });
+        }
+
+        // Export functions
+        function exportTable(format) {
+            if (format === 'excel') {
+                window.location.href = '/Asset/ExportToExcel';
+            } else if (format === 'pdf') {
+                window.location.href = '/Asset/ExportToPdf';
+            }
+            
+            $('#exportModal').modal('hide');
+        }
+
+        // Add smooth animations
+        $('.zoom-on-hover').hover(
+            function() { $(this).addClass('shadow-lg').css('transform', 'translateY(-5px)'); },
+            function() { $(this).removeClass('shadow-lg').css('transform', 'translateY(0)'); }
+        );
+    </script>
+}

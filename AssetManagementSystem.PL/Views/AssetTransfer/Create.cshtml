@@ -1,25 +1,38 @@
 ﻿@model AssetManagementSystem.DAL.Entities.AssetTransfer
 @{
     ViewData["Title"] = "إنشاء مناقلة أصل";
-    Layout = "~/Views/Shared/_Dashboard.cshtml";
+    Layout = "~/Views/Shared/_Dashboard_Tabler.cshtml";
 }
 
-<div class="container mt-4">
-    <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h2 class="mb-0">
-                <i class="bi bi-arrow-left-right me-2"></i> إنشاء مناقلة أصل
-            </h2>
-            <a asp-action="Index" class="btn btn-light">
-                <i class="bi bi-arrow-left"></i> العودة للقائمة
-            </a>
+<link rel="stylesheet" href="~/css/asset-transfer-create.css" />
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1><i class="bi bi-arrow-left-right me-3"></i>إنشاء مناقلة أصل</h1>
+                <p class="subtitle mb-0">نظام إدارة وتتبع عمليات نقل الأصول بين الأقسام</p>
+            </div>
+            <div class="col-auto">
+                <a asp-action="Index" class="btn btn-modern btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>العودة للقائمة
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <div class="card-header">
+            <h2><i class="bi bi-file-earmark-plus me-2"></i>نموذج إنشاء المناقلة</h2>
         </div>
         <div class="card-body">
             <form asp-action="Create" method="post" class="needs-validation" novalidate>
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-4">
                         <label asp-for="AssetTag" class="form-label">
-                            <i class="bi bi-tag me-1"></i> رمز الأصل
+                            <i class="bi bi-tag"></i>رمز الأصل
                         </label>
                         <div class="input-group">
                             <input asp-for="AssetTag" class="form-control" required
@@ -29,12 +42,12 @@
                             </button>
                         </div>
                         <div class="invalid-feedback">الرجاء إدخال رمز الأصل</div>
-                        <small id="assetDetails" class="form-text text-muted"></small>
+                        <div id="assetDetails" class="form-text"></div>
                     </div>
 
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-4">
                         <label asp-for="TransferType" class="form-label">
-                            <i class="bi bi-list-task me-1"></i> نوع المناقلة
+                            <i class="bi bi-list-task"></i>نوع المناقلة
                         </label>
                         <select asp-for="TransferType" class="form-select" required>
                             <option value="">اختر نوع المناقلة</option>
@@ -46,9 +59,9 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-4">
                         <label class="form-label">
-                            <i class="bi bi-person-fill me-1"></i> المستخدم الحالي
+                            <i class="bi bi-person-fill"></i>المستخدم الحالي
                         </label>
                         <select name="CurrentUserId" class="form-select" id="currentUserSelect" required>
                             <option value="">اختر المستخدم الحالي</option>
@@ -60,9 +73,9 @@
                         <div class="invalid-feedback">الرجاء اختيار المستخدم الحالي</div>
                     </div>
 
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-4">
                         <label class="form-label">
-                            <i class="bi bi-person-plus-fill me-1"></i> المستخدم المستهدف
+                            <i class="bi bi-person-plus-fill"></i>المستخدم المستهدف
                         </label>
                         <select name="TargetUserId" class="form-select" id="targetUserSelect" required>
                             <option value="">اختر المستخدم المستهدف</option>
@@ -76,9 +89,9 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-4">
                         <label asp-for="FromDepartment" class="form-label">
-                            <i class="bi bi-building-fill-down me-1"></i> القسم المصدر
+                            <i class="bi bi-building-fill-down"></i>القسم المصدر
                         </label>
                         <select asp-for="FromDepartment" class="form-select" id="fromDepartmentSelect" required>
                             <option value="">اختر القسم المصدر</option>
@@ -90,9 +103,9 @@
                         <div class="invalid-feedback">الرجاء اختيار القسم المصدر</div>
                     </div>
 
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-4">
                         <label asp-for="ToDepartment" class="form-label">
-                            <i class="bi bi-building-fill-up me-1"></i> القسم المستهدف
+                            <i class="bi bi-building-fill-up"></i>القسم المستهدف
                         </label>
                         <select asp-for="ToDepartment" class="form-select" id="toDepartmentSelect" required>
                             <option value="">اختر القسم المستهدف</option>
@@ -106,11 +119,11 @@
                 </div>
 
                 <div class="d-flex justify-content-between mt-4">
-                    <a asp-action="Index" class="btn btn-secondary">
-                        <i class="bi bi-x-circle"></i> إلغاء
+                    <a asp-action="Index" class="btn btn-modern btn-secondary">
+                        <i class="bi bi-x-circle me-2"></i>إلغاء
                     </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle"></i> إنشاء المناقلة
+                    <button type="submit" class="btn btn-modern btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>إنشاء المناقلة
                     </button>
                 </div>
             </form>
@@ -129,6 +142,15 @@
                     return;
                 }
 
+                // Add loading state
+                const $btn = $(this);
+                const $input = $('#AssetTag');
+                const $details = $('#assetDetails');
+                
+                $btn.addClass('loading');
+                $input.prop('disabled', true);
+                $details.html('<i class="bi bi-arrow-repeat"></i> جاري البحث...');
+
                 // AJAX call to get asset details
                 $.ajax({
                     url: '@Url.Action("GetAssetDetails", "Asset")',
@@ -137,9 +159,15 @@
                     success: function(response) {
                         if (response.success) {
                             const asset = response.data;
-                            $('#assetDetails').html(`
-                                <strong>الوصف:</strong> ${asset.assetDescription || 'غير محدد'}
-                                | <strong>القسم الحالي:</strong> ${asset.department?.name || 'غير محدد'}
+                            $details.html(`
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <div>
+                                        <strong>الوصف:</strong> ${asset.assetDescription || 'غير محدد'}
+                                        <br>
+                                        <strong>القسم الحالي:</strong> ${asset.department?.name || 'غير محدد'}
+                                    </div>
+                                </div>
                             `);
 
                             // Set the current department and user
@@ -150,19 +178,25 @@
                                 $('#currentUserSelect').val(asset.user.id);
                             }
                         } else {
-                            $('#assetDetails').html(`
-                                <span class="text-danger">
-                                    <i class="bi bi-exclamation-triangle"></i> ${response.error}
-                                </span>
+                            $details.html(`
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                                    <span>${response.error}</span>
+                                </div>
                             `);
                         }
                     },
                     error: function() {
-                        $('#assetDetails').html(`
-                            <span class="text-danger">
-                                <i class="bi bi-exclamation-triangle"></i> خطأ في جلب تفاصيل الأصل
-                            </span>
+                        $details.html(`
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                                <span>خطأ في جلب تفاصيل الأصل</span>
+                            </div>
                         `);
+                    },
+                    complete: function() {
+                        $btn.removeClass('loading');
+                        $input.prop('disabled', false);
                     }
                 });
             });

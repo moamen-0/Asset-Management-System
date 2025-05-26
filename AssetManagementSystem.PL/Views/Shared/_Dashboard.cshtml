@@ -18,6 +18,10 @@
 
     <!-- Google Fonts - Arabic Support -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap">
+
+    <!-- Page specific styles -->
+    @await RenderSectionAsync("Styles", required: false)
+
     <style>
 
         .btn-outline-danger {

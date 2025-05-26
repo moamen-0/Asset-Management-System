@@ -53,10 +53,7 @@ namespace AssetManagementSystem.PL.Controllers
 				.Take(10)
 				.ToList();
 			var rooms = await _unitOfWork.RoomRepository.GetAllAsync() ?? new List<Room>();
-			var users = (await _userManager.Users.ToListAsync())?.Where(u => u.Id != loggedInUserId).ToList() ?? new List<User>();
-
-
-			
+			var users = (await _userManager.Users.ToListAsync())?.Where(u => u.Id != loggedInUserId).ToList() ?? new List<User>();			
 			// Create the DashboardViewModel
 			var dashboardData = new DashboardViewModel
 			{
@@ -69,7 +66,21 @@ namespace AssetManagementSystem.PL.Controllers
 				RecentChangelogs = recentChangelogs,
 				Rooms = rooms,
 				Users = users,
-				AssetCount = assets.Count() // Store asset count
+				AssetCount = assets.Count(), // Store asset count
+				
+				// Calculate asset statistics for Tabler dashboard
+				TotalAssets = assets.Count(),
+				AvailableAssets = assets.Count(a => a.Status == "متاح"),
+				AssignedAssets = assets.Count(a => !string.IsNullOrEmpty(a.UserId)),
+				MaintenanceAssets = assets.Count(a => a.Status == "صيانة"),
+
+				// Populate recent activities from changelogs
+				RecentActivities = recentChangelogs.Select(log => new ActivityItem
+				{
+					Title = $"{GetEntityNameInArabic(log.EntityName)} - {GetActionTypeInArabic(log.ActionType)}",
+					Time = log.ChangeDate.ToString("yyyy/MM/dd HH:mm"),
+					Icon = GetIconForAction(log.ActionType)
+				})
 			};
 
 			return View(dashboardData);
@@ -84,6 +95,44 @@ namespace AssetManagementSystem.PL.Controllers
 		public IActionResult Error()
 		{
 			return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+		}
+
+		private string GetEntityNameInArabic(string entityName)
+		{
+			return entityName switch
+			{
+				"Asset" => "أصل",
+				"User" => "مستخدم",
+				"Department" => "قسم",
+				"Building" => "مبنى",
+				"Floor" => "طابق",
+				"Room" => "غرفة",
+				"Disposal" => "تخلص",
+				"AssetTransfer" => "نقل أصل",
+				_ => entityName
+			};
+		}
+
+		private string GetActionTypeInArabic(string actionType)
+		{
+			return actionType switch
+			{
+				"Added" => "إضافة",
+				"Modified" => "تعديل",
+				"Deleted" => "حذف",
+				_ => actionType
+			};
+		}
+
+		private string GetIconForAction(string actionType)
+		{
+			return actionType switch
+			{
+				"Added" => "plus-circle",
+				"Modified" => "edit",
+				"Deleted" => "trash-alt",
+				_ => "info-circle"
+			};
 		}
 	}
 }

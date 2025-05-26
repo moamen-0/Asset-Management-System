@@ -1,0 +1,447 @@
+@using System.Security.Claims
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>@ViewData["Title"] - نظام إدارة الأصول</title>
+
+    <!-- CSS files -->
+    <!-- Tabler Core CSS with RTL support -->
+    <link href="https://cdn.jsdelivr.net/npm/@@tabler/core@1.0.0-beta17/dist/css/tabler.rtl.min.css" rel="stylesheet" />
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Cairo Font for Arabic -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap">
+
+    <!-- Custom Tabler overrides for RTL and Arabic -->
+   <link href="~/css/tabler_custom.css" rel="stylesheet" />
+
+    <!-- Page specific styles -->
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body data-notification-url="@Url.Action("GetUnreadNotifications", "Notification")">
+    <script src="https://cdn.jsdelivr.net/npm/@@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+
+    <div class="page">
+        <!-- Sidebar -->
+        <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+            <div class="container-fluid">                <!-- Brand -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu" aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <h1 class="navbar-brand navbar-brand-autodark">
+                    <a href="@Url.Action("Index", "Home")" class="text-decoration-none">
+                        <i class="fas fa-cubes me-2"></i>
+                        نظام إدارة الأصول
+                    </a>
+                </h1>
+
+                <!-- User info in sidebar -->
+                <div class="navbar-nav flex-row d-lg-none">
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
+                            <div class="avatar avatar-sm">
+                                <i class="fas fa-user-circle fa-lg"></i>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                            <a href="@Url.Action("Profile", "User")" class="dropdown-item">
+                                <i class="fas fa-user-circle me-2"></i>
+                                الملف الشخصي
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <form asp-controller="Auth" asp-action="Logout" method="post" class="dropdown-item-form">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="fas fa-sign-out-alt me-2"></i>
+                                    تسجيل الخروج
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <!-- Sidebar menu -->
+                <div class="collapse navbar-collapse" id="sidebar-menu">
+                    <!-- User panel for larger screens -->
+                    <div class="d-none d-lg-block mb-4 pt-3">
+                        <div class="user-profile-card">
+                            <div class="d-flex align-items-center p-3 rounded-3" style="background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%); backdrop-filter: blur(10px);">
+                                <div class="avatar avatar-md me-3 position-relative">
+                                    <div class="avatar-status-indicator"></div>
+                                    <i class="fas fa-user-circle fa-2x text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-white fw-bold fs-6">@(User.Identity?.Name ?? "مستخدم")</div>
+                                    <div class="text-white-75 small">@User.FindFirstValue(ClaimTypes.Role)</div>
+                                    <div class="text-white-50 small">
+                                        <i class="fas fa-circle text-success me-1" style="font-size: 8px;"></i>
+                                        متصل الآن
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="navbar-nav pt-lg-2">
+                        <!-- Dashboard Section -->
+                        <li class="nav-item mb-2">
+                            <div class="nav-section-header">
+                                <span class="text-white-50 fw-bold small text-uppercase">لوحة التحكم</span>
+                            </div>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")"
+                               href="@Url.Action("Index", "Home")">
+                                <span class="nav-link-icon">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                </span>
+                                <span class="nav-link-title">الرئيسية</span>
+                                <span class="nav-link-badge">
+                                    <i class="fas fa-chevron-left"></i>
+                                </span>
+                            </a>
+                        </li>
+
+                        <!-- Assets Management Section -->
+                        <li class="nav-item mt-4 mb-2">
+                            <div class="nav-section-header">
+                                <span class="text-white-50 fw-bold small text-uppercase">إدارة الأصول</span>
+                            </div>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Asset" ? "active" : "")"
+                               href="@Url.Action("Index", "Asset")">
+                                <span class="nav-link-icon">
+                                    <i class="fas fa-box"></i>
+                                </span>
+                                <span class="nav-link-title">الأصول</span>
+                                <span class="nav-link-badge">
+                                    <i class="fas fa-chevron-left"></i>
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AssetTransfer" ? "active" : "")"
+                               href="@Url.Action("Index", "AssetTransfer")">
+                                <span class="nav-link-icon">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </span>
+                                <span class="nav-link-title">نقل الأصول</span>
+                                <span class="nav-link-badge">
+                                    <i class="fas fa-chevron-left"></i>
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Disposal" ? "active" : "")"
+                               href="@Url.Action("Index", "Disposal")">
+                                <span class="nav-link-icon">
+                                    <i class="fas fa-trash-alt"></i>
+                                </span>
+                                <span class="nav-link-title">التكهين</span>
+                                <span class="nav-link-badge">
+                                    <i class="fas fa-chevron-left"></i>
+                                </span>
+                            </a>
+                        </li>
+
+                        <!-- Requests & Documents Section -->
+                        <li class="nav-item mt-4 mb-2">
+                            <div class="nav-section-header">
+                                <span class="text-white-50 fw-bold small text-uppercase">الطلبات والوثائق</span>
+                            </div>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Disbursement" ? "active" : "")"
+                               href="@Url.Action("Index", "Disbursement")">
+                                <span class="nav-link-icon">
+                                    <i class="fas fa-clipboard-list"></i>
+                                </span>
+                                <span class="nav-link-title">طلبات الصرف</span>
+                                <span class="nav-link-badge">
+                                    <i class="fas fa-chevron-left"></i>
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "ReturnDocument" ? "active" : "")"
+                               href="@Url.Action("Index", "ReturnDocument")">
+                                <span class="nav-link-icon">
+                                    <i class="fas fa-file-contract"></i>
+                                </span>
+                                <span class="nav-link-title">مستندات الإرجاع</span>
+                                <span class="nav-link-badge">
+                                    <i class="fas fa-chevron-left"></i>
+                                </span>
+                            </a>
+                        </li>
+
+                        <!-- System Management Section -->
+                        <li class="nav-item mt-4 mb-2">
+                            <div class="nav-section-header">
+                                <span class="text-white-50 fw-bold small text-uppercase">إدارة النظام</span>
+                            </div>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "User" ? "active" : "")"
+                               href="@Url.Action("DepartmentUsers", "User")">
+                                <span class="nav-link-icon">
+                                    <i class="fas fa-users-cog"></i>
+                                </span>
+                                <span class="nav-link-title">إدارة المستخدمين</span>
+                                <span class="nav-link-badge">
+                                    <i class="fas fa-chevron-left"></i>
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Location" ? "active" : "")"
+                               href="@Url.Action("Index", "Location")">
+                                <span class="nav-link-icon">
+                                    <i class="fas fa-map-marked-alt"></i>
+                                </span>
+                                <span class="nav-link-title">إدارة المواقع</span>
+                                <span class="nav-link-badge">
+                                    <i class="fas fa-chevron-left"></i>
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Location" && ViewContext.RouteData.Values["action"]?.ToString() == "Departments" ? "active" : "")"
+                               href="@Url.Action("Departments", "Location")">
+                                <span class="nav-link-icon">
+                                    <i class="fas fa-sitemap"></i>
+                                </span>
+                                <span class="nav-link-title">الأقسام</span>
+                                <span class="nav-link-badge">
+                                    <i class="fas fa-chevron-left"></i>
+                                </span>
+                            </a>
+                        </li>
+
+                        <!-- Reports & Analytics Section -->
+                        <li class="nav-item mt-4 mb-2">
+                            <div class="nav-section-header">
+                                <span class="text-white-50 fw-bold small text-uppercase">التقارير والتحليلات</span>
+                            </div>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "ChangeLog" ? "active" : "")"
+                               href="@Url.Action("Index", "ChangeLog")">
+                                <span class="nav-link-icon">
+                                    <i class="fas fa-history"></i>
+                                </span>
+                                <span class="nav-link-title">سجل التغييرات</span>
+                                <span class="nav-link-badge">
+                                    <i class="fas fa-chevron-left"></i>
+                                </span>
+                            </a>
+                        </li>
+
+                        <!-- Quick Actions Section -->
+                        <li class="nav-item mt-4 mb-2">
+                            <div class="nav-section-header">
+                                <span class="text-white-50 fw-bold small text-uppercase">إجراءات سريعة</span>
+                            </div>
+                        </li>
+                        <li class="nav-item mb-3">
+                            <div class="quick-actions-grid">
+                                <a href="@Url.Action("Create", "Asset")" class="btn btn-sm btn-outline-light">
+                                    <i class="fas fa-plus me-1"></i>
+                                    أصل جديد
+                                </a>
+                                <a href="@Url.Action("Create", "AssetTransfer")" class="btn btn-sm btn-outline-light">
+                                    <i class="fas fa-exchange-alt me-1"></i>
+                                    نقل سريع
+                                </a>
+                                <a href="@Url.Action("Create", "Disbursement")" class="btn btn-sm btn-outline-light">
+                                    <i class="fas fa-clipboard-list me-1"></i>
+                                    طلب صرف
+                                </a>
+                                <a href="@Url.Action("Index", "ChangeLog")" class="btn btn-sm btn-outline-light">
+                                    <i class="fas fa-chart-line me-1"></i>
+                                    تقرير سريع
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </aside>        <!-- Main content wrapper -->
+        <div class="page-wrapper">
+            <!-- Header -->
+            <div class="page-header d-print-none">
+                <div class="container-xl">
+                    <div class="row g-2 align-items-center">                        <!-- Sidebar toggle button for desktop -->
+                        <div class="col-auto d-none d-lg-block">
+                            <button class="btn btn-ghost-light sidebar-toggle-btn" type="button" title="إخفاء/إظهار الشريط الجانبي (Ctrl + B)">
+                                <i class="fas fa-bars"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Mobile menu toggle -->
+                        <div class="col-auto d-lg-none">
+                            <button class="navbar-toggler" type="button" aria-label="Toggle navigation">
+                                <i class="fas fa-bars"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="col">
+                            <!-- Page pre-title -->
+                            <div class="page-pretitle">
+                                نظام إدارة الأصول
+                            </div>
+                            <!-- Page title -->
+                            <h2 class="page-title">
+                                @ViewData["Title"]
+                            </h2>
+                        </div>
+
+                        <!-- Page title actions -->
+                        <div class="col-auto ms-auto d-print-none">
+                            <div class="btn-list">
+                                <!-- Notifications -->
+                                <div class="nav-item dropdown">
+                                    <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" tabindex="-1" aria-label="Show notifications">
+                                        <i class="fas fa-bell"></i>
+                                        <span class="badge bg-red" id="notification-badge" style="display: none;">0</span>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card notification-dropdown">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h3 class="card-title">الإشعارات</h3>
+                                                    <form asp-controller="Notification" asp-action="MarkAllAsRead" method="post" class="d-inline">
+                                                        <button type="submit" class="btn btn-sm btn-ghost-secondary">تحديد الكل كمقروء</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <div id="notification-list">
+                                                    <div class="notification-item text-center">
+                                                        <div class="loading-spinner me-2"></div>
+                                                        جاري تحميل الإشعارات...
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="card-footer text-center">
+                                                <a href="@Url.Action("Index", "Notification")" class="btn btn-sm btn-primary">
+                                                    عرض جميع الإشعارات
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Dark mode toggle -->
+                                <a href="#" class="nav-link px-0" id="darkModeToggle" title="تبديل الوضع المظلم">
+                                    <i class="fas fa-moon"></i>
+                                </a>
+
+                                <!-- User menu -->
+                                <div class="nav-item dropdown d-none d-md-flex me-3">
+                                    <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
+                                        <span class="avatar avatar-sm">
+                                            <i class="fas fa-user-circle"></i>
+                                        </span>                        <div class="d-none d-xl-block ps-2">
+                                            <div>@(User.Identity?.Name ?? "مستخدم")</div>
+                                            <div class="mt-1 small text-muted">@User.FindFirstValue(ClaimTypes.Role)</div>
+                                        </div>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                                        <a href="@Url.Action("Profile", "User")" class="dropdown-item">
+                                            <i class="fas fa-user-circle me-2"></i>
+                                            عرض الملف الشخصي
+                                        </a>
+                                        <a href="@Url.Action("EditProfile", "User")" class="dropdown-item">
+                                            <i class="fas fa-edit me-2"></i>
+                                            تعديل الملف الشخصي
+                                        </a>
+                                        <a href="@Url.Action("ChangePassword", "User")" class="dropdown-item">
+                                            <i class="fas fa-key me-2"></i>
+                                            تغيير كلمة المرور
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <form asp-controller="Auth" asp-action="Logout" method="post" class="dropdown-item-form">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="fas fa-sign-out-alt me-2"></i>
+                                                تسجيل الخروج
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page body -->
+            <div class="page-body">
+                <div class="container-xl">
+                    @RenderBody()
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Tabler JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>    <!-- jQuery for legacy support -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="~/js/tabler_custom.js"></script>
+
+    <!-- Initialize Tabler components -->
+    <script>
+        // Initialize Tabler dropdowns and tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Bootstrap components
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Initialize dropdowns
+            var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+            var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+                return new bootstrap.Dropdown(dropdownToggleEl);
+            });
+
+            // Ensure navbar toggle button has proper aria attributes
+            const navbarToggler = document.querySelector('.navbar-toggler');
+            const sidebarMenu = document.querySelector('#sidebar-menu');
+            
+            if (navbarToggler && sidebarMenu) {
+                navbarToggler.setAttribute('aria-controls', 'sidebar-menu');
+                navbarToggler.setAttribute('aria-expanded', 'false');
+                
+                navbarToggler.addEventListener('click', function() {
+                    const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                    this.setAttribute('aria-expanded', (!isExpanded).toString());
+                });
+            }
+        });
+    </script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

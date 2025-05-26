@@ -1,0 +1,383 @@
+@model IEnumerable<AssetManagementSystem.DAL.Entities.Asset>
+
+@{
+    ViewData["Title"] = "إدارة الأصول";
+    Layout = "~/Views/Shared/_Dashboard_Tabler.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/asset-index.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css">
+}
+
+<!-- Main Content -->
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle">
+                        <i class="fas fa-boxes me-2"></i>إدارة النظام
+                    </div>
+                    <h2 class="page-title">
+                        إدارة الأصول
+                    </h2>
+                </div>
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <a href="/Asset/Create" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>
+                            إضافة أصل جديد
+                        </a>
+                        <button type="button" class="btn btn-outline-primary" id="exportBtn">
+                            <i class="fas fa-download me-2"></i>
+                            تصدير
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row mb-4" id="statsRow">
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm zoom-on-hover">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-primary text-white avatar">
+                                        <i class="fas fa-boxes"></i>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium" id="totalAssets">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </div>
+                                    <div class="text-muted">إجمالي الأصول</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm zoom-on-hover">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-success text-white avatar">
+                                        <i class="fas fa-check-circle"></i>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium" id="availableAssets">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </div>
+                                    <div class="text-muted">الأصول المتاحة</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm zoom-on-hover">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-warning text-white avatar">
+                                        <i class="fas fa-user-friends"></i>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium" id="assignedAssets">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </div>
+                                    <div class="text-muted">الأصول المخصصة</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm zoom-on-hover">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-danger text-white avatar">
+                                        <i class="fas fa-tools"></i>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium" id="maintenanceAssets">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </div>
+                                    <div class="text-muted">تحت الصيانة</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assets Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">قائمة الأصول</h3>
+                    <div class="card-actions">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="refreshBtn">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            تحديث
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body border-bottom py-3">
+                    <div class="d-flex">
+                        <div class="text-muted">
+                            عرض
+                            <div class="mx-2 d-inline-block">
+                                <select class="form-select form-select-sm" id="pageLength">
+                                    <option value="10">10</option>
+                                    <option value="25" selected>25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                            عنصر
+                        </div>
+                        <div class="ms-auto text-muted">
+                            البحث:
+                            <div class="ms-2 d-inline-block">
+                                <input type="text" class="form-control form-control-sm" id="globalSearch" 
+                                       placeholder="ابحث في جميع الحقول...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table card-table table-vcenter text-nowrap datatable" id="assetsTable">
+                        <thead>
+                            <tr>
+                                <th class="w-1">
+                                    <input class="form-check-input m-0 align-middle" type="checkbox" id="selectAll">
+                                </th>
+                                <th>الإجراءات</th>
+                                <th>رقم الأصل</th>
+                                <th>المجموعة</th>
+                                <th>المرفق</th>
+                                <th>المبنى</th>
+                                <th>الطابق</th>
+                                <th>الغرفة</th>
+                                <th>القسم</th>
+                                <th>المشرف</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be loaded via DataTables -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Simple Modals -->
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تصدير البيانات</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-success w-100 mb-2" onclick="exportTable('excel')">
+                            <i class="fas fa-file-excel me-2"></i>Excel
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-danger w-100 mb-2" onclick="exportTable('pdf')">
+                            <i class="fas fa-file-pdf me-2"></i>PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Core Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- DataTables -->
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+
+    <!-- Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            console.log('🚀 Asset Management System - Clean UI Initialized');
+            
+            // Load statistics
+            fetchAssetStats();
+            
+            // Initialize DataTable
+            const table = $('#assetsTable').DataTable({
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                pageLength: 25,
+                ajax: {
+                    url: '/Asset/GetAssets',
+                    type: 'POST',
+                    error: function(xhr, error, thrown) {
+                        console.error('DataTable error:', error);
+                        Swal.fire({
+                            title: 'خطأ!',
+                            text: 'فشل في تحميل البيانات',
+                            icon: 'error',
+                            confirmButtonText: 'حسناً'
+                        });
+                    }
+                },
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json",
+                    search: "",
+                    searchPlaceholder: "ابحث في الجدول...",
+                    lengthMenu: "عرض _MENU_ عنصر",
+                    info: "عرض _START_ إلى _END_ من أصل _TOTAL_ عنصر",
+                    processing: "جاري التحميل..."
+                },
+                columns: [
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "w-1",
+                        render: function() {
+                            return '<input type="checkbox" class="form-check-input row-checkbox">';
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: "text-center",
+                        render: function(data, type, row) {
+                            return `
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="/Asset/Edit/${row.assetTag}" class="dropdown-item">
+                                            <i class="fas fa-edit text-warning me-2"></i>تعديل
+                                        </a></li>
+                                        <li><a href="/Asset/Delete/${row.assetTag}" class="dropdown-item">
+                                            <i class="fas fa-trash text-danger me-2"></i>حذف
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            `;
+                        }
+                    },
+                    { data: 'assetTag' },
+                    { data: 'cluster' },
+                    { data: 'facility.name' },
+                    { data: 'building.name' },
+                    { data: 'floor.name' },
+                    { data: 'room.name' },
+                    { data: 'department.name' },
+                    { data: 'supervisor.name' },
+                    {
+                        data: 'assetStatus',
+                        render: function(data) {
+                            const statusMap = {
+                                'Available': { text: 'متاح', class: 'badge bg-success' },
+                                'Assigned': { text: 'مخصص', class: 'badge bg-warning' },
+                                'Maintenance': { text: 'صيانة', class: 'badge bg-danger' },
+                                'Disposed': { text: 'مكهن', class: 'badge bg-secondary' }
+                            };
+                            const status = statusMap[data] || { text: data, class: 'badge bg-light' };
+                            return `<span class="${status.class}">${status.text}</span>`;
+                        }
+                    }
+                ]
+            });
+
+            // Global search
+            $('#globalSearch').on('keyup', function() {
+                table.search(this.value).draw();
+            });
+
+            // Page length change
+            $('#pageLength').on('change', function() {
+                table.page.len(parseInt(this.value)).draw();
+            });
+
+            // Select all checkbox
+            $('#selectAll').on('change', function() {
+                $('.row-checkbox').prop('checked', this.checked);
+            });
+
+            // Export button
+            $('#exportBtn').on('click', function() {
+                $('#exportModal').modal('show');
+            });
+
+            // Refresh button
+            $('#refreshBtn').on('click', function() {
+                table.ajax.reload();
+                fetchAssetStats();
+            });
+        });
+
+        // Fetch asset statistics
+        function fetchAssetStats() {
+            $.get('/Asset/GetAssetStats')
+                .done(function(data) {
+                    $('#totalAssets').text(data.totalAssets || 0);
+                    $('#availableAssets').text(data.availableAssets || 0);
+                    $('#assignedAssets').text(data.assignedAssets || 0);
+                    $('#maintenanceAssets').text(data.maintenanceAssets || 0);
+                })
+                .fail(function() {
+                    console.error('Failed to load asset statistics');
+                    $('#totalAssets, #availableAssets, #assignedAssets, #maintenanceAssets').text('--');
+                });
+        }
+
+        // Export functions
+        function exportTable(format) {
+            const table = $('#assetsTable').DataTable();
+            
+            if (format === 'excel') {
+                table.button('.buttons-excel').trigger();
+            } else if (format === 'pdf') {
+                table.button('.buttons-pdf').trigger();
+            }
+            
+            $('#exportModal').modal('hide');
+        }
+
+        // Add some smooth animations
+        $('.zoom-on-hover').hover(
+            function() { $(this).addClass('shadow-lg').css('transform', 'translateY(-5px)'); },
+            function() { $(this).removeClass('shadow-lg').css('transform', 'translateY(0)'); }
+        );
+    </script>
+}

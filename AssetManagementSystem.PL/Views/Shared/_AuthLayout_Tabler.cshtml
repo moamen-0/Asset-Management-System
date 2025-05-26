@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <title>@ViewData["Title"] - نظام إدارة الأصول</title>
+    
+    <!-- Tabler Core CSS with RTL support -->
+    <link href="https://cdn.jsdelivr.net/npm/@@tabler/core@1.0.0-beta17/dist/css/tabler.rtl.min.css" rel="stylesheet"/>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Cairo Font for Arabic -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap">
+    
+    <style>
+        :root {
+            --tblr-font-sans-serif: 'Cairo', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+        }
+        
+        body {
+            font-family: 'Cairo', sans-serif !important;
+            direction: rtl;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .page {
+            background: transparent;
+        }
+        
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+        
+        .auth-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border-radius: 24px;
+            overflow: hidden;
+            max-width: 900px;
+            width: 100%;
+        }
+        
+        .auth-image {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+        }
+        
+        .auth-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .auth-form {
+            padding: 3rem 2rem;
+        }
+        
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .auth-logo h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--tblr-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .auth-logo p {
+            color: var(--tblr-muted);
+            margin: 0;
+        }
+        
+        .form-control {
+            border-radius: 12px;
+            border: 2px solid var(--tblr-border-color);
+            padding: 0.875rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: var(--tblr-primary);
+            box-shadow: 0 0 0 0.25rem rgba(var(--tblr-primary-rgb), 0.25);
+        }
+        
+        .input-group-text {
+            background: var(--tblr-bg-surface-secondary);
+            border: 2px solid var(--tblr-border-color);
+            border-radius: 12px 0 0 12px;
+            color: var(--tblr-muted);
+        }
+        
+        .input-group .form-control {
+            border-radius: 0 12px 12px 0;
+        }
+        
+        .btn-auth {
+            padding: 0.875rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 1rem 1.25rem;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--tblr-dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .text-danger {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        .validation-summary-errors {
+            background: var(--tblr-danger);
+            color: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .validation-summary-errors ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        
+        .validation-summary-errors li {
+            margin-bottom: 0.25rem;
+        }
+        
+        /* Responsive design */
+        @@media (max-width: 768px) {
+            .auth-container {
+                padding: 1rem;
+            }
+            
+            .auth-form {
+                padding: 2rem 1.5rem;
+            }
+            
+            .auth-image {
+                padding: 2rem 1rem;
+                order: 2;
+            }
+            
+            .auth-form {
+                order: 1;
+            }
+            
+            .auth-logo h1 {
+                font-size: 1.5rem;
+            }
+        }
+        
+        /* Animation */
+        .auth-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page page-center">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="row g-0">
+                    <!-- Image Section -->
+                    <div class="col-lg-6 auth-image">
+                        <img src="~/img/draw2.webp" alt="نظام إدارة الأصول" class="img-fluid">
+                    </div>
+                    
+                    <!-- Form Section -->
+                    <div class="col-lg-6 auth-form">
+                        <div class="auth-logo">
+                            <h1><i class="fas fa-cubes me-2"></i>نظام إدارة الأصول</h1>
+                            <p>مرحباً بك في نظام إدارة الأصول المتطور</p>
+                        </div>
+                        
+                        @RenderBody()
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabler Core JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+    
+    <!-- jQuery for legacy support -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        // Form validation enhancements
+        $(document).ready(function() {
+            // Add floating label effect
+            $('.form-control').on('focus blur', function() {
+                $(this).parent().toggleClass('focused', this.value !== '' || this === document.activeElement);
+            });
+            
+            // Initialize validation state
+            $('.form-control').each(function() {
+                if (this.value !== '') {
+                    $(this).parent().addClass('focused');
+                }
+            });
+            
+            // Enhanced form submission
+            $('form').on('submit', function() {
+                const submitBtn = $(this).find('button[type="submit"]');
+                submitBtn.prop('disabled', true);
+                submitBtn.html('<span class="spinner-border spinner-border-sm me-2" role="status"></span>جاري التحقق...');
+                
+                // Re-enable after 3 seconds in case of client-side issues
+                setTimeout(() => {
+                    submitBtn.prop('disabled', false);
+                    submitBtn.html('<i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول');
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,30 +1,170 @@
 ﻿@{
     ViewData["Title"] = "التكهينات";
-    Layout = "~/Views/Shared/_Dashboard.cshtml";
+    Layout = "~/Views/Shared/_Dashboard_Tabler.cshtml";
 }
 
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0"><i class="bi bi-trash3-fill me-2"></i> التكهينات</h2>
-        <a asp-action="Create" class="btn btn-success rounded-pill">
-            <i class="bi bi-plus-circle"></i> اضافة تكهين
-        </a>
+<link rel="stylesheet" href="~/css/disposal.css" />
+
+<!-- Success/Error Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1><i class="bi bi-trash3-fill me-3"></i>إدارة التكهينات</h1>
+                <p class="subtitle mb-0">نظام إدارة وتتبع عمليات تكهين الأصول</p>
+            </div>
+            <div class="col-auto">
+                <a asp-action="Create" class="btn btn-add btn-modern btn-lg">
+                    <i class="bi bi-plus-circle me-2"></i>إضافة تكهين جديد
+                </a>
+            </div>
+        </div>
     </div>
 
-    <div class="card shadow-lg border-0 rounded-4 mt-4">
-        <!-- mt-4 applied here -->
-        <div class="card-body">
+    <!-- Statistics Cards -->
+    <div class="stats-row">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stat-card total">
+                    <div class="stat-icon">
+                        <i class="bi bi-trash3"></i>
+                    </div>
+                    <div class="stat-value" id="totalDisposals">-</div>
+                    <div class="stat-label">إجمالي التكهينات</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card this-month">
+                    <div class="stat-icon">
+                        <i class="bi bi-calendar-month"></i>
+                    </div>
+                    <div class="stat-value" id="monthlyDisposals">-</div>
+                    <div class="stat-label">تكهينات هذا الشهر</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card high-value">
+                    <div class="stat-icon">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                    <div class="stat-value" id="totalValue">-</div>
+                    <div class="stat-label">إجمالي القيمة</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card recent">
+                    <div class="stat-icon">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="stat-value" id="recentDisposals">-</div>
+                    <div class="stat-label">تكهينات الأسبوع الماضي</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+        <h5><i class="bi bi-funnel me-2"></i>خيارات التصفية والبحث</h5>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="filter-group">
+                    <label for="disposalTypeFilter">نوع التكهين</label>
+                    <select id="disposalTypeFilter" class="form-select">
+                        <option value="">جميع الأنواع</option>
+                        <option value="بيع">بيع</option>
+                        <option value="إتلاف">إتلاف</option>
+                        <option value="تبرع">تبرع</option>
+                        <option value="أخرى">أخرى</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="filter-group">
+                    <label for="dateFromFilter">من تاريخ</label>
+                    <input type="date" id="dateFromFilter" class="form-control">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="filter-group">
+                    <label for="dateToFilter">إلى تاريخ</label>
+                    <input type="date" id="dateToFilter" class="form-control">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="filter-group">
+                    <label for="valueRangeFilter">نطاق القيمة</label>
+                    <select id="valueRangeFilter" class="form-select">
+                        <option value="">جميع القيم</option>
+                        <option value="0-1000">أقل من 1000</option>
+                        <option value="1000-5000">1000 - 5000</option>
+                        <option value="5000-10000">5000 - 10000</option>
+                        <option value="10000+">أكثر من 10000</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="table-controls">
+                    <div class="d-flex gap-2">
+                        <button id="applyFilters" class="btn btn-filter btn-modern">
+                            <i class="bi bi-funnel me-2"></i>تطبيق المرشحات
+                        </button>
+                        <button id="clearFilters" class="btn btn-outline-secondary btn-modern">
+                            <i class="bi bi-arrow-clockwise me-2"></i>إعادة تعيين
+                        </button>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button id="exportExcel" class="btn btn-export btn-modern">
+                            <i class="bi bi-file-earmark-excel me-2"></i>تصدير Excel
+                        </button>
+                        <button id="exportPdf" class="btn btn-export btn-modern">
+                            <i class="bi bi-file-earmark-pdf me-2"></i>تصدير PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Data Table -->
+    <div class="main-table-card">
+        <div class="card-header">
+            <h5><i class="bi bi-table me-2"></i>قائمة التكهينات</h5>
+        </div>
+        <div class="card-body position-relative">
+            <div class="loading-overlay d-none" id="tableLoader">
+                <div class="spinner"></div>
+            </div>
             <div class="table-responsive">
-                <table id="disposalsTable" class="table table-striped table-hover align-middle">
-                    <thead class="table-dark text-center">
+                <table id="disposalsTable" class="table table-hover align-middle">
+                    <thead>
                         <tr>
-                            <th><i class="bi bi-hash"></i> ID</th>
-                            <th><i class="bi bi-upc-scan"></i> Asset Tag</th>
-                            <th><i class="bi bi-tags-fill"></i> Disposal Type</th>
-                            <th><i class="bi bi-calendar-event"></i> Disposal Date</th>
-                            <th><i class="bi bi-currency-dollar"></i> Sale Value</th>
-                            <th><i class="bi bi-file-text"></i> Asset Description</th>
-                            <th><i class="bi bi-gear"></i> Actions</th>
+                            <th><i class="bi bi-hash"></i> المعرف</th>
+                            <th><i class="bi bi-upc-scan"></i> رقم الأصل</th>
+                            <th><i class="bi bi-tags-fill"></i> نوع التكهين</th>
+                            <th><i class="bi bi-calendar-event"></i> تاريخ التكهين</th>
+                            <th><i class="bi bi-currency-dollar"></i> قيمة البيع</th>
+                            <th><i class="bi bi-file-text"></i> وصف الأصل</th>
+                            <th><i class="bi bi-gear"></i> الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -38,49 +178,16 @@
 
 @section Scripts {
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        $(document).ready(function () {
-            $('#disposalsTable').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: '@Url.Action("GetDisposals", "Disposal")',
-                    type: 'POST'
-                },
-                order: [[3, 'desc']], // Order by date
-                      language: {
-            url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json"
-        },
-                columns: [
-                    { data: 'id', className: "text-center" },
-                    { data: 'assetTag', className: "text-center" },
-                    { data: 'disposalType', className: "text-center" },
-                    { data: 'disposalDate', className: "text-center" },
-                    { data: 'saleValue', className: "text-center" },
-                    { data: 'assetDescription', className: "text-center" },
-                    {
-                        data: 'id',
-                        className: "text-center",
-                        render: function (data, type, row) {
-                            return `
-                                <a href="@Url.Action("Edit", "Disposal")/${data}" class="btn btn-sm btn-warning rounded-pill me-1">
-                                    <i class="bi bi-pencil-square"></i> تعديل
-                                </a>
-                               <a href="@Url.Action("Delete", "Disposal")/${data}" class="btn btn-sm btn-danger rounded-pill me-1">
-                                    <i class="bi bi-trash"></i> حذف
-                                </a>
-                            `;
-                        }
-                    }
-                ]
-            });
-        });
-
-      
-    </script>
+    <script src="~/js/disposal.js"></script>
 }

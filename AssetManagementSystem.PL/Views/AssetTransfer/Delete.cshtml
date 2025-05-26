@@ -1,109 +1,83 @@
 ﻿@model AssetManagementSystem.DAL.Entities.AssetTransfer
 @{
     ViewData["Title"] = "حذف مناقلة أصل";
-    Layout = "~/Views/Shared/_Dashboard.cshtml";
+    Layout = "~/Views/Shared/_Dashboard_Tabler.cshtml";
 }
 
-<div class="container mt-4">
-    @if (Model == null)
-    {
-        <div class="card border-danger">
-            <div class="card-header bg-danger text-white">
-                <i class="bi bi-exclamation-triangle me-2"></i> خطأ: لم يتم العثور على المناقلة
+<link rel="stylesheet" href="~/css/asset-transfer-delete.css" />
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1><i class="bi bi-trash3-fill me-3"></i>حذف مناقلة أصل</h1>
+                <p class="subtitle mb-0">تأكيد حذف عملية نقل الأصل</p>
             </div>
-            <div class="card-body">
-                <p class="text-danger">عذراً، لم يتم العثور على بيانات المناقلة المطلوبة.</p>
-                <a asp-action="Index" class="btn btn-primary">
-                    <i class="bi bi-list-ul me-1"></i> العودة للقائمة
+            <div class="col-auto">
+                <a asp-action="Index" class="btn btn-modern btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>العودة للقائمة
                 </a>
             </div>
         </div>
-    }
-    else
-    {
-        <div class="card shadow-lg border-danger">
-            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                <h2 class="mb-0">
-                    <i class="bi bi-trash me-2"></i> تأكيد حذف المناقلة
-                </h2>
-                <a asp-action="Index" class="btn btn-light">
-                    <i class="bi bi-arrow-left"></i> العودة للقائمة
-                </a>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-warning" role="alert">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    هل أنت متأكد من رغبتك في حذف هذه المناقلة؟
-                    لا يمكن التراجع عن هذا الإجراء.
-                </div>
+    </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5 class="text-primary mb-3">
-                            <i class="bi bi-info-circle me-2"></i> تفاصيل المناقلة
-                        </h5>
-                        <dl class="row">
-                            <dt class="col-sm-5">نوع المناقلة</dt>
-                            <dd class="col-sm-7">
-                                <span class="badge bg-info">@Model.TransferType</span>
-                            </dd>
-
-                            <dt class="col-sm-5">تاريخ المناقلة</dt>
-                            <dd class="col-sm-7">
-                                <i class="bi bi-calendar me-1"></i>
-                                @Model.TransferDate.ToString("yyyy-MM-dd HH:mm")
-                            </dd>
-
-                            <dt class="col-sm-5">القسم المصدر</dt>
-                            <dd class="col-sm-7">
-                                <i class="bi bi-building-down me-1"></i>
-                                @Model.FromDepartment
-                            </dd>
-
-                            <dt class="col-sm-5">القسم المستهدف</dt>
-                            <dd class="col-sm-7">
-                                <i class="bi bi-building-up me-1"></i>
-                                @Model.ToDepartment
-                            </dd>
-                        </dl>
-                    </div>
-
-                    <div class="col-md-6">
-                        <h5 class="text-primary mb-3">
-                            <i class="bi bi-box-seam me-2"></i> تفاصيل الأصل
-                        </h5>
-                        <dl class="row">
-                            <dt class="col-sm-5">وصف الأصل</dt>
-                            <dd class="col-sm-7">
-                                @(Model.Asset?.AssetDescription ?? "غير محدد")
-                            </dd>
-
-                            <dt class="col-sm-5">رمز الأصل</dt>
-                            <dd class="col-sm-7">
-                                <span class="badge bg-secondary">@Model.AssetTag</span>
-                            </dd>
-
-                            
-                        </dl>
-                    </div>
-                </div>
-
-                <form asp-action="DeleteConfirmed" method="post" class="mt-4">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" value="@Model.Id" />
-
-                    <div class="d-flex justify-content-between">
-                        <a asp-action="Index" class="btn btn-secondary">
-                            <i class="bi bi-x-circle me-1"></i> إلغاء
-                        </a>
-                        <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-trash me-1"></i> تأكيد الحذف
-                        </button>
-                    </div>
-                </form>
-            </div>
+    <!-- Delete Card -->
+    <div class="delete-card">
+        <div class="card-header">
+            <h2><i class="bi bi-exclamation-triangle-fill me-2"></i>تأكيد الحذف</h2>
         </div>
-    }
+        <div class="card-body text-center">
+            <div class="warning-icon">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+
+            <div class="warning-message">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                <p>هل أنت متأكد من رغبتك في حذف هذه المناقلة؟ لا يمكن التراجع عن هذا الإجراء.</p>
+            </div>
+
+            <div class="details-list">
+                <div class="detail-item">
+                    <i class="bi bi-tag"></i>
+                    <span class="label">رمز الأصل:</span>
+                    <span class="value">@Model.AssetTag</span>
+                </div>
+                <div class="detail-item">
+                    <i class="bi bi-list-task"></i>
+                    <span class="label">نوع المناقلة:</span>
+                    <span class="value">@Model.TransferType</span>
+                </div>
+                <div class="detail-item">
+                    <i class="bi bi-building-fill-down"></i>
+                    <span class="label">القسم المصدر:</span>
+                    <span class="value">@Model.FromDepartment</span>
+                </div>
+                <div class="detail-item">
+                    <i class="bi bi-building-fill-up"></i>
+                    <span class="label">القسم المستهدف:</span>
+                    <span class="value">@Model.ToDepartment</span>
+                </div>
+                <div class="detail-item">
+                    <i class="bi bi-calendar-event"></i>
+                    <span class="label">تاريخ المناقلة:</span>
+                    <span class="value">@Model.TransferDate.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+            </div>
+
+            <form asp-action="Delete" method="post" class="mt-4">
+                <input type="hidden" asp-for="Id" />
+                <div class="d-flex justify-content-center gap-3">
+                    <a asp-action="Index" class="btn btn-modern btn-secondary">
+                        <i class="bi bi-x-circle me-2"></i>إلغاء
+                    </a>
+                    <button type="submit" class="btn btn-modern btn-danger">
+                        <i class="bi bi-trash3 me-2"></i>تأكيد الحذف
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <style>

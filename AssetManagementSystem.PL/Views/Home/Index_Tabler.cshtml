@@ -1,0 +1,249 @@
+@model AssetManagementSystem.PL.Models.DashboardViewModel
+
+@{
+    Layout = "~/Views/Shared/_Dashboard_Tabler.cshtml";
+    ViewData["Title"] = "لوحة التحكم";
+}
+
+<div class="row g-3 mb-4">
+    <!-- Stats Cards -->
+    <div class="col-lg-3 col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar avatar-md me-3 bg-primary text-white">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div>
+                        <div class="h3 mb-0">@(Model?.TotalAssets ?? 0)</div>
+                        <div class="text-muted">إجمالي الأصول</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar avatar-md me-3 bg-success text-white">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div>
+                        <div class="h3 mb-0">@(Model?.AvailableAssets ?? 0)</div>
+                        <div class="text-muted">الأصول المتاحة</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar avatar-md me-3 bg-warning text-white">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div>
+                        <div class="h3 mb-0">@(Model?.AssignedAssets ?? 0)</div>
+                        <div class="text-muted">الأصول المخصصة</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar avatar-md me-3 bg-danger text-white">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <div class="h3 mb-0">@(Model?.MaintenanceAssets ?? 0)</div>
+                        <div class="text-muted">قيد الصيانة</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-history me-2"></i>
+                    النشاط الأخير
+                </h3>
+            </div>
+            <div class="card-body">
+                @if (Model?.RecentChangelogs?.Any() == true)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-vcenter">
+                            <thead>
+                                <tr>
+                                    <th>الكيان</th>
+                                    <th>الإجراء</th>
+                                    <th>التاريخ</th>
+                                    <th>المستخدم</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var log in Model.RecentChangelogs.Take(10))
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span class="avatar avatar-sm me-2">
+                                                    @switch (log.EntityName)
+                                                    {
+                                                        case "Asset":
+                                                            <i class="fas fa-box"></i>
+                                                            break;
+                                                        case "User":
+                                                            <i class="fas fa-user"></i>
+                                                            break;
+                                                        default:
+                                                            <i class="fas fa-file"></i>
+                                                            break;
+                                                    }
+                                                </span>
+                                                <div>
+                                                    <div class="fw-bold">@log.EntityName</div>
+                                                    <div class="text-muted small">ID: @log.EntityId</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-@(log.ActionType == "Create" ? "success" : log.ActionType == "Update" ? "warning" : "danger")">
+                                                @switch (log.ActionType)
+                                                {
+                                                    case "Create":
+                                                        @("إنشاء")
+                                                        break;
+                                                    case "Update":
+                                                        @("تحديث")
+                                                        break;
+                                                    case "Delete":
+                                                        @("حذف")
+                                                        break;
+                                                    default:
+                                                        @log.ActionType
+                                                        break;
+                                                }
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="text-muted small">@log.ChangeDate.ToString("dd/MM/yyyy HH:mm")</div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">@log.User.FullName</div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="card-footer text-center">
+                        <a href="@Url.Action("Index", "ChangeLog")" class="btn btn-primary">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            عرض جميع التغييرات
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty">
+                        <div class="empty-icon">
+                            <i class="fas fa-history fa-3x text-muted"></i>
+                        </div>
+                        <p class="empty-title">لا توجد أنشطة حديثة</p>
+                        <p class="empty-subtitle text-muted">لم يتم العثور على تغييرات في النظام</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-bolt me-2"></i>
+                    إجراءات سريعة
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="@Url.Action("Create", "Asset")" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>
+                        إضافة أصل جديد
+                    </a>
+                    <a href="@Url.Action("Index", "AssetTransfer")" class="btn btn-outline-primary">
+                        <i class="fas fa-exchange-alt me-2"></i>
+                        نقل أصل
+                    </a>
+                    <a href="@Url.Action("DepartmentUsers", "User")" class="btn btn-outline-secondary">
+                        <i class="fas fa-users me-2"></i>
+                        إدارة المستخدمين
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Status -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-server me-2"></i>
+                    حالة النظام
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="card card-sm">
+                            <div class="card-body text-center">
+                                <div class="text-green">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                                <div class="mt-2 fw-bold">قاعدة البيانات</div>
+                                <div class="text-muted small">متصلة</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card card-sm">
+                            <div class="card-body text-center">
+                                <div class="text-green">
+                                    <i class="fas fa-server fa-2x"></i>
+                                </div>
+                                <div class="mt-2 fw-bold">الخادم</div>
+                                <div class="text-muted small">يعمل بشكل طبيعي</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Real-time updates simulation
+        setInterval(function() {
+            // This would normally fetch real data
+            console.log('Checking for updates...');
+        }, 30000);
+    </script>
+}

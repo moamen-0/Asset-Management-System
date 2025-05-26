@@ -1,108 +1,132 @@
 ﻿@model IEnumerable<AssetManagementSystem.DAL.Entities.User>
 @{
     ViewData["Title"] = "مستخدمو القسم";
-    Layout = "~/Views/Shared/_Dashboard.cshtml";
+    Layout = "~/Views/Shared/_Dashboard_Tabler.cshtml";
 }
 
-<div class="container mt-4" dir="rtl">
-    <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-header bg-primary text-white p-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <h2 class="mb-0"><i class="fas fa-users ml-2"></i> إدارة المستخدمين</h2>
-                <a asp-action="Create" class="btn btn-light">
-                    <i class="fas fa-user-plus ml-2"></i> إضافة مستخدم جديد
-				</a> 
-                <button class="btn btn-light rounded-pill" data-bs-toggle="modal" data-bs-target="#importUsersModal">
-					<i class="fas fa-file-import"></i> استيراد مستخدمين
-				</button>
-            </div>
-           
-        </div>
-
-        <div class="card-body p-4">
-            <!-- Search and Filter Card -->
-            <div class="card mb-4 shadow-sm border-0 rounded-3">
-                <div class="card-header bg-light py-3">
-                    <h5 class="mb-0 text-primary">
-                        <i class="fas fa-filter ml-2"></i> البحث والتصفية
-                    </h5>
+<div class="container-fluid mt-4" dir="rtl">
+    <!-- Main Header Section -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <div class="page-icon">
+                    <i class="fas fa-users"></i>
                 </div>
-                <div class="card-body">
-                    <form method="get" class="row g-3">
-                        <div class="col-md-5">
-                            <label class="form-label fw-bold">القسم:</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light">
-                                    <i class="fas fa-building text-primary"></i>
+            </div>
+            <div class="col">
+                <h1 class="page-title mb-1">إدارة المستخدمين</h1>
+                <p class="page-subtitle text-muted mb-0">إدارة وتنظيم مستخدمي النظام والأقسام</p>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-gradient-primary btn-elevated" data-bs-toggle="modal" data-bs-target="#importUsersModal">
+                        <i class="fas fa-file-import me-2"></i>
+                        <span>استيراد مستخدمين</span>
+                    </button>
+                    <a asp-action="Create" class="btn btn-gradient-success btn-elevated">
+                        <i class="fas fa-user-plus me-2"></i>
+                        <span>إضافة مستخدم جديد</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Card -->
+    <div class="main-card">
+        <!-- Search and Filter Section -->
+        <div class="filter-section">
+            <div class="filter-header">
+                <div class="filter-icon">
+                    <i class="fas fa-filter"></i>
+                </div>
+                <h5 class="filter-title">البحث والتصفية</h5>
+            </div>
+            <div class="filter-body">
+                <form method="get" class="filter-form">
+                    <div class="row g-3">
+                        <div class="col-lg-4 col-md-6">
+                            <label class="form-label">القسم</label>
+                            <div class="input-group input-group-modern">
+                                <span class="input-group-text">
+                                    <i class="fas fa-building"></i>
                                 </span>
                                 <select name="departmentId" class="form-select" asp-items="ViewBag.Departments" onchange="this.form.submit()">
                                     <option value="">-- جميع الأقسام --</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">الدور:</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light">
-                                    <i class="fas fa-user-tag text-primary"></i>
+                        <div class="col-lg-3 col-md-6">
+                            <label class="form-label">الدور</label>
+                            <div class="input-group input-group-modern">
+                                <span class="input-group-text">
+                                    <i class="fas fa-user-tag"></i>
                                 </span>
                                 <select name="roleName" class="form-select" asp-items="ViewBag.Roles" onchange="this.form.submit()">
                                     <option value="">-- جميع الأدوار --</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-5">
-                            <label class="form-label fw-bold">بحث:</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light">
-                                    <i class="fas fa-search text-primary"></i>
+                        <div class="col-lg-4 col-md-8">
+                            <label class="form-label">بحث</label>
+                            <div class="input-group input-group-modern">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
                                 </span>
                                 <input type="text" name="searchTerm" class="form-control"
                                        placeholder="ابحث باستخدام الاسم أو البريد الإلكتروني أو رقم الهوية..."
                                        value="@ViewBag.SearchTerm">
                             </div>
                         </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100 py-2">
-                                <i class="fas fa-search ml-2"></i> بحث
+                        <div class="col-lg-1 col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-gradient-primary w-100">
+                                <i class="fas fa-search"></i>
                             </button>
                         </div>
-                    </form>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Filter Info Alerts -->
+        @if (ViewBag.SelectedRoleId != null)
+        {
+            <div class="alert alert-modern alert-info">
+                <div class="alert-icon">
+                    <i class="fas fa-user-tag"></i>
+                </div>
+                <div class="alert-content">
+                    <h6 class="alert-title">الدور: @ViewBag.SelectedRoleName</h6>
+                    <p class="alert-text">عرض @Model.Count() مستخدم بهذا الدور</p>
                 </div>
             </div>
-            @if (ViewBag.SelectedRoleId != null)
-            {
-                <div class="alert alert-info d-flex align-items-center">
-                    <i class="fas fa-user-tag fa-lg ml-3"></i>
-                    <div>
-                        <h5 class="mb-1">الدور: @ViewBag.SelectedRoleName</h5>
-                        <p class="mb-0">عرض @Model.Count() مستخدم بهذا الدور</p>
-                    </div>
+        }
+        @if (ViewBag.SelectedDepartmentId != null)
+        {
+            <div class="alert alert-modern alert-info">
+                <div class="alert-icon">
+                    <i class="fas fa-building"></i>
                 </div>
-            }
-            @if (ViewBag.SelectedDepartmentId != null)
-            {
-                <div class="alert alert-info d-flex align-items-center">
-                    <i class="fas fa-info-circle fa-lg ml-3"></i>
-                    <div>
-                        <h5 class="mb-1">القسم: @ViewBag.SelectedDepartmentName</h5>
-                        <p class="mb-0">عرض @Model.Count() مستخدم في هذا القسم</p>
-                    </div>
+                <div class="alert-content">
+                    <h6 class="alert-title">القسم: @ViewBag.SelectedDepartmentName</h6>
+                    <p class="alert-text">عرض @Model.Count() مستخدم في هذا القسم</p>
                 </div>
-            }
+            </div>
+        }
 
-            <!-- Users Table -->
-            <div class="table-responsive">
-                <table id="departmentUsersTable" class="table table-hover align-middle border">
-                    <thead class="table-dark text-center">
+        <!-- Users Table Section -->
+        <div class="table-section">
+            <div class="table-container">
+                <table id="departmentUsersTable" class="table table-modern">
+                    <thead>
                         <tr>
-                            <th class="border-start-0">الاسم الكامل</th>
+                            <th>الاسم الكامل</th>
                             <th>البريد الإلكتروني</th>
                             <th>القسم</th>
                             <th>الأدوار</th>
                             <th>رقم الهوية</th>
                             <th>رقم الملف</th>
-                            <th class="border-end-0">الإجراءات</th>
+                            <th class="text-center">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -110,74 +134,78 @@
                         {
                             foreach (var user in Model)
                             {
-                                <tr>
+                                <tr class="table-row-modern">
                                     <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-circle bg-primary text-white">
+                                        <div class="user-info">
+                                            <div class="user-avatar">
                                                 @user.FullName.Substring(0, 1).ToUpper()
                                             </div>
-                                            <div class="ms-3">
-                                                <h6 class="mb-0 fw-bold">@user.FullName</h6>
-                                                
+                                            <div class="user-details">
+                                                <h6 class="user-name">@user.FullName</h6>
                                             </div>
                                         </div>
                                     </td>
-                                    <td dir="ltr" class="text-end">@user.Email</td>
+                                    <td class="email-cell" dir="ltr">@user.Email</td>
                                     <td>
                                         @if (user.Department != null)
                                         {
-                                            <span class="badge bg-info text-dark">@user.Department.Name</span>
+                                            <span class="badge badge-department">
+                                                <i class="fas fa-building me-1"></i>
+                                                @user.Department.Name
+                                            </span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-secondary">غير معين</span>
+                                            <span class="badge badge-unassigned">غير معين</span>
                                         }
                                     </td>
                                     <td>
-                                        @if (ViewBag.UserRoles != null && ViewBag.UserRoles.ContainsKey(user.Id))
-                                        {
-                                            foreach (var role in ViewBag.UserRoles[user.Id])
+                                        <div class="roles-container">
+                                            @if (ViewBag.UserRoles != null && ViewBag.UserRoles.ContainsKey(user.Id))
                                             {
-                                                <span class="badge bg-primary me-1">@role</span>
+                                                foreach (var role in ViewBag.UserRoles[user.Id])
+                                                {
+                                                    <span class="badge badge-role">@role</span>
+                                                }
                                             }
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-secondary">لا توجد أدوار</span>
-                                        }
+                                            else
+                                            {
+                                                <span class="badge badge-no-roles">لا توجد أدوار</span>
+                                            }
+                                        </div>
                                     </td>
-                                    <td dir="ltr" class="text-end">
+                                    <td class="id-cell" dir="ltr">
                                         @if (!string.IsNullOrEmpty(user.NationalId))
                                         {
-                                            @user.NationalId
+                                            <span class="id-value">@user.NationalId</span>
                                         }
                                         else
                                         {
-                                            <span class="text-muted">غير متوفر</span>
+                                            <span class="text-muted-modern">غير متوفر</span>
                                         }
                                     </td>
-                                    <td dir="ltr" class="text-end">
+                                    <td class="id-cell" dir="ltr">
                                         @if (!string.IsNullOrEmpty(user.RecipientFileNumber))
                                         {
-                                            @user.RecipientFileNumber
+                                            <span class="id-value">@user.RecipientFileNumber</span>
                                         }
                                         else
                                         {
-                                            <span class="text-muted">غير متوفر</span>
+                                            <span class="text-muted-modern">غير متوفر</span>
                                         }
                                     </td>
                                     <td class="text-center">
                                         <div class="action-buttons">
-                                            <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="عرض التفاصيل">
+                                            <a asp-action="Details" asp-route-id="@user.Id" class="btn-action btn-action-info" data-bs-toggle="tooltip" title="عرض التفاصيل">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-warning" data-bs-toggle="tooltip" title="تعديل المستخدم">
+                                            <a asp-action="Edit" asp-route-id="@user.Id" class="btn-action btn-action-warning" data-bs-toggle="tooltip" title="تعديل المستخدم">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a asp-action="ManageRoles" asp-route-userId="@user.Id" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="إدارة الأدوار">
+                                            <a asp-action="ManageRoles" asp-route-userId="@user.Id" class="btn-action btn-action-primary" data-bs-toggle="tooltip" title="إدارة الأدوار">
                                                 <i class="fas fa-user-tag"></i>
                                             </a>
-                                            <a asp-action="Delete" asp-route-id="@user.Id" class="btn btn-sm btn-danger delete-user" data-bs-toggle="tooltip" title="حذف المستخدم">
+                                            <a asp-action="Delete" asp-route-id="@user.Id" class="btn-action btn-action-danger delete-user" data-bs-toggle="tooltip" title="حذف المستخدم">
                                                 <i class="fas fa-trash-alt"></i>
                                             </a>
                                         </div>
@@ -188,13 +216,16 @@
                         else
                         {
                             <tr>
-                                <td colspan="6" class="text-center py-5">
+                                <td colspan="7" class="text-center">
                                     <div class="empty-state">
-                                        <i class="fas fa-users-slash fa-4x text-muted mb-3"></i>
-                                        <h5 class="text-muted">لم يتم العثور على مستخدمين</h5>
-                                        <p class="text-muted">حاول تغيير معايير البحث أو إضافة مستخدمين جدد</p>
-                                        <a asp-action="Create" class="btn btn-primary mt-2">
-                                            <i class="fas fa-user-plus ml-2"></i> إضافة مستخدم جديد
+                                        <div class="empty-icon">
+                                            <i class="fas fa-users-slash"></i>
+                                        </div>
+                                        <h5 class="empty-title">لم يتم العثور على مستخدمين</h5>
+                                        <p class="empty-text">حاول تغيير معايير البحث أو إضافة مستخدمين جدد</p>
+                                        <a asp-action="Create" class="btn btn-gradient-primary">
+                                            <i class="fas fa-user-plus me-2"></i>
+                                            إضافة مستخدم جديد
                                         </a>
                                     </div>
                                 </td>
@@ -203,127 +234,175 @@
                     </tbody>
                 </table>
             </div>
-
-            <!-- Pagination Controls -->
-            @if (ViewBag.TotalPages > 1)
-            {
-                <div class="mt-4">
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination justify-content-center">
-                            @{
-                                int totalPages = ViewBag.TotalPages ?? 1;
-                                int currentPage = ViewBag.CurrentPage ?? 1;
-                                int maxPagesToShow = 5;
-                                int startPage = Math.Max(1, currentPage - (maxPagesToShow / 2));
-                                int endPage = Math.Min(totalPages, startPage + maxPagesToShow - 1);
-
-                                // Adjust startPage if we're near the end
-                                if (endPage - startPage + 1 < maxPagesToShow)
-                                {
-                                    startPage = Math.Max(1, endPage - maxPagesToShow + 1);
-                                }
-                            }
-
-                            <!-- Previous button -->
-                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                                <a class="page-link" href="@Url.Action("DepartmentUsers", new { departmentId = ViewBag.SelectedDepartmentId, searchTerm = ViewBag.SearchTerm, page = currentPage - 1 })" aria-label="Previous">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-
-                            <!-- Page numbers -->
-                            @for (int i = startPage; i <= endPage; i++)
-                            {
-                                <li class="page-item @(i == currentPage ? "active" : "")">
-                                    <a class="page-link" href="@Url.Action("DepartmentUsers", new { departmentId = ViewBag.SelectedDepartmentId, roleName = ViewBag.SelectedRoleName, searchTerm = ViewBag.SearchTerm, page = i })">@i</a>
-                                </li>
-                            }
-
-                            <!-- Next button -->
-                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                                <a class="page-link" href="@Url.Action("DepartmentUsers", new { departmentId = ViewBag.SelectedDepartmentId, searchTerm = ViewBag.SearchTerm, page = currentPage + 1 })" aria-label="Next">
-                                    <span aria-hidden="true">&laquo;</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                    <div class="text-center text-muted small">
-                        صفحة @currentPage من @totalPages
-                    </div>
-                </div>
-            }
         </div>
+
+        <!-- Pagination -->
+        @if (ViewBag.TotalPages > 1)
+        {
+            <div class="pagination-section">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-modern">
+                        @{
+                            int totalPages = ViewBag.TotalPages ?? 1;
+                            int currentPage = ViewBag.CurrentPage ?? 1;
+                            int maxPagesToShow = 5;
+                            int startPage = Math.Max(1, currentPage - (maxPagesToShow / 2));
+                            int endPage = Math.Min(totalPages, startPage + maxPagesToShow - 1);
+
+                            if (endPage - startPage + 1 < maxPagesToShow)
+                            {
+                                startPage = Math.Max(1, endPage - maxPagesToShow + 1);
+                            }
+                        }
+
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" href="@Url.Action("DepartmentUsers", new { departmentId = ViewBag.SelectedDepartmentId, searchTerm = ViewBag.SearchTerm, page = currentPage - 1 })" aria-label="Previous">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+
+                        @for (int i = startPage; i <= endPage; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("DepartmentUsers", new { departmentId = ViewBag.SelectedDepartmentId, roleName = ViewBag.SelectedRoleName, searchTerm = ViewBag.SearchTerm, page = i })">@i</a>
+                            </li>
+                        }
+
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" href="@Url.Action("DepartmentUsers", new { departmentId = ViewBag.SelectedDepartmentId, searchTerm = ViewBag.SearchTerm, page = currentPage + 1 })" aria-label="Next">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                <div class="pagination-info">
+                    صفحة @currentPage من @totalPages
+                </div>
+            </div>
+        }
     </div>
 </div>
+
+<!-- Import Users Modal -->
 <div class="modal fade" id="importUsersModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-file-import me-2"></i> استيراد المستخدمين</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-modern">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-file-import"></i>
+                </div>
+                <div class="modal-title-section">
+                    <h5 class="modal-title">استيراد المستخدمين</h5>
+                    <p class="modal-subtitle">قم بتحميل ملف Excel يحتوي على بيانات المستخدمين</p>
+                </div>
+                <button type="button" class="btn-close-modern" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
-                <div class="text-center mb-4">
-                    <div class="import-icon-container mb-3">
-                        <i class="fas fa-file-excel fa-4x text-success"></i>
-                        <i class="fas fa-arrow-right fa-2x text-primary mx-3"></i>
-                        <i class="fas fa-users fa-4x text-primary"></i>
+                <div class="import-visual">
+                    <div class="import-flow">
+                        <div class="flow-item">
+                            <div class="flow-icon excel">
+                                <i class="fas fa-file-excel"></i>
+                            </div>
+                            <span class="flow-label">ملف Excel</span>
+                        </div>
+                        <div class="flow-arrow">
+                            <i class="fas fa-arrow-left"></i>
+                        </div>
+                        <div class="flow-item">
+                            <div class="flow-icon users">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <span class="flow-label">مستخدمين جدد</span>
+                        </div>
                     </div>
-                    <h5>استيراد مستخدمين من ملف Excel</h5>
-                    <p class="text-muted">قم بتحميل ملف Excel يحتوي على بيانات المستخدمين</p>
                 </div>
 
                 @using (Html.BeginForm("ImportUsers", "User", FormMethod.Post, new { enctype = "multipart/form-data", id = "importUsersForm" }))
                 {
-                    <div class="mb-3">
-                        <div class="custom-file-upload">
-                            <div class="input-group">
-                                <input type="file" name="file" id="importUsersFile" class="form-control" accept=".xlsx,.xls" required />
-                                <label for="importUsersFile" class="input-group-text">
-                                    <i class="fas fa-upload"></i>
-                                </label>
-                            </div>
-                            <small class="form-text text-muted">الملفات المدعومة: .xlsx, .xls</small>
+                    <div class="file-upload-section">
+                        <div class="file-upload-container">
+                            <input type="file" name="file" id="importUsersFile" class="file-input" accept=".xlsx,.xls" required />
+                            <label for="importUsersFile" class="file-upload-label">
+                                <div class="upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="upload-text">
+                                    <span class="upload-title">اسحب الملف هنا أو انقر للتصفح</span>
+                                    <span class="upload-subtitle">الملفات المدعومة: .xlsx, .xls</span>
+                                </div>
+                            </label>
                         </div>
                     </div>
 
-                    <div class="alert alert-info">
-                        <h6 class="fw-bold"><i class="fas fa-info-circle me-2"></i>بيانات الاستيراد</h6>
-                        <ul class="mb-0 small">
-                            <li><strong>البريد الإلكتروني (مطلوب)</strong>: يستخدم كاسم المستخدم أيضاً</li>
-                            <li><strong>الاسم الكامل (مطلوب)</strong></li>
-                            <li><strong>الرقم الوطني</strong>: اختياري</li>
-                            <li><strong>رقم الملف</strong>: اختياري</li>
-                            <li><strong>اسم القسم</strong>: يجب أن يتطابق مع قسم موجود في النظام</li>
-                            <li><strong>كلمة المرور</strong>: اختيارية (الافتراضية: Password123!)</li>
-                            <li><strong>الأدوار</strong>: مفصولة بفواصل (مثال: User, Supervisor)</li>
-                        </ul>
+                    <div class="import-info">
+                        <div class="info-header">
+                            <i class="fas fa-info-circle"></i>
+                            <h6>بيانات الاستيراد المطلوبة</h6>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-item required">
+                                <i class="fas fa-asterisk"></i>
+                                <span>البريد الإلكتروني (مطلوب)</span>
+                            </div>
+                            <div class="info-item required">
+                                <i class="fas fa-asterisk"></i>
+                                <span>الاسم الكامل (مطلوب)</span>
+                            </div>
+                            <div class="info-item optional">
+                                <i class="fas fa-circle"></i>
+                                <span>الرقم الوطني</span>
+                            </div>
+                            <div class="info-item optional">
+                                <i class="fas fa-circle"></i>
+                                <span>رقم الملف</span>
+                            </div>
+                            <div class="info-item optional">
+                                <i class="fas fa-circle"></i>
+                                <span>اسم القسم</span>
+                            </div>
+                            <div class="info-item optional">
+                                <i class="fas fa-circle"></i>
+                                <span>كلمة المرور</span>
+                            </div>
+                            <div class="info-item optional">
+                                <i class="fas fa-circle"></i>
+                                <span>الأدوار</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="d-grid gap-2">
-                        <a href="@Url.Action("DownloadUserTemplate", "User")" class="btn btn-outline-primary">
-                            <i class="fas fa-download me-1"></i> تنزيل نموذج للاستيراد
+                    <div class="template-download">
+                        <a href="@Url.Action("DownloadUserTemplate", "User")" class="btn btn-outline-primary btn-template">
+                            <i class="fas fa-download me-2"></i>
+                            تنزيل نموذج للاستيراد
                         </a>
                     </div>
                 }
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i> إلغاء
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>
+                    إلغاء
                 </button>
-                <button type="submit" form="importUsersForm" class="btn btn-primary">
-                    <i class="fas fa-file-import me-1"></i> استيراد
+                <button type="submit" form="importUsersForm" class="btn btn-gradient-primary" disabled>
+                    <i class="fas fa-file-import me-2"></i>
+                    استيراد المستخدمين
                 </button>
             </div>
         </div>
     </div>
 </div>
+
 @section Scripts {
     <script>
         $(document).ready(function() {
             // Initialize tooltips
             const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
             const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
         @if (TempData["ImportErrors"] != null)
         {
             <text>
@@ -336,7 +415,6 @@
             </text>
         }
 
-        // Show success message
         @if (TempData["Success"] != null)
         {
             <text>
@@ -349,7 +427,6 @@
             </text>
         }
 
-        // Show error message
         @if (TempData["Error"] != null)
         {
             <text>
@@ -362,61 +439,59 @@
             </text>
         }
 
-        // Handle file selection feedback
-        $('#importUsersFile').on('change', function() {
-            const fileName = $(this).val().split('\\').pop();
-            if (fileName) {
-                $(this).next('.custom-file-label').html(fileName);
-                // Enable submit button
-                $('button[form="importUsersForm"]').prop('disabled', false);
-            } else {
-                $(this).next('.custom-file-label').html('Choose file');
-                // Disable submit button
-                $('button[form="importUsersForm"]').prop('disabled', true);
-            }
-        });
+            // File upload handling
+            $('#importUsersFile').on('change', function() {
+                const file = this.files[0];
+                const submitBtn = $('button[form="importUsersForm"]');
+                const label = $(this).next('.file-upload-label');
+                
+                if (file) {
+                    label.addClass('file-selected');
+                    label.find('.upload-title').text(file.name);
+                    label.find('.upload-subtitle').text(`حجم الملف: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+                    submitBtn.prop('disabled', false);
+                } else {
+                    label.removeClass('file-selected');
+                    label.find('.upload-title').text('اسحب الملف هنا أو انقر للتصفح');
+                    label.find('.upload-subtitle').text('الملفات المدعومة: .xlsx, .xls');
+                    submitBtn.prop('disabled', true);
+                }
+            });
 
-        // Initialize with disabled submit button
-        $('button[form="importUsersForm"]').prop('disabled', true);
-
-        // Add loading overlay when form is submitted
-        $('#importUsersForm').on('submit', function() {
-            if (this.checkValidity()) {
-                const loadingOverlay = $(`
-                    <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-                         style="background-color: rgba(0,0,0,0.5); z-index: 9999;">
-                        <div class="card p-4 text-center">
-                            <div class="spinner-border text-primary mb-3" role="status"></div>
-                            <h5>جاري استيراد المستخدمين...</h5>
-                            <p class="text-muted mb-0">يرجى الانتظار</p>
+            // Form submission with loading
+            $('#importUsersForm').on('submit', function() {
+                if (this.checkValidity()) {
+                    const loadingOverlay = $(`
+                        <div class="loading-overlay">
+                            <div class="loading-content">
+                                <div class="loading-spinner"></div>
+                                <h5>جاري استيراد المستخدمين...</h5>
+                                <p>يرجى الانتظار، قد تستغرق هذه العملية بعض الوقت</p>
+                            </div>
                         </div>
-                    </div>
-                `);
-                $('body').append(loadingOverlay);
-            }
-        });
-            // Initialize DataTable with RTL support
+                    `);
+                    $('body').append(loadingOverlay);
+                }
+            });
+
+            // Initialize DataTable
             $('#departmentUsersTable').DataTable({
-                "paging": false, // Disable DataTables pagination since we're using server-side
+                "paging": false,
                 "ordering": true,
-                "info": false, // Disable info since we show it in our custom pagination
-                "searching": false, // We already have a custom search box
+                "info": false,
+                "searching": false,
                 "responsive": true,
                 "language": {
                     "emptyTable": "لم يتم العثور على مستخدمين",
-                    "zeroRecords": "لم يتم العثور على مستخدمين مطابقين",
-                    "info": "عرض _START_ إلى _END_ من _TOTAL_ مستخدم",
-                    "infoEmpty": "عرض 0 إلى 0 من 0 مستخدم",
-                    "infoFiltered": "(تمت تصفيته من _MAX_ مستخدم إجمالي)"
+                    "zeroRecords": "لم يتم العثور على مستخدمين مطابقين"
                 },
                 "autoWidth": false,
                 "columnDefs": [
-                    { "targets": [0, 1, 2, 3, 4], "className": "align-middle" },
-                    { "targets": -1, "className": "text-center align-middle", "orderable": false }
+                    { "targets": -1, "className": "text-center", "orderable": false }
                 ]
             });
 
-            // Add confirmation dialog for delete buttons
+            // Delete confirmation
             $('.delete-user').on('click', function(e) {
                 if (!confirm('هل أنت متأكد من رغبتك في حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء.')) {
                     e.preventDefault();
@@ -426,79 +501,1015 @@
     </script>
 
     <style>
-        /* RTL specific adjustments */
-        .ml-1, .ml-2, .ml-3, .ml-4 {
-            margin-left: 0 !important;
+        :root {
+            --primary-color: #667eea;
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-color: #48bb78;
+            --success-gradient: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            --warning-color: #ed8936;
+            --danger-color: #f56565;
+            --info-color: #4299e1;
+            --secondary-color: #718096;
+            --light-bg: #f8fafc;
+            --white: #ffffff;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 32px rgba(0, 0, 0, 0.15);
+            --border-radius: 12px;
+            --border-radius-lg: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        .ml-1 {
-            margin-right: 0.25rem !important;
+        /* Page Header */
+        .page-header {
+            margin-bottom: 2rem;
         }
 
-        .ml-2 {
-            margin-right: 0.5rem !important;
+        .page-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--primary-gradient);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow-md);
         }
 
-        .ml-3 {
-            margin-right: 1rem !important;
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0;
         }
 
-        /* Avatar style */
-        .avatar-circle {
+        .page-subtitle {
+            font-size: 1rem;
+            color: #718096;
+        }
+
+        /* Gradient Buttons */
+        .btn-gradient-primary {
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-gradient-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            color: white;
+        }
+
+        .btn-gradient-success {
+            background: var(--success-gradient);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-gradient-success:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            color: white;
+        }
+
+        .btn-elevated {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-elevated::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-elevated:hover::before {
+            left: 100%;
+        }
+
+        /* Main Card */
+        .main-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+        }
+
+        .filter-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .filter-form {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            backdrop-filter: blur(10px);
+        }
+
+        .input-group-modern .input-group-text {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            color: var(--primary-color);
+            border-radius: var(--border-radius) 0 0 var(--border-radius);
+        }
+
+        .input-group-modern .form-control,
+        .input-group-modern .form-select {
+            border: none;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            background: rgba(255, 255, 255, 0.95);
+            transition: var(--transition);
+        }
+
+        .input-group-modern .form-control:focus,
+        .input-group-modern .form-select:focus {
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Alert Modern */
+        .alert-modern {
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 1rem 1.5rem;
+            margin: 1.5rem;
+            display: flex;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .alert-modern.alert-info {
+            background: rgba(66, 153, 225, 0.1);
+            border-left: 4px solid var(--info-color);
+        }
+
+        .alert-icon {
             width: 40px;
             height: 40px;
+            background: var(--info-color);
+            color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 18px;
+            margin-left: 1rem;
+            flex-shrink: 0;
+    }
+
+    .alert-content {
+        flex: 1;
+    }
+
+    .alert-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem 0;
+        color: var(--info-color);
+    }
+
+    .alert-text {
+        font-size: 0.875rem;
+        margin: 0;
+        color: #4a5568;
+    }
+
+    /* Table Section */
+    .table-section {
+        padding: 0;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .table-modern {
+        width: 100%;
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+        .table-modern thead {
+            background: linear-gradient(135deg, #f8faff 0%, #eef2ff 100%);
         }
 
-        /* Action buttons styling */
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-        }
-
-            .action-buttons .btn {
-                width: 36px;
-                height: 36px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-                transition: all 0.2s;
+            .table-modern thead th {
+                padding: 1.25rem 1rem;
+                font-weight: 700;
+                color: #4a5568;
+                border: none;
+                font-size: 0.875rem;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                position: sticky;
+                top: 0;
+                z-index: 10;
             }
 
-                .action-buttons .btn:hover {
-                    transform: translateY(-3px);
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                .table-modern thead th:first-child {
+                    border-top-right-radius: var(--border-radius);
                 }
 
-        /* Empty state styling */
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
+                .table-modern thead th:last-child {
+                    border-top-left-radius: var(--border-radius);
+                }
+
+    .table-row-modern {
+        background: white;
+        transition: var(--transition);
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+        .table-row-modern:hover {
+            background: #f8faff;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
         }
 
-        /* Pagination RTL fixes */
-        .pagination {
-            direction: ltr;
+        .table-row-modern td {
+            padding: 1.25rem 1rem;
+            border: none;
+            vertical-align: middle;
         }
 
-        /* Table responsive fixes for RTL */
-        .table-responsive {
-            direction: rtl;
+    /* User Info */
+    .user-info {
+        display: flex;
+        align-items: center;
+    }
+
+    .user-avatar {
+        width: 48px;
+        height: 48px;
+        background: var(--primary-gradient);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.125rem;
+        margin-left: 1rem;
+        flex-shrink: 0;
+        box-shadow: var(--shadow-md);
+    }
+
+    .user-details {
+        flex: 1;
+    }
+
+    .user-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    .email-cell {
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        color: var(--info-color);
+        direction: ltr !important;
+        text-align: left;
+    }
+
+    .id-cell {
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        color: #4a5568;
+        direction: ltr !important;
+        text-align: left;
+    }
+
+    .id-value {
+        background: #f7fafc;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .text-muted-modern {
+        color: #a0aec0;
+        font-style: italic;
+    }
+
+    /* Badges */
+    .badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        margin: 0.125rem;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .badge-department {
+        background: rgba(72, 187, 120, 0.1);
+        color: var(--success-color);
+        border: 1px solid rgba(72, 187, 120, 0.2);
+    }
+
+    .badge-unassigned {
+        background: rgba(160, 174, 192, 0.1);
+        color: var(--secondary-color);
+        border: 1px solid rgba(160, 174, 192, 0.2);
+    }
+
+    .badge-role {
+        background: rgba(102, 126, 234, 0.1);
+        color: var(--primary-color);
+        border: 1px solid rgba(102, 126, 234, 0.2);
+    }
+
+    .badge-no-roles {
+        background: rgba(237, 137, 54, 0.1);
+        color: var(--warning-color);
+        border: 1px solid rgba(237, 137, 54, 0.2);
+    }
+
+    .roles-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .btn-action {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+
+    .btn-action-info {
+        background: rgba(66, 153, 225, 0.1);
+        color: var(--info-color);
+        border: 1px solid rgba(66, 153, 225, 0.2);
+    }
+
+        .btn-action-info:hover {
+            background: var(--info-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
-        /* Email alignment in RTL */
-        [dir="rtl"] td[dir="ltr"] {
-            text-align: left !important;
+    .btn-action-warning {
+        background: rgba(237, 137, 54, 0.1);
+        color: var(--warning-color);
+        border: 1px solid rgba(237, 137, 54, 0.2);
+    }
+
+        .btn-action-warning:hover {
+            background: var(--warning-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
-    </style>
-}
+
+    .btn-action-primary {
+        background: rgba(102, 126, 234, 0.1);
+        color: var(--primary-color);
+        border: 1px solid rgba(102, 126, 234, 0.2);
+    }
+
+        .btn-action-primary:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+    .btn-action-danger {
+        background: rgba(245, 101, 101, 0.1);
+        color: var(--danger-color);
+        border: 1px solid rgba(245, 101, 101, 0.2);
+    }
+
+        .btn-action-danger:hover {
+            background: var(--danger-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+    /* Empty State */
+    .empty-state {
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(160, 174, 192, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        color: var(--secondary-color);
+        font-size: 2rem;
+    }
+
+    .empty-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-text {
+        color: #718096;
+        margin-bottom: 2rem;
+        font-size: 1rem;
+    }
+
+    /* Pagination */
+    .pagination-section {
+        padding: 2rem;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .pagination-modern {
+        margin: 0;
+    }
+
+        .pagination-modern .page-item .page-link {
+            border: none;
+            background: white;
+            color: var(--primary-color);
+            margin: 0 0.125rem;
+            border-radius: var(--border-radius);
+            padding: 0.75rem 1rem;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .pagination-modern .page-item.active .page-link {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .pagination-modern .page-item:not(.disabled) .page-link:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .pagination-modern .page-item.disabled .page-link {
+            background: #f7fafc;
+            color: #a0aec0;
+            cursor: not-allowed;
+        }
+
+    .pagination-info {
+        color: #718096;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    /* Modal Styles */
+    .modal-modern .modal-content {
+        border: none;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-xl);
+        overflow: hidden;
+    }
+
+    .modal-modern .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border: none;
+        display: flex;
+        align-items: center;
+    }
+
+    .modal-icon {
+        width: 56px;
+        height: 56px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: var(--border-radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 1rem;
+        font-size: 1.5rem;
+        backdrop-filter: blur(10px);
+    }
+
+    .modal-title-section {
+        flex: 1;
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 0.25rem 0;
+    }
+
+    .modal-subtitle {
+        font-size: 1rem;
+        margin: 0;
+        opacity: 0.9;
+    }
+
+    .btn-close-modern {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        transition: var(--transition);
+        backdrop-filter: blur(10px);
+    }
+
+        .btn-close-modern:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .modal-footer {
+        padding: 1.5rem 2rem;
+        background: #f8fafc;
+        border: none;
+    }
+
+    /* Import Visual */
+    .import-visual {
+        margin-bottom: 2rem;
+    }
+
+    .import-flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+        padding: 2rem;
+        background: linear-gradient(135deg, #f8faff 0%, #eef2ff 100%);
+        border-radius: var(--border-radius);
+        border: 2px dashed #e2e8f0;
+    }
+
+    .flow-item {
+        text-align: center;
+    }
+
+    .flow-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: var(--border-radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.75rem;
+        font-size: 1.5rem;
+        color: white;
+    }
+
+        .flow-icon.excel {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: var(--shadow-md);
+        }
+
+        .flow-icon.users {
+            background: var(--primary-gradient);
+            box-shadow: var(--shadow-md);
+        }
+
+    .flow-arrow {
+        color: var(--primary-color);
+        font-size: 1.5rem;
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100%
+
+    {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    }
+
+    .flow-label {
+        font-weight: 600;
+        color: #4a5568;
+    }
+
+    /* File Upload */
+    .file-upload-section {
+        margin-bottom: 2rem;
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .file-upload-container {
+        position: relative;
+    }
+
+    .file-upload-label {
+        display: block;
+        padding: 3rem 2rem;
+        border: 2px dashed #cbd5e0;
+        border-radius: var(--border-radius);
+        text-align: center;
+        cursor: pointer;
+        transition: var(--transition);
+        background: #f8fafc;
+    }
+
+        .file-upload-label:hover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .file-upload-label.file-selected {
+            border-color: var(--success-color);
+            background: rgba(72, 187, 120, 0.05);
+        }
+
+    .upload-icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .upload-text {
+        display: block;
+    }
+
+    .upload-title {
+        display: block;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-subtitle {
+        display: block;
+        font-size: 0.875rem;
+        color: #718096;
+    }
+
+    /* Import Info */
+    .import-info {
+        background: #f8fafc;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .info-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        color: var(--info-color);
+    }
+
+        .info-header i {
+            margin-left: 0.5rem;
+        }
+
+        .info-header h6 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        color: #4a5568;
+        font-size: 0.875rem;
+    }
+
+        .info-item i {
+            margin-left: 0.5rem;
+            width: 12px;
+            text-align: center;
+        }
+
+        .info-item.required i {
+            color: var(--danger-color);
+        }
+
+        .info-item.optional i {
+            color: var(--secondary-color);
+        }
+
+    /* Template Download */
+    .template-download {
+        text-align: center;
+    }
+
+    .btn-template {
+        border: 2px dashed var(--primary-color);
+        color: var(--primary-color);
+        background: rgba(102, 126, 234, 0.05);
+        padding: 0.75rem 1.5rem;
+        border-radius: var(--border-radius);
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+        .btn-template:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(5px);
+    }
+
+    .loading-content {
+        background: white;
+        padding: 3rem;
+        border-radius: var(--border-radius-lg);
+        text-align: center;
+        box-shadow: var(--shadow-xl);
+        max-width: 400px;
+    }
+
+    .loading-spinner {
+        width: 64px;
+        height: 64px;
+        border: 4px solid #e2e8f0;
+        border-top: 4px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1.5rem;
+    }
+
+    @@keyframes spin {
+        0%
+
+    {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+
+    }
+
+    .loading-content h5 {
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+    }
+
+    .loading-content p {
+        color: #718096;
+        margin: 0;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .page-header .row
+
+    {
+        text-align: center;
+    }
+
+    .page-header .col-auto,
+    .page-header .col {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .filter-form .row {
+        margin: 0;
+    }
+
+    .filter-form .col-lg-4,
+    .filter-form .col-lg-3,
+    .filter-form .col-lg-1,
+    .filter-form .col-md-6,
+    .filter-form .col-md-4,
+    .filter-form .col-md-8 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .action-buttons {
+        flex-wrap: wrap;
+    }
+
+    .pagination-section {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .user-info {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .user-avatar {
+        margin: 0 0 0.75rem 0;
+    }
+
+    .table-container {
+        font-size: 0.875rem;
+    }
+
+    .modal-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .modal-icon {
+        margin: 0 0 1rem 0;
+    }
+
+    .import-flow {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .flow-arrow {
+        transform: rotate(90deg);
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    }
+
+    @@media (max-width: 576px) {
+        .page-icon
+
+    {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .filter-section {
+        padding: 1.5rem;
+    }
+
+    .modal-body,
+    .modal-footer {
+        padding: 1.5rem;
+    }
+
+    .file-upload-label {
+        padding: 2rem 1rem;
+    }
+
+    .upload-icon {
+        font-size: 2rem;
+    }
+
+    }
+
+    /* Print Styles */
+    @@media print {
+        .page-header .col-auto:last-child, .filter-section, .action-buttons, .pagination-section
+
+    {
+        display: none !important;
+    }
+
+    .main-card {
+        box-shadow: none;
+        border: 1px solid #e2e8f0;
+    }
+
+    .table-row-modern:hover {
+        background: white;
+        transform: none;
+        box-shadow: none;
+    }
+
+    body {
+        background: white;
+    }
+
+    }
+
+        </style>
+        }

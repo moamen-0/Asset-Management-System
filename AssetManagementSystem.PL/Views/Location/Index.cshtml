@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<AssetManagementSystem.DAL.Entities.Facility>
 @{
     ViewData["Title"] = "إدارة المواقع";
-    Layout = "~/Views/Shared/_Dashboard.cshtml";
+    Layout = "~/Views/Shared/_Dashboard_Tabler.cshtml";
 }
 <div class="card shadow-lg rounded-4 mb-4 border-0">
     <div class="card-body p-2">
@@ -170,84 +170,263 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="col-md-9">
-                    <!-- عرض التفاصيل -->
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0" id="detail-title"><i class="bi bi-info-circle"></i> تفاصيل الموقع</h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="location-details">
-                                <div class="text-center py-5">
-                                    <i class="bi bi-arrow-left-circle display-1 text-muted"></i>
-                                    <h3 class="mt-3 text-muted">اختر عنصرًا من التسلسل الهرمي لعرض التفاصيل</h3>
+                </div>                <div class="col-md-9">
+                    <!-- Enhanced Location Details Section -->
+                    <div class="location-details-enhanced">
+                        <div class="details-header">
+                            <div class="details-title-wrapper">
+                                <h5 class="details-title" id="detail-title">
+                                    <i class="fas fa-info-circle details-icon"></i> 
+                                    تفاصيل الموقع
+                                </h5>
+                                <div class="details-breadcrumb" id="detail-breadcrumb" style="display: none;">
+                                    <!-- Breadcrumb will be populated dynamically -->
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- الإحصائيات السريعة -->
-                    <div class="row mt-4">
-                        <div class="col-md-4">
-                            <div class="card bg-primary text-white shadow border-0">
-                                <div class="card-body">
-                                    <h5><i class="bi bi-building"></i> المنشآت</h5>
-                                    <h2 class="mb-0">@Model.Count()</h2>
-                                </div>
+                            <div class="details-actions" id="detail-actions" style="display: none;">
+                                <button class="action-btn-small edit" id="editLocationBtn" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn-small refresh" id="refreshDetailsBtn" title="تحديث">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                                <button class="action-btn-small expand" id="expandDetailsBtn" title="توسيع">
+                                    <i class="fas fa-expand"></i>
+                                </button>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card bg-success text-white shadow border-0">
-                                <div class="card-body">
-                                    <h5><i class="bi bi-house"></i> المباني</h5>
-                                    <h2 class="mb-0">@Model.Sum(f => f.Buildings.Count())</h2>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card bg-danger text-white shadow border-0">
-                                <div class="card-body">
-                                    <h5><i class="bi bi-door-closed"></i> الغرف</h5>
-                                    <h2 class="mb-0">@Model.Sum(f => f.Buildings.Sum(b => b.Floors.Sum(fl => fl.Rooms.Count())))</h2>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card border-0 shadow-sm m-4">
-                        <div class="card-header bg-black text-white d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0"><i class="bi bi-diagram-3"></i> نظرة عامة على الأقسام</h5>
-                            <a asp-action="Departments" class="btn btn-sm btn-light">
-                                <i class="bi bi-eye"></i> عرض الكل
-                            </a>
-                        </div>
-                        <div class="card-body">
-                            <div class="list-group list-group-flush">
-                                @foreach (var facility in Model)
-                                {
-                                    if (facility.Departments != null && facility.Departments.Any())
-                                    {
-                                        <div class="list-group-item">
-                                            <h6 class="mb-2 text-primary"><i class="bi bi-building"></i> @facility.Name</h6>
-                                            <div class="d-flex flex-wrap gap-2">
-                                                @foreach (var dept in facility.Departments.Take(3))
-                                                {
-                                                    <span class="badge bg-info text-white p-2">
-                                                        <i class="bi bi-people"></i> @dept.Name
-                                                    </span>
-                                                }
-                                                @if (facility.Departments.Count() > 3)
-                                                {
-                                                    <span class="badge bg-secondary text-white p-2">
-                                                        +@(facility.Departments.Count() - 3) أكثر
-                                                    </span>
-                                                }
+                        
+                        <div class="details-body">
+                            <div id="location-details" class="details-content">
+                                <div class="details-empty-state">
+                                    <div class="empty-state-animation">
+                                        <div class="animated-icon">
+                                            <i class="fas fa-sitemap"></i>
+                                        </div>
+                                        <div class="floating-elements">
+                                            <div class="floating-dot dot-1"></div>
+                                            <div class="floating-dot dot-2"></div>
+                                            <div class="floating-dot dot-3"></div>
+                                        </div>
+                                    </div>
+                                    <div class="empty-state-content">
+                                        <h3 class="empty-state-title">استكشف التسلسل الهرمي للمواقع</h3>
+                                        <p class="empty-state-subtitle">اختر منشأة، مبنى، أو طابق من الجانب الأيسر لعرض معلوماته التفصيلية</p>
+                                        <div class="empty-state-tips">
+                                            <div class="tip-item">
+                                                <i class="fas fa-hand-pointer"></i>
+                                                <span>انقر على أي عنصر لاستكشاف محتوياته</span>
+                                            </div>
+                                            <div class="tip-item">
+                                                <i class="fas fa-eye"></i>
+                                                <span>عرض تفاصيل شاملة ومعلومات إحصائية</span>
                                             </div>
                                         </div>
-                                    }
-                                }
+                                    </div>
+                                </div>
                             </div>
+                            
+                            <!-- Quick Stats Overlay -->
+                            <div class="quick-stats-overlay" id="quickStatsOverlay" style="display: none;">
+                                <div class="quick-stat-item">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span class="stat-label">النمو الشهري</span>
+                                    <span class="stat-value">+12%</span>
+                                </div>
+                                <div class="quick-stat-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span class="stat-label">آخر تحديث</span>
+                                    <span class="stat-value">اليوم</span>
+                                </div>
+                                <div class="quick-stat-item">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span class="stat-label">الحالة</span>
+                                    <span class="stat-value">نشط</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Enhanced Navigation Tabs -->
+                        <div class="details-tabs" id="detailsTabs" style="display: none;">
+                            <div class="tab-container">
+                                <button class="tab-btn active" data-tab="overview">
+                                    <i class="fas fa-chart-pie"></i>
+                                    نظرة عامة
+                                </button>
+                                <button class="tab-btn" data-tab="hierarchy">
+                                    <i class="fas fa-sitemap"></i>
+                                    التسلسل الهرمي
+                                </button>
+                                <button class="tab-btn" data-tab="analytics">
+                                    <i class="fas fa-analytics"></i>
+                                    التحليلات
+                                </button>
+                                <button class="tab-btn" data-tab="history">
+                                    <i class="fas fa-history"></i>
+                                    السجل
+                                </button>
+                            </div>
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="overview-tab">
+                                    <!-- Overview content will be loaded here -->
+                                </div>
+                                <div class="tab-pane" id="hierarchy-tab">
+                                    <!-- Hierarchy content will be loaded here -->
+                                </div>
+                                <div class="tab-pane" id="analytics-tab">
+                                    <!-- Analytics content will be loaded here -->
+                                </div>
+                                <div class="tab-pane" id="history-tab">
+                                    <!-- History content will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- الإحصائيات المتقدمة -->
+                    <div class="location-stats-container">
+                        <div class="row g-4">
+                            <div class="col-xl-3 col-lg-6 col-md-6">
+                                <div class="stat-card-professional facilities" tabindex="0">
+                                    <div class="stat-content-wrapper">
+                                        <div class="stat-icon-container">
+                                            <div class="stat-icon-professional">
+                                                <i class="fas fa-building"></i>
+                                            </div>
+                                            <div class="stat-trending">
+                                                <div class="trend-indicator positive">
+                                                    <i class="fas fa-arrow-up"></i>
+                                                    <span>+12%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="stat-info">
+                                            <h2 class="stat-number-professional" data-value="@Model.Count()">@Model.Count()</h2>
+                                            <h5 class="stat-label-professional">المنشآت</h5>
+                                            <p class="stat-subtitle">المنشآت المسجلة في النظام</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-xl-3 col-lg-6 col-md-6">
+                                <div class="stat-card-professional buildings" tabindex="0">
+                                    <div class="stat-content-wrapper">
+                                        <div class="stat-icon-container">
+                                            <div class="stat-icon-professional">
+                                                <i class="fas fa-home"></i>
+                                            </div>
+                                            <div class="stat-trending">
+                                                <div class="trend-indicator positive">
+                                                    <i class="fas fa-arrow-up"></i>
+                                                    <span>+8%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="stat-info">
+                                            <h2 class="stat-number-professional" data-value="@Model.Sum(f => f.Buildings.Count())">@Model.Sum(f => f.Buildings.Count())</h2>
+                                            <h5 class="stat-label-professional">المباني</h5>
+                                            <p class="stat-subtitle">إجمالي المباني في جميع المنشآت</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-xl-3 col-lg-6 col-md-6">
+                                <div class="stat-card-professional rooms" tabindex="0">
+                                    <div class="stat-content-wrapper">
+                                        <div class="stat-icon-container">
+                                            <div class="stat-icon-professional">
+                                                <i class="fas fa-door-open"></i>
+                                            </div>
+                                            <div class="stat-trending">
+                                                <div class="trend-indicator neutral">
+                                                    <i class="fas fa-minus"></i>
+                                                    <span>0%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="stat-info">
+                                            <h2 class="stat-number-professional" data-value="@Model.Sum(f => f.Buildings.Sum(b => b.Floors.Sum(fl => fl.Rooms.Count())))">@Model.Sum(f => f.Buildings.Sum(b => b.Floors.Sum(fl => fl.Rooms.Count())))</h2>
+                                            <h5 class="stat-label-professional">الغرف</h5>
+                                            <p class="stat-subtitle">العدد الكلي للغرف المتاحة</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-xl-3 col-lg-6 col-md-6">
+                                <div class="stat-card-professional departments" tabindex="0">
+                                    <div class="stat-content-wrapper">
+                                        <div class="stat-icon-container">
+                                            <div class="stat-icon-professional">
+                                                <i class="fas fa-users"></i>
+                                            </div>
+                                            <div class="stat-trending">
+                                                <div class="trend-indicator positive">
+                                                    <i class="fas fa-arrow-up"></i>
+                                                    <span>+5%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="stat-info">
+                                            <h2 class="stat-number-professional" data-value="@Model.Sum(f => f.Departments?.Count() ?? 0)">@Model.Sum(f => f.Departments?.Count() ?? 0)</h2>
+                                            <h5 class="stat-label-professional">الأقسام</h5>
+                                            <p class="stat-subtitle">الأقسام الموزعة على المنشآت</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>                        </div>                    </div>
+
+                    <div class="departments-overview-professional mt-4">
+                        <div class="departments-header-professional d-flex justify-content-between align-items-center">
+                            <h5 class="departments-header-title">
+                                <i class="fas fa-sitemap"></i>
+                                نظرة عامة على الأقسام
+                            </h5>
+                            <a asp-action="Departments" class="departments-view-all-btn">
+                                <i class="fas fa-external-link-alt me-2"></i>عرض الكل
+                            </a>
+                        </div>
+                        <div class="departments-body-professional">
+                            @if (Model.Any(f => f.Departments != null && f.Departments.Any()))
+                            {
+                                @foreach (var facility in Model.Where(f => f.Departments != null && f.Departments.Any()))
+                                {
+                                    <div class="facility-item-professional">
+                                        <h6 class="facility-title-professional">
+                                            <i class="fas fa-building"></i>
+                                            @facility.Name
+                                        </h6>
+                                        <div class="departments-badges-container">
+                                            @foreach (var dept in facility.Departments.Take(3))
+                                            {
+                                                <span class="department-badge-professional" tabindex="0" role="button" 
+                                                      aria-label="قسم @dept.Name" 
+                                                      title="قسم @dept.Name">
+                                                    <i class="fas fa-users"></i>
+                                                    @dept.Name
+                                                </span>
+                                            }
+                                            @if (facility.Departments.Count() > 3)
+                                            {
+                                                <span class="department-badge-professional more" tabindex="0" role="button"
+                                                      aria-label="@(facility.Departments.Count() - 3) أقسام إضافية"
+                                                      title="عدد الأقسام الإضافية: @(facility.Departments.Count() - 3)">
+                                                    <i class="fas fa-plus"></i>
+                                                    @(facility.Departments.Count() - 3) أكثر
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="departments-empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <h6>لا توجد أقسام مسجلة</h6>
+                                    <p>لم يتم إنشاء أي أقسام في المنشآت حتى الآن</p>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -313,7 +492,12 @@
         </div>
     </div>
 </div>
+@section Styles {
+    <link href="~/css/location-statistics.css" rel="stylesheet" />
+}
+
 @section Scripts {
+    <script src="~/js/location-statistics.js"></script>
     <script>
         $(document).ready(function() {
 

@@ -2,6 +2,13 @@
 
 namespace AssetManagementSystem.PL.Models
 {
+	public class ActivityItem
+	{
+		public string Title { get; set; }
+		public string Time { get; set; }
+		public string Icon { get; set; }
+	}
+
 	public class DashboardViewModel
 	{
 		public IEnumerable<Asset?>? Assets { get; set; }
@@ -14,5 +21,14 @@ namespace AssetManagementSystem.PL.Models
 		public IEnumerable<Room?>? Rooms { get; set; }
 		public IEnumerable<User?>? Users { get; set; } // All users except the logged-in user
 		public int AssetCount { get; set; }
+		
+		// Additional properties for Tabler dashboard
+		public int TotalAssets { get; set; }
+		public int AvailableAssets { get; set; }
+		public int AssignedAssets { get; set; }
+		public int MaintenanceAssets { get; set; }
+
+		// Recent activities for the dashboard
+		public IEnumerable<ActivityItem>? RecentActivities { get; set; }
 	}
 }

@@ -1,0 +1,1856 @@
+﻿@model IEnumerable<AssetManagementSystem.DAL.Entities.Asset>
+
+@{
+    ViewData["Title"] = "إدارة الأصول";
+    Layout = "~/Views/Shared/_Dashboard_Tabler.cshtml";
+}
+
+<!-- Professional Loading Overlay -->
+<div id="professionalLoadingOverlay" class="professional-loading-overlay">
+    <div class="loading-container">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+        </div>
+        <div class="loading-text">
+            <h4 class="loading-title">جاري التحميل...</h4>
+            <p class="loading-subtitle" id="loadingSubtitle">إعداد نظام إدارة الأصول</p>
+            <div class="loading-progress">
+                <div class="progress-bar" id="loadingProgressBar"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Professional Notification System -->
+<div id="professionalNotifications" class="professional-notifications">
+    <div class="notification-container" id="notificationContainer"></div>
+</div>
+
+<!-- Welcome Tour Modal for First-Time Users -->
+<div class="modal fade" id="welcomeTourModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-rocket me-2"></i>مرحباً بك في نظام إدارة الأصول المحترف
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="welcome-content">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-boxes fa-4x text-primary mb-3"></i>
+                        <h4>نظام إدارة متقدم وشامل</h4>
+                        <p class="text-muted">تعرّف على الميزات المحترفة المتاحة لك</p>
+                    </div>
+                    
+                    <div class="features-grid">
+                        <div class="feature-item">
+                            <i class="fas fa-keyboard text-info"></i>
+                            <h6>اختصارات لوحة المفاتيح</h6>
+                            <p>استخدم Ctrl+F للبحث، Ctrl+R للتحديث، وCtrl+A لتحديد الكل</p>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-layer-group text-success"></i>
+                            <h6>العمليات المجمعة</h6>
+                            <p>حدد عدة أصول وقم بتنفيذ عمليات النقل والتكهين بشكل مجمع</p>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-search-plus text-warning"></i>
+                            <h6>البحث المتقدم</h6>
+                            <p>ابحث باستخدام Asset Tags متعددة أو استخدم المرشحات المتقدمة</p>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-file-export text-primary"></i>
+                            <h6>التصدير المتقدم</h6>
+                            <p>صدّر البيانات بصيغ متعددة مع خيارات تخصيص متقدمة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="dontShowAgain">
+                    <label class="form-check-label" for="dontShowAgain">
+                        لا تظهر هذه الرسالة مرة أخرى
+                    </label>
+                </div>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                    <i class="fas fa-rocket me-2"></i>ابدأ الاستخدام
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Professional Performance Monitor -->
+<div id="performanceMonitor" class="performance-monitor">
+    <div class="monitor-content">
+        <div class="performance-indicators">
+            <div class="indicator" id="apiResponseTime">
+                <i class="fas fa-tachometer-alt"></i>
+                <span class="value">--ms</span>
+                <span class="label">API Response</span>
+            </div>
+            <div class="indicator" id="memoryUsage">
+                <i class="fas fa-memory"></i>
+                <span class="value">--MB</span>
+                <span class="label">Memory</span>
+            </div>
+            <div class="indicator" id="connectionStatus">
+                <i class="fas fa-wifi"></i>
+                <span class="value">Online</span>
+                <span class="label">Connection</span>
+            </div>
+        </div>
+        <button class="monitor-toggle" id="togglePerformanceMonitor">
+            <i class="fas fa-chart-line"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Advanced Export Progress Modal -->
+<div class="modal fade" id="exportProgressModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-export me-2"></i>تصدير البيانات
+                </h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="export-animation mb-4">
+                    <div class="export-icon-container">
+                        <i class="fas fa-file-excel fa-4x text-success mb-3 export-icon"></i>
+                        <div class="export-waves">
+                            <div class="wave"></div>
+                            <div class="wave"></div>
+                            <div class="wave"></div>
+                        </div>
+                    </div>
+                </div>
+                <h5 id="exportStatusText">جاري تجهيز البيانات...</h5>
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                         id="exportProgressBar" style="width: 0%"></div>
+                </div>
+                <p class="text-muted" id="exportDetailsText">معالجة الأصول المحددة</p>
+                <div class="export-stats">
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <span class="stat-number" id="processedCount">0</span>
+                                <span class="stat-label">تم معالجته</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <span class="stat-number" id="totalExportCount">0</span>
+                                <span class="stat-label">المجموع</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <span class="stat-number" id="exportSpeed">0</span>
+                                <span class="stat-label">عنصر/ثانية</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelExport" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>إلغاء
+                </button>
+                <button type="button" class="btn btn-success" id="downloadExportedFile" style="display: none;">
+                    <i class="fas fa-download me-2"></i>تنزيل الملف
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Professional Loading Overlay -->
+<div id="professionalLoadingOverlay" class="professional-loading-overlay">
+    <div class="loading-container">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+        </div>
+        <div class="loading-text">
+            <h4 class="loading-title">جاري التحميل...</h4>
+            <p class="loading-subtitle" id="loadingSubtitle">إعداد نظام إدارة الأصول</p>
+            <div class="loading-progress">
+                <div class="progress-bar" id="loadingProgressBar"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Professional Header with Search and Shortcuts -->
+<div class="professional-page-header mb-4">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="page-title-container">
+                    <h1 class="page-title">
+                        <i class="fas fa-boxes text-primary me-3"></i>
+                        نظام إدارة الأصول
+                        <span class="title-badge">المحترف</span>
+                    </h1>
+                    <p class="page-subtitle text-muted">إدارة شاملة ومتقدمة لجميع الأصول في المؤسسة</p>
+                    <div class="live-stats-mini">
+                        <span class="stat-mini" id="liveAssetCount">
+                            <i class="fas fa-boxes text-primary"></i>
+                            <span class="count">0</span> أصل
+                        </span>
+                        <span class="stat-mini" id="liveLastUpdate">
+                            <i class="fas fa-clock text-info"></i>
+                            <span class="time">--</span>
+                        </span>
+                        <span class="stat-mini" id="performanceIndicator">
+                            <i class="fas fa-tachometer-alt text-success"></i>
+                            <span class="performance">Optimal</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="header-controls">
+                    <!-- Enhanced Global Search -->
+                    <div class="global-search-container mb-3">
+                        <div class="search-input-group">
+                            <input type="text" id="globalSearch" class="form-control professional-search" 
+                                   placeholder="البحث السريع في جميع الأصول... (Ctrl+F)">
+                            <div class="search-buttons">
+                                <button id="clearSearch" class="search-btn clear-btn" title="مسح البحث">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <button id="advancedSearchToggle" class="search-btn advanced-btn" title="البحث المتقدم">
+                                    <i class="fas fa-sliders-h"></i>
+                                </button>
+                                <button id="showShortcuts" class="search-btn shortcuts-btn" title="اختصارات لوحة المفاتيح">
+                                    <i class="fas fa-keyboard"></i>
+                                </button>
+                                <button id="voiceSearch" class="search-btn voice-btn" title="البحث الصوتي">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="search-suggestions" id="searchSuggestions"></div>
+                        <div class="search-history" id="searchHistory"></div>
+                    </div>
+                    
+                    <!-- Page Actions -->
+                    <div class="page-actions">
+                        <div class="btn-group me-2">
+                            <button id="refreshTable" class="btn btn-outline-primary rounded-pill" 
+                                    title="تحديث الجدول (Ctrl+R)">
+                                <i class="fas fa-sync-alt me-2"></i>تحديث
+                            </button>
+                            <button type="button" class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split rounded-pill" 
+                                    data-bs-toggle="dropdown" title="خيارات التحديث">
+                                <span class="visually-hidden">خيارات التحديث</span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" id="autoRefreshToggle">
+                                    <i class="fas fa-robot me-2"></i>التحديث التلقائي
+                                </a></li>
+                                <li><a class="dropdown-item" id="refreshStats">
+                                    <i class="fas fa-chart-bar me-2"></i>تحديث الإحصائيات فقط
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" id="clearCache">
+                                    <i class="fas fa-trash me-2"></i>مسح الذاكرة المؤقتة
+                                </a></li>
+                            </ul>
+                        </div>
+                        <a asp-action="Create" class="btn btn-primary rounded-pill shadow-sm"
+                           title="إضافة أصل جديد (Ctrl+N)">
+                            <i class="fas fa-plus-circle me-2"></i>إضافة أصل جديد
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Real-time Notification Bar -->
+        <div class="notification-bar" id="notificationBar" style="display: none;">
+            <div class="notification-content">
+                <i class="fas fa-bell text-warning me-2"></i>
+                <span id="notificationText">تحديثات جديدة متاحة</span>
+                <div class="notification-actions">
+                    <button class="notification-action" id="refreshForUpdates">
+                        <i class="fas fa-sync-alt me-1"></i>تحديث الآن
+                    </button>
+                    <button class="notification-action" id="viewChanges">
+                        <i class="fas fa-eye me-1"></i>عرض التغييرات
+                    </button>
+                    <button class="notification-close" id="closeNotification">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Keyboard Shortcuts Panel -->
+<div class="keyboard-shortcuts-panel" id="shortcutsPanel">
+    <div class="shortcuts-header">
+        <h6><i class="fas fa-keyboard me-2"></i>اختصارات لوحة المفاتيح</h6>
+        <button class="close-shortcuts" id="closeShortcuts">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="shortcuts-grid">
+        <div class="shortcut-category">
+            <h6>البحث والتصفح</h6>
+            <div class="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>F</kbd>
+                <span>البحث السريع</span>
+            </div>
+            <div class="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd>
+                <span>البحث المتقدم</span>
+            </div>
+            <div class="shortcut-item">
+                <kbd>/</kbd>
+                <span>التركيز على البحث</span>
+            </div>
+        </div>
+        <div class="shortcut-category">
+            <h6>العمليات</h6>
+            <div class="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>R</kbd>
+                <span>تحديث الجدول</span>
+            </div>
+            <div class="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>A</kbd>
+                <span>تحديد الكل</span>
+            </div>
+            <div class="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>N</kbd>
+                <span>إضافة أصل جديد</span>
+            </div>
+            <div class="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>E</kbd>
+                <span>تصدير البيانات</span>
+            </div>
+        </div>
+        <div class="shortcut-category">
+            <h6>التنقل</h6>
+            <div class="shortcut-item">
+                <kbd>Escape</kbd>
+                <span>إلغاء التحديد</span>
+            </div>
+            <div class="shortcut-item">
+                <kbd>F5</kbd>
+                <span>إعادة تحميل الصفحة</span>
+            </div>
+            <div class="shortcut-item">
+                <kbd>Alt</kbd> + <kbd>1-9</kbd>
+                <span>التنقل بين التبويبات</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Search Panel -->
+<div class="advanced-search-panel" id="advancedSearchPanel">
+    <div class="container-fluid">
+        <div class="search-panel-card">
+            <div class="panel-header">
+                <h5><i class="fas fa-search-plus me-2"></i>البحث المتقدم</h5>
+                <div class="panel-controls">
+                    <button class="btn btn-sm btn-outline-secondary" id="resetAdvancedSearch">
+                        <i class="fas fa-undo me-1"></i>إعادة تعيين
+                    </button>
+                    <button class="close-panel" id="closeAdvancedSearch">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Asset Tag</label>
+                        <input type="text" class="form-control" id="searchAssetTag" placeholder="AST001, AST002...">
+                        <small class="form-text text-muted">يمكن إدخال عدة قيم مفصولة بفاصلة</small>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">القسم</label>
+                        <select class="form-select" id="searchDepartment" multiple>
+                            <option value="">جميع الأقسام</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">الحالة</label>
+                        <select class="form-select" id="searchStatus" multiple>
+                            <option value="Active">نشط</option>
+                            <option value="Maintenance">صيانة</option>
+                            <option value="Disposed">مكهن</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">الماركة</label>
+                        <input type="text" class="form-control" id="searchBrand" placeholder="Dell, HP, etc.">
+                    </div>
+                </div>
+                <div class="row g-3 mt-2">
+                    <div class="col-md-3">
+                        <label class="form-label">الموديل</label>
+                        <input type="text" class="form-control" id="searchModel" placeholder="الموديل">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">من تاريخ</label>
+                        <input type="date" class="form-control" id="searchDateFrom">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">إلى تاريخ</label>
+                        <input type="date" class="form-control" id="searchDateTo">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">المنشأة</label>
+                        <select class="form-select" id="searchFacility" multiple>
+                            <option value="">جميع المنشآت</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row g-3 mt-2">
+                    <div class="col-md-3">
+                        <label class="form-label">المبنى</label>
+                        <select class="form-select" id="searchBuilding">
+                            <option value="">جميع المباني</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">الطابق</label>
+                        <select class="form-select" id="searchFloor">
+                            <option value="">جميع الطوابق</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">نطاق القيمة</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="valueMin" placeholder="من">
+                            <span class="input-group-text">-</span>
+                            <input type="number" class="form-control" id="valueMax" placeholder="إلى">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">المسؤول</label>
+                        <select class="form-select" id="searchResponsible">
+                            <option value="">جميع المسؤولين</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="panel-actions mt-4">
+                    <button class="btn btn-primary" id="applyAdvancedSearch">
+                        <i class="fas fa-search me-2"></i>تطبيق البحث
+                    </button>
+                    <button class="btn btn-outline-secondary" id="clearAdvancedSearch">
+                        <i class="fas fa-eraser me-2"></i>مسح المرشحات
+                    </button>
+                    <button class="btn btn-outline-info" id="saveSearchPreset">
+                        <i class="fas fa-save me-2"></i>حفظ كنموذج
+                    </button>
+                    <button class="btn btn-outline-success" id="exportFilteredResults">
+                        <i class="fas fa-file-export me-2"></i>تصدير النتائج
+                    </button>
+                </div>
+                <div class="saved-presets mt-3" id="savedPresets">
+                    <label class="form-label">النماذج المحفوظة:</label>
+                    <div class="preset-buttons" id="presetButtons"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+                        </span>
+                        <span class="stat-mini" id="liveLastUpdate">
+                            <i class="fas fa-clock text-info"></i>
+                            <span class="time">--</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="header-controls">
+                    <!-- Enhanced Global Search -->
+                    <div class="global-search-container mb-3">
+                        <div class="search-input-group">
+                            <input type="text" id="globalSearch" class="form-control professional-search" 
+                                   placeholder="البحث السريع في جميع الأصول... (Ctrl+F)">
+                            <div class="search-buttons">
+                                <button id="clearSearch" class="search-btn clear-btn" title="مسح البحث">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <button id="advancedSearchToggle" class="search-btn advanced-btn" title="البحث المتقدم">
+                                    <i class="fas fa-sliders-h"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="search-suggestions" id="searchSuggestions"></div>
+                    </div>
+                    
+                    <!-- Page Actions -->
+                    <div class="page-actions">
+                        <button id="refreshTable" class="btn btn-outline-primary rounded-pill me-2" 
+                                title="تحديث الجدول (Ctrl+R)">
+                            <i class="fas fa-sync-alt me-2"></i>تحديث
+                        </button>
+                        <a asp-action="Create" class="btn btn-primary rounded-pill shadow-sm"
+                           title="إضافة أصل جديد (Ctrl+N)">
+                            <i class="fas fa-plus-circle me-2"></i>إضافة أصل جديد
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Keyboard Shortcuts Panel -->
+        <div class="keyboard-shortcuts-panel" id="shortcutsPanel">
+            <div class="shortcuts-header">
+                <h6><i class="fas fa-keyboard me-2"></i>اختصارات لوحة المفاتيح</h6>
+                <button class="close-shortcuts" id="closeShortcuts">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="shortcuts-grid">
+                <div class="shortcut-item">
+                    <kbd>Ctrl</kbd> + <kbd>F</kbd>
+                    <span>البحث السريع</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>Ctrl</kbd> + <kbd>R</kbd>
+                    <span>تحديث الجدول</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>Ctrl</kbd> + <kbd>A</kbd>
+                    <span>تحديد الكل</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>Ctrl</kbd> + <kbd>N</kbd>
+                    <span>إضافة أصل جديد</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>Escape</kbd>
+                    <span>إلغاء التحديد</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>F5</kbd>
+                    <span>إعادة تحميل الصفحة</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Search Panel -->
+<div class="advanced-search-panel" id="advancedSearchPanel">
+    <div class="container-fluid">
+        <div class="search-panel-card">
+            <div class="panel-header">
+                <h5><i class="fas fa-search-plus me-2"></i>البحث المتقدم</h5>
+                <button class="close-panel" id="closeAdvancedSearch">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="panel-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Asset Tag</label>
+                        <input type="text" class="form-control" id="searchAssetTag" placeholder="AST001">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">القسم</label>
+                        <select class="form-select" id="searchDepartment">
+                            <option value="">جميع الأقسام</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">الحالة</label>
+                        <select class="form-select" id="searchStatus">
+                            <option value="">جميع الحالات</option>
+                            <option value="Active">نشط</option>
+                            <option value="Maintenance">صيانة</option>
+                            <option value="Disposed">مكهن</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">الماركة</label>
+                        <input type="text" class="form-control" id="searchBrand" placeholder="Dell, HP, etc.">
+                    </div>
+                </div>
+                <div class="panel-actions mt-3">
+                    <button class="btn btn-primary" id="applyAdvancedSearch">
+                        <i class="fas fa-search me-2"></i>تطبيق البحث
+                    </button>
+                    <button class="btn btn-outline-secondary" id="clearAdvancedSearch">
+                        <i class="fas fa-eraser me-2"></i>مسح المرشحات
+                    </button>
+                    <button class="btn btn-outline-info" id="saveSearchPreset">
+                        <i class="fas fa-save me-2"></i>حفظ كنموذج
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Asset Overview Dashboard Cards -->
+<div class="container-fluid mb-5">
+    <div class="row g-4 asset-overview-dashboard">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <div class="professional-stat-card total-assets-card">
+                <div class="card-background"></div>
+                <div class="card-content">
+                    <div class="stat-icon">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-number" id="totalAssetCount">--</h3>
+                        <p class="stat-label">إجمالي الأصول</p>
+                        <div class="stat-description">كافة الأصول المسجلة</div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="progress-indicator">
+                        <div class="progress-bar total-progress"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <div class="professional-stat-card active-assets-card">
+                <div class="card-background"></div>
+                <div class="card-content">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-number" id="activeAssetCount">--</h3>
+                        <p class="stat-label">الأصول النشطة</p>
+                        <div class="stat-description">قيد الاستخدام الفعلي</div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="progress-indicator">
+                        <div class="progress-bar active-progress"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <div class="professional-stat-card maintenance-assets-card">
+                <div class="card-background"></div>
+                <div class="card-content">
+                    <div class="stat-icon">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-number" id="maintenanceAssetCount">--</h3>
+                        <p class="stat-label">قيد الصيانة</p>
+                        <div class="stat-description">تحت الصيانة أو الإصلاح</div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="progress-indicator">
+                        <div class="progress-bar maintenance-progress"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <div class="professional-stat-card disposed-assets-card">
+                <div class="card-background"></div>
+                <div class="card-content">
+                    <div class="stat-icon">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-number" id="disposedAssetCount">--</h3>
+                        <p class="stat-label">تم التكهين</p>
+                        <div class="stat-description">الأصول المكهنة</div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="progress-indicator">
+                        <div class="progress-bar disposed-progress"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Quick Actions Bar -->
+<div class="professional-actions-bar mb-4">
+    <div class="container-fluid">
+        <div class="actions-card">
+            <div class="actions-header">
+                <h5 class="actions-title">
+                    <i class="fas fa-bolt text-primary me-2"></i>
+                    العمليات السريعة
+                </h5>
+                <div class="actions-controls">
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+                            <i class="fas fa-file-import me-2"></i>استيراد
+                        </button>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-success btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-file-export me-2"></i>تصدير
+                            </button>
+                            <ul class="dropdown-menu professional-dropdown">
+                                <li><a href="@Url.Action("ExportAssets", "Asset")" class="dropdown-item">
+                                    <i class="fas fa-file-excel text-success me-2"></i>تصدير Excel
+                                </a></li>
+                                <li><a href="@Url.Action("ExportAssetsToPdf", "Asset")" class="dropdown-item">
+                                    <i class="fas fa-file-pdf text-danger me-2"></i>تصدير PDF
+                                </a></li>
+                            </ul>
+                        </div>
+                        <button id="downloadTemplate" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-download me-2"></i>نموذج الاستيراد
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Professional Navigation Tabs -->
+<div class="professional-nav-container mb-4">
+    <div class="container-fluid">
+        <div class="nav-card">
+            <nav class="professional-nav">
+                <div class="nav nav-tabs professional-tabs" id="assetTabs" role="tablist">
+                    <button class="nav-link active" id="bulk-operations-tab" data-bs-toggle="tab" 
+                            data-bs-target="#bulk-operations" type="button" role="tab">
+                        <div class="tab-content-wrapper">
+                            <i class="fas fa-layer-group tab-icon"></i>
+                            <span class="tab-text">العمليات المجمعة</span>
+                            <div class="tab-indicator"></div>
+                        </div>
+                    </button>
+                    <button class="nav-link" id="asset-tags-tab" data-bs-toggle="tab" 
+                            data-bs-target="#asset-tags" type="button" role="tab">
+                        <div class="tab-content-wrapper">
+                            <i class="fas fa-tags tab-icon"></i>
+                            <span class="tab-text">البحث بواسطة Tags</span>
+                            <div class="tab-indicator"></div>
+                        </div>
+                    </button>
+                    <button class="nav-link" id="advanced-filters-tab" data-bs-toggle="tab" 
+                            data-bs-target="#advanced-filters" type="button" role="tab">
+                        <div class="tab-content-wrapper">
+                            <i class="fas fa-filter tab-icon"></i>
+                            <span class="tab-text">المرشحات المتقدمة</span>
+                            <div class="tab-indicator"></div>
+                        </div>
+                    </button>
+                </div>
+            </nav>
+            
+            <div class="tab-content professional-tab-content" id="assetTabsContent">
+                <!-- Enhanced Bulk Operations Tab -->
+                <div class="tab-pane fade show active" id="bulk-operations" role="tabpanel">
+                    <div class="bulk-operations-container">
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <div class="operations-grid">
+                                    <div class="operation-group">
+                                        <label class="operation-label">عمليات النقل والإدارة</label>
+                                        <div class="operation-buttons">
+                                            <button id="bulkTransferBtn" class="professional-operation-btn transfer-btn" disabled>
+                                                <i class="fas fa-exchange-alt"></i>
+                                                <span>نقل الأصول</span>
+                                                <div class="selection-count bulk-badge">0</div>
+                                            </button>
+                                            <button id="bulkSupervisorBtn" class="professional-operation-btn supervisor-btn" disabled>
+                                                <i class="fas fa-user-check"></i>
+                                                <span>تعيين مشرف</span>
+                                                <div class="selection-count bulk-badge">0</div>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="operation-group">
+                                        <label class="operation-label">عمليات التكهين والإرجاع</label>
+                                        <div class="operation-buttons">
+                                            <button id="bulkDisposeBtn" class="professional-operation-btn dispose-btn" disabled>
+                                                <i class="fas fa-trash-alt"></i>
+                                                <span>تكهين الأصول</span>
+                                                <div class="selection-count bulk-badge">0</div>
+                                            </button>
+                                            <button id="bulkReturnBtn" class="professional-operation-btn return-btn" disabled>
+                                                <i class="fas fa-undo-alt"></i>
+                                                <span>مستند إرجاع</span>
+                                                <div class="selection-count bulk-badge">0</div>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="selection-summary">
+                                    <div class="selection-header">
+                                        <h6 class="selection-title">ملخص التحديد</h6>
+                                    </div>
+                                    <div class="selection-stats">
+                                        <div class="stat-item">
+                                            <span class="stat-label">المحدد:</span>
+                                            <span class="stat-value" id="selectedCount">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="selection-actions">
+                                        <button id="clearSelectionBtn" class="clear-selection-btn" disabled>
+                                            <i class="fas fa-eraser me-2"></i>مسح التحديد
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bulk Tag Processing Section -->
+                        <div class="bulk-tag-section mt-4">
+                            <div class="card professional-card">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">
+                                        <i class="fas fa-tags me-2"></i>تحديد الأصول بواسطة Tags
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="form-group">
+                                                <label for="bulkAssetTags" class="form-label">أدخل Asset Tags (كل tag في سطر منفصل)</label>
+                                                <textarea id="bulkAssetTags" class="form-control professional-textarea" rows="4" 
+                                                          placeholder="مثال:&#10;ASSET001&#10;ASSET002&#10;ASSET003&#10;&#10;أو انسخ من Excel مباشرة..."></textarea>
+                                                <div class="form-text">يمكنك لصق البيانات من Excel مباشرة أو إدخال كل tag في سطر منفصل</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 d-flex align-items-end">
+                                            <button id="processAssetTags" class="btn btn-primary professional-btn w-100">
+                                                <i class="fas fa-search me-2"></i>البحث والتحديد
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                        <div class="selection-counter text-center p-3 rounded-3 shadow-sm">
+                            <div class="counter-value">
+                                <span id="selectedCount" class="display-6">0</span>
+                                <small class="d-block text-muted">أصول محددة</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-clipboard-list me-2"></i> اختيار سريع للأصول
+                            <small class="text-muted">(الصق قائمة من Asset Tags)</small>
+                        </label>
+                        <div class="input-group">
+                            <textarea id="bulkAssetTags" class="form-control font-monospace" rows="3"
+                                      placeholder="مثال: AST001, AST002, AST003"></textarea>
+                            <button id="processAssetTags" class="btn btn-primary">
+                                <i class="fas fa-check-circle me-1"></i> تحديد
+                            </button>
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i> يمكنك لصق بيانات من Excel مباشرة (سطر لكل أصل)
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+         
+            
+            <!-- Asset Tags Tab -->
+            <div class="tab-pane fade" id="asset-tags" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-tags me-2"></i> أدخل Asset Tags للبحث
+                            </label>
+                            <textarea id="assetTagsInput" class="form-control font-monospace"
+                                      rows="5"
+                                      placeholder="مثال:
+AST001
+AST002, AST003
+AST004⟶AST005"></textarea>
+                            <div class="d-flex justify-content-between mt-2">
+                                <span id="tagCounter" class="text-muted">
+                                    <i class="fas fa-tag me-1"></i> تم اكتشاف <span class="badge bg-secondary">0</span> tags
+                                </span>
+                                <button id="clearTagsBtn" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-eraser me-1"></i> مسح
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex flex-column h-100 justify-content-center">
+                            <div class="text-center mb-4">
+                                <div class="search-animation mb-3">
+                                    <i class="fas fa-search-plus fa-3x text-primary"></i>
+                                </div>
+                                <p class="text-muted">البحث عن أصول محددة باستخدام Asset Tags</p>
+                            </div>
+                            <button id="filterAssets" class="btn btn-primary btn-lg mb-2 rounded-pill shadow">
+                                <i class="fas fa-filter me-2"></i> تصفية في الجدول
+                            </button>
+                            <button id="filterNewPage" class="btn btn-success btn-lg mb-2 rounded-pill shadow">
+                                <i class="fas fa-external-link-alt me-2"></i> فتح في صفحة منفصلة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtered Results Section (Initially Hidden) -->
+<div id="filterResultsSection" class="card shadow-lg border-0 rounded-4 mb-4" style="display: none;">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3 rounded-top-4">
+        <h5 class="mb-0"><i class="fas fa-filter me-2"></i> الأصول المصفاة</h5>
+        <div>
+            <span class="badge bg-light text-primary me-2" id="filterCount">0</span>
+            <button type="button" id="closeFilterResults" class="btn btn-sm btn-light">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div id="filterStats" class="alert alert-light border-start border-info border-4 mb-4">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-info-circle text-info fa-2x me-3"></i>
+                <div>
+                    <h6 class="mb-1 fw-bold">نتائج التصفية</h6>
+                    <p class="mb-0">عرض الأصول المصفاة حسب Asset Tags</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table id="filteredAssetsTable" class="table table-striped table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Asset Tag</th>
+                        <th>الوصف</th>
+                        <th>القسم</th>
+                        <th>الماركة</th>
+                        <th>الموديل</th>
+                        <th>الحالة</th>
+                        <th>العمليات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- سيتم إدراج النتائج المصفاة هنا -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="filterTags" class="mt-4">
+            <h6 class="fw-bold"><i class="fas fa-filter me-2"></i> تم التصفية حسب:</h6>
+            <div id="matchedTags" class="d-flex flex-wrap gap-2 mb-2">
+                <!-- سيتم إدراج الTags المطابقة هنا -->
+            </div>
+            <div id="missingTagsAlert" class="alert alert-warning border-warning mt-3" style="display: none;">
+                <div class="d-flex">
+                    <div class="me-3">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold">تنبيه!</h6>
+                        <p class="mb-2">لم يتم العثور على الTags التالية في قاعدة البيانات:</p>
+                        <div id="missingTags" class="d-flex flex-wrap gap-2">
+                            <!-- سيتم إدراج الTags المفقودة هنا -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Professional Main Assets Table -->
+<div class="card shadow-lg border-0 rounded-4 professional-table-card">
+    <div class="card-header bg-gradient-primary text-white py-3">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h4 class="text-white mb-0">
+                    <i class="fas fa-box-open me-2"></i>قائمة الأصول
+                    <span class="table-count-badge" id="tableCountBadge">0</span>
+                </h4>
+                <small class="text-white-50">إدارة متقدمة لجميع الأصول</small>
+            </div>
+            <div class="col-md-6">
+                <div class="table-tools d-flex justify-content-end align-items-center">
+                    <!-- View Mode Toggle -->
+                    <div class="btn-group me-2" role="group">
+                        <input type="radio" class="btn-check" name="viewMode" id="tableView" checked>
+                        <label class="btn btn-outline-light btn-sm" for="tableView" title="عرض الجدول">
+                            <i class="fas fa-table"></i>
+                        </label>
+                        <input type="radio" class="btn-check" name="viewMode" id="cardView">
+                        <label class="btn btn-outline-light btn-sm" for="cardView" title="عرض البطاقات">
+                            <i class="fas fa-th-large"></i>
+                        </label>
+                        <input type="radio" class="btn-check" name="viewMode" id="compactView">
+                        <label class="btn btn-outline-light btn-sm" for="compactView" title="العرض المضغوط">
+                            <i class="fas fa-bars"></i>
+                        </label>
+                    </div>
+                    
+                    <!-- Table Controls -->
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-outline-light btn-sm" id="refreshTable" title="تحديث (Ctrl+R)">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-light btn-sm dropdown-toggle dropdown-toggle-split" 
+                                data-bs-toggle="dropdown" title="خيارات الجدول">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" id="exportVisibleColumns">
+                                <i class="fas fa-eye me-2"></i>تصدير الأعمدة المرئية فقط
+                            </a></li>
+                            <li><a class="dropdown-item" id="resetTableState">
+                                <i class="fas fa-undo me-2"></i>إعادة تعيين حالة الجدول
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" id="toggleRowNumbers">
+                                <i class="fas fa-list-ol me-2"></i>عرض أرقام الصفوف
+                            </a></li>
+                            <li><a class="dropdown-item" id="toggleCompactMode">
+                                <i class="fas fa-compress me-2"></i>الوضع المضغوط
+                            </a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Column Visibility -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-light btn-sm dropdown-toggle" 
+                                data-bs-toggle="dropdown" title="إظهار/إخفاء الأعمدة">
+                            <i class="fas fa-columns me-1"></i>الأعمدة
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end p-3" id="columnToggleMenu" style="min-width: 250px;">
+                            <h6 class="dropdown-header">إدارة الأعمدة</h6>
+                            <div class="column-toggles">
+                                <!-- سيتم إنشاؤها ديناميكياً -->
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <button class="btn btn-sm btn-outline-primary w-100" id="showAllColumns">
+                                <i class="fas fa-eye me-1"></i>إظهار الكل
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Stats Bar -->
+        <div class="quick-stats-bar mt-3">
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <div class="quick-stat">
+                        <span class="stat-icon"><i class="fas fa-list"></i></span>
+                        <span class="stat-label">إجمالي الصفوف:</span>
+                        <span class="stat-value" id="totalRows">0</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="quick-stat">
+                        <span class="stat-icon"><i class="fas fa-check-square"></i></span>
+                        <span class="stat-label">محدد:</span>
+                        <span class="stat-value" id="selectedRows">0</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="quick-stat">
+                        <span class="stat-icon"><i class="fas fa-filter"></i></span>
+                        <span class="stat-label">مصفى:</span>
+                        <span class="stat-value" id="filteredRows">0</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="quick-stat">
+                        <span class="stat-icon"><i class="fas fa-clock"></i></span>
+                        <span class="stat-label">آخر تحديث:</span>
+                        <span class="stat-value" id="lastRefresh">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-body p-0">
+        <!-- Table View -->
+        <div id="tableViewContainer" class="table-view-container">
+            <div class="table-responsive">
+                <table id="assetsTable" class="table table-hover align-middle border-top professional-table">
+                    <thead class="table-dark sticky-top">
+                        <tr>
+                            <th width="40px" class="select-column">
+                                <div class="form-check">
+                                    <input type="checkbox" id="selectAll" class="form-check-input">
+                                    <label class="form-check-label" for="selectAll"></label>
+                                </div>
+                            </th>
+                            <th width="120px" class="actions-column">العمليات</th>
+                            <th class="sortable-column" data-column="AssetTag">
+                                Asset Tag <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable-column" data-column="Cluster">
+                                Cluster <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable-column" data-column="Facility">
+                                المنشأة <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable-column" data-column="Building">
+                                المبنى <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable-column" data-column="Floor">
+                                الطابق <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable-column" data-column="Room">
+                                الغرفة <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable-column" data-column="Department">
+                                القسم <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable-column" data-column="Description">
+                                الوصف <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable-column" data-column="Brand">
+                                الماركة <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable-column" data-column="Model">
+                                الموديل <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable-column" data-column="Type">
+                                النوع <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                            <th class="sortable-column" data-column="Status">
+                                الحالة <i class="fas fa-sort sort-icon"></i>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- يتم تحميل البيانات بشكل ديناميكي -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Card View -->
+        <div id="cardViewContainer" class="card-view-container" style="display: none;">
+            <div class="assets-grid" id="assetsGrid">
+                <!-- سيتم إنشاء البطاقات ديناميكياً -->
+            </div>
+        </div>
+        
+        <!-- Compact View -->
+        <div id="compactViewContainer" class="compact-view-container" style="display: none;">
+            <div class="compact-list" id="compactList">
+                <!-- سيتم إنشاء القائمة المضغوطة ديناميكياً -->
+            </div>
+        </div>
+        
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state text-center py-5" style="display: none;">
+            <div class="empty-icon mb-3">
+                <i class="fas fa-inbox fa-4x text-muted"></i>
+            </div>
+            <h5 class="text-muted">لا توجد أصول</h5>
+            <p class="text-muted">لم يتم العثور على أصول تطابق المعايير المحددة</p>
+            <button class="btn btn-outline-primary" id="clearFiltersBtn">
+                <i class="fas fa-filter me-2"></i>مسح جميع المرشحات
+            </button>
+        </div>
+        
+        <!-- Loading State -->
+        <div id="tableLoadingState" class="loading-state text-center py-5" style="display: none;">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">جاري التحميل...</span>
+            </div>
+            <h6 class="text-muted">جاري تحميل البيانات...</h6>
+        </div>
+    </div>
+    
+    <!-- Table Footer with Pagination and Statistics -->
+    <div class="card-footer bg-light">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="table-info">
+                    <span class="text-muted">
+                        عرض <span id="showingFrom">0</span> إلى <span id="showingTo">0</span> 
+                        من أصل <span id="totalEntries">0</span> صف
+                        <span id="filteredInfo" class="text-primary" style="display: none;">
+                            (مصفى من <span id="totalBeforeFilter">0</span> صف)
+                        </span>
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex justify-content-end align-items-center">
+                    <div class="page-size-selector me-3">
+                        <label class="form-label me-2 mb-0">عرض:</label>
+                        <select class="form-select form-select-sm" id="pageSizeSelector" style="width: auto;">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="-1">الكل</option>
+                        </select>
+                    </div>
+                    <nav id="tablePagination">
+                        <!-- سيتم إنشاء التصفح ديناميكياً -->
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-file-import me-2"></i> استيراد أصول</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div class="import-icon-container mb-3">
+                        <i class="fas fa-file-excel fa-4x text-success"></i>
+                        <i class="fas fa-arrow-right fa-2x text-primary mx-3"></i>
+                        <i class="fas fa-database fa-4x text-primary"></i>
+                    </div>
+                    <h5>استيراد أصول من ملف Excel</h5>
+                    <p class="text-muted">قم بتحميل ملف Excel يحتوي على بيانات الأصول</p>
+                </div>
+                
+                @using (Html.BeginForm("ImportAssets", "Asset", FormMethod.Post, new { enctype = "multipart/form-data", id = "importForm" }))
+                {
+                    <div class="mb-3">
+                        <div class="custom-file-upload">
+                            <div class="input-group">
+                                <input type="file" name="file" id="importFile" class="form-control" accept=".xlsx,.xls" required />
+                                <label for="importFile" class="input-group-text">
+                                    <i class="fas fa-upload"></i>
+                                </label>
+                            </div>
+                            <small class="form-text text-muted">الملفات المدعومة: .xlsx, .xls</small>
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span>تأكد من أن الملف يحتوي على الأعمدة الصحيحة المطابقة لنموذج النظام</span>
+                    </div>
+                    <a href="#" id="downloadTemplate" class="btn btn-outline-primary btn-sm mb-3">
+                        <i class="fas fa-download me-1"></i> تنزيل نموذج للاستيراد
+                    </a>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> إلغاء
+                </button>
+                <button type="submit" form="importForm" class="btn btn-primary">
+                    <i class="fas fa-file-import me-1"></i> استيراد
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Transfer Modal -->
+<div class="modal fade" id="bulkTransferModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exchange-alt me-2"></i> نقل الأصول المجمعة
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="bulkTransferForm">
+                <div class="modal-body">
+                    
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">القسم الهدف</label>
+                        <select id="targetDepartment" class="form-select form-select-lg mb-3" required>
+                            <option value="">-- اختر القسم --</option>
+                        </select>
+                        <div class="invalid-feedback">يرجى اختيار القسم الهدف</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">المستلم الهدف (جميع المستخدمين)</label>
+                        <select id="targetUser" class="form-select form-select-lg">
+                            <option value="">-- غير محدد --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">المستلم الهدف (مستخدمي القسم المحدد)</label>
+                        <select id="targetDepartmentUser" class="form-select form-select-lg">
+                            <option value="">-- غير محدد --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> إلغاء
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-1"></i> تأكيد النقل
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Disposal Modal -->
+<div class="modal fade" id="bulkDisposalModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-trash-alt me-2"></i> التكهين من الأصول المجمعة
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="bulkDisposalForm">
+                <div class="modal-body">
+                    
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">نوع التكهين</label>
+                            <input type="text" id="disposalType" class="form-control" required placeholder="  ادخل النوع  ">
+                            <div class="invalid-feedback">يرجى ادخال نوع التكهين</div>
+                        </div>
+                        <div class="col-md-6">
+                           <label class="form-label fw-bold">قيمة البيع (ريال)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">ر.س</span>
+                                <input type="number" id="saleValue" class="form-control" value="0" min="0" step="0.01" />
+                            </div>
+                            <small class="form-text text-muted">أدخل 0 إذا لم يكن هناك قيمة بيع</small>
+                        </div>
+                    </div>
+                    
+                   
+               
+                    
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="generateDocument" checked>
+                        <label class="form-check-label" for="generateDocument">إنشاء وتنزيل مستند التكهين تلقائياً</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> إلغاء
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-trash-alt me-1"></i> تأكيد التكهين
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Supervisor Assignment Modal -->
+<div class="modal fade" id="bulkSupervisorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-people"></i> تعيين مشرف
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="bulkSupervisorForm">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        تم اختيار <span id="supervisorAssetCount">0</span> أصل لتعيين المشرف
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">اختر المشرف</label>
+                        <select id="supervisorSelect" class="form-select" required>
+                            <option value="">-- اختر المشرف --</option>
+                            <!-- سيتم ملؤها بواسطة جافا سكريبت -->
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x"></i> إلغاء
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check2"></i> تعيين
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Professional Asset Details Modal -->
+<div class="modal fade" id="assetDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>تفاصيل الأصل
+                    <span id="assetTagTitle" class="badge bg-light text-primary ms-2"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="asset-details-container">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="detail-tabs">
+                                <ul class="nav nav-pills mb-3" id="assetDetailTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="basic-info-tab" data-bs-toggle="pill" 
+                                                data-bs-target="#basic-info" type="button" role="tab">
+                                            <i class="fas fa-info me-2"></i>المعلومات الأساسية
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="location-tab" data-bs-toggle="pill" 
+                                                data-bs-target="#location" type="button" role="tab">
+                                            <i class="fas fa-map-marker-alt me-2"></i>الموقع
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="history-tab" data-bs-toggle="pill" 
+                                                data-bs-target="#history" type="button" role="tab">
+                                            <i class="fas fa-history me-2"></i>السجل
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="documents-tab" data-bs-toggle="pill" 
+                                                data-bs-target="#documents" type="button" role="tab">
+                                            <i class="fas fa-file-alt me-2"></i>المستندات
+                                        </button>
+                                    </li>
+                                </ul>
+                                <div class="tab-content" id="assetDetailTabsContent">
+                                    <div class="tab-pane fade show active" id="basic-info" role="tabpanel">
+                                        <div id="basicInfoContent">
+                                            <!-- سيتم ملؤها ديناميكياً -->
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="location" role="tabpanel">
+                                        <div id="locationContent">
+                                            <!-- سيتم ملؤها ديناميكياً -->
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="history" role="tabpanel">
+                                        <div id="historyContent">
+                                            <!-- سيتم ملؤها ديناميكياً -->
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="documents" role="tabpanel">
+                                        <div id="documentsContent">
+                                            <!-- سيتم ملؤها ديناميكياً -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="asset-actions-panel">
+                                <h6 class="panel-title">
+                                    <i class="fas fa-tools me-2"></i>العمليات المتاحة
+                                </h6>
+                                <div class="action-buttons">
+                                    <a class="btn btn-outline-primary btn-sm w-100 mb-2" id="editAssetBtn">
+                                        <i class="fas fa-edit me-2"></i>تعديل
+                                    </a>
+                                    <button class="btn btn-outline-info btn-sm w-100 mb-2" id="transferAssetBtn">
+                                        <i class="fas fa-exchange-alt me-2"></i>نقل
+                                    </button>
+                                    <button class="btn btn-outline-warning btn-sm w-100 mb-2" id="maintenanceAssetBtn">
+                                        <i class="fas fa-tools me-2"></i>صيانة
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm w-100 mb-2" id="disposeAssetBtn">
+                                        <i class="fas fa-trash-alt me-2"></i>تكهين
+                                    </button>
+                                    <hr>
+                                    <button class="btn btn-outline-success btn-sm w-100 mb-2" id="printAssetLabel">
+                                        <i class="fas fa-print me-2"></i>طباعة باركود
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm w-100" id="exportAssetDetails">
+                                        <i class="fas fa-file-export me-2"></i>تصدير التفاصيل
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Export Options Modal -->
+<div class="modal fade" id="advancedExportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-export me-2"></i>خيارات التصدير المتقدمة
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="export-options-container">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-file-alt me-2"></i>نوع الملف</h6>
+                            <div class="export-format-options">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="exportFormat" id="formatExcel" value="excel" checked>
+                                    <label class="form-check-label" for="formatExcel">
+                                        <i class="fas fa-file-excel text-success me-2"></i>Excel (.xlsx)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="exportFormat" id="formatCSV" value="csv">
+                                    <label class="form-check-label" for="formatCSV">
+                                        <i class="fas fa-file-csv text-info me-2"></i>CSV (.csv)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="exportFormat" id="formatPDF" value="pdf">
+                                    <label class="form-check-label" for="formatPDF">
+                                        <i class="fas fa-file-pdf text-danger me-2"></i>PDF (.pdf)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="exportFormat" id="formatJSON" value="json">
+                                    <label class="form-check-label" for="formatJSON">
+                                        <i class="fas fa-code text-warning me-2"></i>JSON (.json)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-columns me-2"></i>الأعمدة المطلوبة</h6>
+                            <div class="column-selection">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="selectAllColumns" checked>
+                                    <label class="form-check-label fw-bold" for="selectAllColumns">
+                                        تحديد الكل
+                                    </label>
+                                </div>
+                                <hr>
+                                <div id="columnCheckboxes">
+                                    <!-- سيتم إنشاؤها ديناميكياً -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-filter me-2"></i>خيارات التصفية</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="exportSelectedOnly">
+                                <label class="form-check-label" for="exportSelectedOnly">
+                                    تصدير الصفوف المحددة فقط
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="exportVisibleOnly">
+                                <label class="form-check-label" for="exportVisibleOnly">
+                                    تصدير الصفوف المرئية فقط
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeHeaders" checked>
+                                <label class="form-check-label" for="includeHeaders">
+                                    تضمين رؤوس الأعمدة
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-cog me-2"></i>إعدادات إضافية</h6>
+                            <div class="mb-3">
+                                <label class="form-label">اسم الملف</label>
+                                <input type="text" class="form-control" id="exportFileName" 
+                                       placeholder="أصول_المؤسسة">
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="includeTimestamp" checked>
+                                <label class="form-check-label" for="includeTimestamp">
+                                    إضافة التاريخ والوقت للاسم
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="openAfterExport">
+                                <label class="form-check-label" for="openAfterExport">
+                                    فتح الملف بعد التصدير
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>إلغاء
+                </button>
+                <button type="button" class="btn btn-success" id="startAdvancedExport">
+                    <i class="fas fa-download me-2"></i>بدء التصدير
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Professional Settings Panel -->
+<div class="modal fade" id="settingsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient-dark text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-cogs me-2"></i>إعدادات النظام
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-container">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="nav flex-column nav-pills" id="settingsNav" role="tablist">
+                                <button class="nav-link active" id="appearance-tab" data-bs-toggle="pill" 
+                                        data-bs-target="#appearance" type="button" role="tab">
+                                    <i class="fas fa-palette me-2"></i>المظهر
+                                </button>
+                                <button class="nav-link" id="performance-tab" data-bs-toggle="pill" 
+                                        data-bs-target="#performance" type="button" role="tab">
+                                    <i class="fas fa-tachometer-alt me-2"></i>الأداء
+                                </button>
+                                <button class="nav-link" id="notifications-tab" data-bs-toggle="pill" 
+                                        data-bs-target="#notifications" type="button" role="tab">
+                                    <i class="fas fa-bell me-2"></i>الإشعارات
+                                </button>
+                                <button class="nav-link" id="data-tab" data-bs-toggle="pill" 
+                                        data-bs-target="#data" type="button" role="tab">
+                                    <i class="fas fa-database me-2"></i>البيانات
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="tab-content" id="settingsTabContent">
+                                <div class="tab-pane fade show active" id="appearance" role="tabpanel">
+                                    <h6>إعدادات المظهر</h6>
+                                    <div class="setting-group">
+                                        <label class="form-label">سمة اللون</label>
+                                        <select class="form-select" id="themeSelector">
+                                            <option value="default">الافتراضي</option>
+                                            <option value="dark">داكن</option>
+                                            <option value="light">فاتح</option>
+                                            <option value="blue">أزرق</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-group">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="compactMode">
+                                            <label class="form-check-label" for="compactMode">
+                                                الوضع المضغوط
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="setting-group">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="showAnimations" checked>
+                                            <label class="form-check-label" for="showAnimations">
+                                                إظهار الرسوم المتحركة
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="performance" role="tabpanel">
+                                    <h6>إعدادات الأداء</h6>
+                                    <div class="setting-group">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="autoRefresh">
+                                            <label class="form-check-label" for="autoRefresh">
+                                                التحديث التلقائي
+                                            </label>
+                                        </div>
+                                        <small class="form-text text-muted">تحديث البيانات كل 30 ثانية</small>
+                                    </div>
+                                    <div class="setting-group">
+                                        <label class="form-label">عدد الصفوف لكل صفحة</label>
+                                        <select class="form-select" id="defaultPageSize">
+                                            <option value="10">10</option>
+                                            <option value="25" selected>25</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-group">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="enableCache" checked>
+                                            <label class="form-check-label" for="enableCache">
+                                                تفعيل الذاكرة المؤقتة
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="notifications" role="tabpanel">
+                                    <h6>إعدادات الإشعارات</h6>
+                                    <div class="setting-group">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="enableNotifications" checked>
+                                            <label class="form-check-label" for="enableNotifications">
+                                                تفعيل الإشعارات
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="setting-group">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="soundEnabled">
+                                            <label class="form-check-label" for="soundEnabled">
+                                                تفعيل الأصوات
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="setting-group">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="showToasts" checked>
+                                            <label class="form-check-label" for="showToasts">
+                                                إظهار النوافذ المنبثقة
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="data" role="tabpanel">
+                                    <h6>إعدادات البيانات</h6>
+                                    <div class="setting-group">
+                                        <button class="btn btn-outline-danger" id="clearLocalData">
+                                            <i class="fas fa-trash me-2"></i>مسح البيانات المحلية
+                                        </button>
+                                        <small class="form-text text-muted">مسح جميع البيانات المحفوظة محلياً</small>
+                                    </div>
+                                    <div class="setting-group">
+                                        <button class="btn btn-outline-info" id="exportSettings">
+                                            <i class="fas fa-download me-2"></i>تصدير الإعدادات
+                                        </button>
+                                        <small class="form-text text-muted">تصدير إعداداتك الحالية</small>
+                                    </div>
+                                    <div class="setting-group">
+                                        <button class="btn btn-outline-warning" id="resetSettings">
+                                            <i class="fas fa-undo me-2"></i>إعادة تعيين الإعدادات
+                                        </button>
+                                        <small class="form-text text-muted">إعادة جميع الإعدادات للحالة الافتراضية</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>إغلاق
+                </button>
+                <button type="button" class="btn btn-primary" id="saveSettings">
+                    <i class="fas fa-save me-2"></i>حفظ الإعدادات
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/asset-index.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.3.4/css/select.bootstrap5.min.css">
+}
+
+@section Scripts {
+    <!-- Core Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- DataTables Core -->
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- DataTables Extensions -->
+    <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/select/1.3.4/js/dataTables.select.min.js"></script>
+
+    <!-- Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+
+    <!-- Custom Scripts -->
+    <script src="~/js/asset-index.js"></script>
+
+    <script>
+        // Check if jQuery is loaded
+        if (typeof jQuery === 'undefined') {
+            console.error('jQuery is not loaded!');
+            alert('Error: jQuery is not loaded. Please check your internet connection and try again.');
+        }
+
+        // Check if DataTables is loaded
+        if (typeof $.fn.DataTable === 'undefined') {
+            console.error('DataTables is not loaded!');
+            alert('Error: DataTables is not loaded. Please check your internet connection and try again.');
+        }
+
+        // Check if SweetAlert2 is loaded
+        if (typeof Swal === 'undefined') {
+            console.error('SweetAlert2 is not loaded!');
+            alert('Error: SweetAlert2 is not loaded. Please check your internet connection and try again.');
+        }
+
+        // Add error handling for script loading
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'SCRIPT') {
+                console.error('Script loading error:', e);
+                alert('Error loading required scripts. Please check your internet connection and try again.');
+            }
+        }, true);
+    </script>
+}
