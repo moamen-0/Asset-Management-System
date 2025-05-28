@@ -9,8 +9,6 @@
 *.user
 *.userosscache
 *.sln.docstates
-
-# User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
 # Mono auto generated files
@@ -31,13 +29,12 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+build/
 
-# Visual Studio 2015/2017 cache/options directory
+# Visual Studio cache/options directory
 .vs/
-# Uncomment if you have tasks that create the project's static files in wwwroot
-#wwwroot/
 
-# Visual Studio 2017 auto generated files
+# Visual Studio auto generated files
 Generated\ Files/
 
 # MSTest test Results
@@ -89,8 +86,6 @@ StyleCopReport.xml
 *.tmp
 *.tmp_proj
 *_wpftmp.csproj
-*.log
-*.tlog
 *.vspscc
 *.vssscc
 .builds
@@ -182,14 +177,10 @@ publish/
 # Publish Web Output
 *.[Pp]ublish.xml
 *.azurePubxml
-# Note: Comment the next line if you want to checkin your web deploy settings,
-# but database connection strings (with potential passwords) will be unencrypted
 *.pubxml
 *.publishproj
 
-# Microsoft Azure Web App publish settings. Comment the next line if you want to
-# checkin your Azure Web App publish settings, but sensitive information contained
-# in these scripts will be unencrypted
+# Microsoft Azure Web App publish settings
 PublishScripts/
 
 # NuGet Packages
@@ -200,8 +191,6 @@ PublishScripts/
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
-# Uncomment if necessary however generally it will be regenerated when needed
-#!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files
 *.nuget.props
 *.nuget.targets
@@ -224,9 +213,7 @@ _pkginfo.txt
 *.appxupload
 
 # Visual Studio cache files
-# files ending in .cache can be ignored
 *.[Cc]ache
-# but keep track of directories ending in .cache
 !?*.[Cc]ache/
 
 # Others
@@ -240,20 +227,10 @@ ClientBin/
 *.publishsettings
 orleans.codegen.cs
 
-# Including strong name files can present a security risk
-# (https://github.com/github/gitignore/pull/2483#issue-259490424)
-#*.snk
-
-# Since there are multiple workflows, uncomment next line to ignore bower_components
-# (https://github.com/github/gitignore/pull/1529#issuecomment-104372622)
-#bower_components/
-
 # RIA/Silverlight projects
 Generated_Code/
 
 # Backup & report files from converting an old project file
-# to a newer Visual Studio version. Backup files are not needed,
-# because we have git ;-)
 _UpgradeReport_Files/
 Backup*/
 UpgradeLog*.XML
@@ -285,25 +262,13 @@ FakesAssemblies/
 .ntvs_analysis.dat
 node_modules/
 
-# Visual Studio 6 build log
+# Visual Studio 6 files
 *.plg
-
-# Visual Studio 6 workspace options file
 *.opt
-
-# Visual Studio 6 auto-generated workspace file (contains which files were open etc.)
 *.vbw
-
-# Visual Studio 6 auto-generated project file (contains which files were open etc.)
 *.vbp
-
-# Visual Studio 6 workspace and project file (working project files containing files to include in project)
 *.dsw
 *.dsp
-
-# Visual Studio 6 technical files
-*.ncb
-*.aps
 
 # Visual Studio LightSwitch build output
 **/*.HTMLClient/GeneratedArtifacts
@@ -326,10 +291,6 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
-
-# Cake - Uncomment if you are using it
-# tools/**
-# !tools/packages.config
 
 # Tabs Studio
 *.tss
@@ -360,8 +321,6 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
-
-# Visual Studio History (VSHistory) files
 .vshistory/
 
 # BeatPulse healthcheck temp database
@@ -376,18 +335,16 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# VS Code files for those working on multiple tools
+# VS Code files
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
-
-# Local History for Visual Studio Code
 .history/
 
-# Windows Installer files from build outputs
+# Windows Installer files
 *.cab
 *.msi
 *.msix
@@ -397,9 +354,26 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
+# Application files
 wwwroot/
-
 appsettings.json
 appsettings.Development.json
+appsettings.Production.json
+.env
 /AssetManagementSystem.PL/appsettings.json
 /AssetManagementSystem.PL/migrate-to-tabler.ps1
+
+# User-uploaded files
+wwwroot/files/*
+!wwwroot/files/.gitkeep
+wwwroot/uploads/
+wwwroot/temp/
+
+# Database files
+*.db
+*.sqlite
+
+# Log files
+logs/
+*.log
+*.tlog
