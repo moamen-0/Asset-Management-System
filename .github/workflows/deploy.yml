@@ -1,0 +1,291 @@
+name: Deploy Asset Management System to AWS EC2
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  PROJECT_PATH: 'AssetManagementSystem.PL'
+  SOLUTION_PATH: 'AssetManagementSystem.PL/AssetManagementSystem.PL.sln'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+    - name: Build solution
+      run: dotnet build ${{ env.SOLUTION_PATH }} --no-restore --configuration Release
+
+    - name: Run tests (if any)
+      run: |
+        if [ -d "AssetManagementSystem.Tests" ]; then
+          dotnet test ${{ env.SOLUTION_PATH }} --no-build --verbosity normal --configuration Release
+        else
+          echo "No tests found, skipping test step"
+        fi
+
+    - name: Publish application
+      run: |
+        dotnet publish ${{ env.PROJECT_PATH }}/${{ env.PROJECT_PATH }}.csproj \
+          -c Release \
+          -o ./publish \
+          --no-restore \
+          --verbosity normal
+
+    - name: Create deployment package
+      run: |
+        cd publish
+        
+        # Create .env file for production
+        cat > .env << EOF
+        DB_SERVER=${{ secrets.DB_SERVER }}
+        DB_NAME=AssetManagementDB
+        DB_USER=admin
+        DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+        EMAIL_SENDER=momenhassan7240@gmail.com
+        EMAIL_ACCOUNT=momenhassan7240@gmail.com
+        EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}
+        EOF
+        
+        # Create production appsettings
+        cat > appsettings.Production.json << EOF
+        {
+          "ConnectionStrings": {
+            "DefaultConnection": "Server=${{ secrets.DB_SERVER }},1433;Database=AssetManagementDB;User Id=admin;Password=${{ secrets.DB_PASSWORD }};Encrypt=True;TrustServerCertificate=True;"
+          },
+          "Logging": {
+            "LogLevel": {
+              "Default": "Information",
+              "Microsoft.AspNetCore": "Warning",
+              "Microsoft.EntityFrameworkCore": "Warning"
+            }
+          },
+          "AllowedHosts": "*",
+          "ApplicationUrl": "http://${{ secrets.AWS_EC2_HOST }}",
+          "Email": {
+            "Server": "smtp.gmail.com",
+            "Port": 587,
+            "SenderName": "Asset Management System",
+            "SenderEmail": "momenhassan7240@gmail.com",
+            "Account": "momenhassan7240@gmail.com",
+            "Password": "${{ secrets.EMAIL_PASSWORD }}",
+            "Security": true
+          }
+        }
+        EOF
+        
+        # Create deployment archive
+        zip -r ../deployment.zip .
+        cd ..
+        echo "Deployment package created: $(ls -lh deployment.zip)"
+
+    - name: Stop existing application
+      uses: appleboy/ssh-action@v1.0.3
+      continue-on-error: true
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USER }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        script: |
+          echo "Stopping existing application..."
+          sudo systemctl stop assetmanagement || echo "Service was not running"
+          
+          # Kill any remaining processes
+          sudo pkill -f "AssetManagementSystem.PL" || echo "No processes to kill"
+          
+          # Wait for processes to stop
+          sleep 5
+
+    - name: Backup current version
+      uses: appleboy/ssh-action@v1.0.3
+      continue-on-error: true
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USER }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        script: |
+          # Create app directory if it doesn't exist
+          sudo mkdir -p /var/www/assetmanagement
+          sudo chown ec2-user:ec2-user /var/www/assetmanagement
+          
+          # Backup current version if exists
+          if [ -d "/var/www/assetmanagement/current" ]; then
+            BACKUP_NAME="backup_$(date +%Y%m%d_%H%M%S)"
+            echo "Creating backup: $BACKUP_NAME"
+            mv /var/www/assetmanagement/current /var/www/assetmanagement/$BACKUP_NAME
+            
+            # Keep only last 3 backups
+            cd /var/www/assetmanagement
+            ls -t backup_* 2>/dev/null | tail -n +4 | xargs rm -rf
+          fi
+
+    - name: Deploy application
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USER }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        source: "deployment.zip"
+        target: "/tmp/"
+
+    - name: Extract and configure application
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USER }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        script: |
+          cd /var/www/assetmanagement
+          
+          # Extract application
+          echo "Extracting application..."
+          unzip -o /tmp/deployment.zip -d current/
+          rm /tmp/deployment.zip
+          
+          # Set permissions
+          chmod +x current/AssetManagementSystem.PL
+          
+          # Create necessary directories
+          mkdir -p current/wwwroot/files
+          mkdir -p current/Logs
+          chmod 755 current/wwwroot/files
+          
+          # Create symbolic link for file storage
+          if [ ! -L /var/www/assetmanagement/files ]; then
+            ln -sf /var/www/assetmanagement/current/wwwroot/files /var/www/assetmanagement/files
+          fi
+          
+          # Set ownership
+          chown -R ec2-user:ec2-user /var/www/assetmanagement/
+          
+          echo "Application extracted and configured successfully"
+
+    - name: Run database migrations
+      uses: appleboy/ssh-action@v1.0.3
+      continue-on-error: true
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USER }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        script: |
+          cd /var/www/assetmanagement/current
+          
+          # Set environment variables
+          export ASPNETCORE_ENVIRONMENT=Production
+          
+          # Try to run migrations if the command exists
+          echo "Checking for database migrations..."
+          if dotnet ef --help > /dev/null 2>&1; then
+            echo "Running database migrations..."
+            dotnet ef database update || echo "No migrations to run or EF tools not available"
+          else
+            echo "EF Core tools not available, skipping migrations"
+          fi
+
+    - name: Start application
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USER }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        script: |
+          # Reload systemd configuration
+          sudo systemctl daemon-reload
+          
+          # Start the application service
+          echo "Starting Asset Management System..."
+          sudo systemctl start assetmanagement
+          
+          # Wait for service to start
+          sleep 10
+          
+          # Check service status
+          if sudo systemctl is-active --quiet assetmanagement; then
+            echo "✅ Application started successfully"
+            sudo systemctl status assetmanagement --no-pager -l
+          else
+            echo "❌ Failed to start application"
+            echo "Service status:"
+            sudo systemctl status assetmanagement --no-pager -l
+            echo "Recent logs:"
+            sudo journalctl -u assetmanagement --no-pager -l -n 20
+            exit 1
+          fi
+
+    - name: Health check
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USER }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        script: |
+          echo "Performing health checks..."
+          
+          # Wait for application to be fully ready
+          sleep 15
+          
+          # Check if application responds on localhost:5000
+          if curl -f http://localhost:5000/health > /dev/null 2>&1; then
+            echo "✅ Application health check passed"
+          else
+            echo "⚠️  Health check endpoint not responding, checking main page..."
+            if curl -f http://localhost:5000 > /dev/null 2>&1; then
+              echo "✅ Application is responding"
+            else
+              echo "❌ Application is not responding"
+              echo "Checking logs..."
+              sudo journalctl -u assetmanagement --no-pager -l -n 10
+              exit 1
+            fi
+          fi
+          
+          # Check nginx status
+          if sudo systemctl is-active --quiet nginx; then
+            echo "✅ Nginx is running"
+          else
+            echo "❌ Nginx is not running"
+            sudo systemctl status nginx
+            exit 1
+          fi
+          
+          echo "🎉 Deployment completed successfully!"
+          echo "Application is available at: http://${{ secrets.AWS_EC2_HOST }}"
+
+    - name: Cleanup old backups
+      uses: appleboy/ssh-action@v1.0.3
+      continue-on-error: true
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USER }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        script: |
+          # Clean up old backups (keep only 3 most recent)
+          cd /var/www/assetmanagement
+          ls -t backup_* 2>/dev/null | tail -n +4 | xargs rm -rf || echo "No old backups to clean"
+          
+          # Clean up old log files
+          find /var/log/assetmanagement -name "*.log" -mtime +30 -delete 2>/dev/null || echo "No old logs to clean"
+          
+          echo "Cleanup completed"
