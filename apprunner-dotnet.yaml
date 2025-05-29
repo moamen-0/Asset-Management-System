@@ -1,0 +1,33 @@
+version: 1.0
+runtime: dotnet
+build:
+  commands:
+    build:
+      - echo "Building Asset Management System with .NET runtime..."
+      - dotnet restore AssetManagementSystem.PL/AssetManagementSystem.PL.sln
+      - dotnet publish AssetManagementSystem.PL/AssetManagementSystem.PL.csproj -c Release -o ./publish
+  env:
+    - name: DOTNET_VERSION
+      value: "9.0"
+run:
+  runtime-version: dotnet-9
+  commands:
+    start:
+      - cd publish && dotnet AssetManagementSystem.PL.dll
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: "Production"
+    - name: ASPNETCORE_URLS
+      value: "http://+:8080"
+  network:
+    port: 8080
+    env: PORT
+  secrets:
+    - name: ConnectionStrings__DefaultConnection
+      value-from: "/asset-management/production/connection-string"
+    - name: Email__SenderEmail
+      value-from: "/asset-management/production/email-sender"
+    - name: Email__Account
+      value-from: "/asset-management/production/email-account"
+    - name: Email__Password
+      value-from: "/asset-management/production/email-password"

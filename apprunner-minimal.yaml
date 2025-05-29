@@ -1,0 +1,15 @@
+version: 1.0
+runtime: docker
+build:
+  commands:
+    build:
+      - docker build -t asset-management .
+run:
+  env:
+    - name: ASPNETCORE_ENVIRONMENT
+      value: Production
+    - name: ASPNETCORE_URLS
+      value: http://+:80
+  network:
+    port: 80
+    env: PORT

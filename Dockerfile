@@ -44,8 +44,6 @@ RUN mkdir -p /app/wwwroot/files /app/logs && \
 
 # Set environment variables for Cloud Run and other platforms
 ENV ASPNETCORE_ENVIRONMENT=Production
-ENV ASPNETCORE_URLS=http://+:8080
-ENV PORT=8080
 ENV DOTNET_RUNNING_IN_CONTAINER=true
 ENV DOTNET_USE_POLLING_FILE_WATCHER=true
 

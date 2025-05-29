@@ -20,9 +20,11 @@ namespace AssetManagementSystem.PL
 	{
 		public static async Task Main(string[] args)
 		{
-			DotNetEnv.Env.Load();
+			DotNetEnv.Env.Load();			var builder = WebApplication.CreateBuilder(args);
 
-			var builder = WebApplication.CreateBuilder(args);
+			// 🔹 Configure port for Cloud Run (must be done before building)
+			var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+			builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 			// 🔹 Add environment variables support
 			builder.Configuration.AddEnvironmentVariables();
@@ -88,19 +90,19 @@ namespace AssetManagementSystem.PL
 
 			return connectionString;
 		}
-
 		private static void ConfigureEmailService(WebApplicationBuilder builder)
 		{
 			builder.Services.AddMailKit(optionBuilder =>
 			{
+				var emailPort = builder.Configuration["Email:Port"];
 				optionBuilder.UseMailKit(new MailKitOptions()
 				{
-					Server = builder.Configuration["Email:Server"],
-					Port = int.Parse(builder.Configuration["Email:Port"]),
-					SenderName = builder.Configuration["Email:SenderName"],
-					SenderEmail = Environment.GetEnvironmentVariable("EMAIL_SENDER") ?? builder.Configuration["Email:SenderEmail"],
-					Account = Environment.GetEnvironmentVariable("EMAIL_ACCOUNT") ?? builder.Configuration["Email:Account"],
-					Password = Environment.GetEnvironmentVariable("EMAIL_PASSWORD") ?? builder.Configuration["Email:Password"],
+					Server = builder.Configuration["Email:Server"] ?? "smtp.gmail.com",
+					Port = int.Parse(emailPort ?? "587"),
+					SenderName = builder.Configuration["Email:SenderName"] ?? "Asset Management System",
+					SenderEmail = Environment.GetEnvironmentVariable("EMAIL_SENDER") ?? builder.Configuration["Email:SenderEmail"] ?? "",
+					Account = Environment.GetEnvironmentVariable("EMAIL_ACCOUNT") ?? builder.Configuration["Email:Account"] ?? "",
+					Password = Environment.GetEnvironmentVariable("EMAIL_PASSWORD") ?? builder.Configuration["Email:Password"] ?? "",
 					Security = true
 				});
 			});
@@ -198,9 +200,7 @@ namespace AssetManagementSystem.PL
 
 			// 🔹 Add Health Checks services
 			services.AddHealthChecks();
-		}
-
-		private static void ConfigurePipeline(WebApplication app)
+		}		private static void ConfigurePipeline(WebApplication app)
 		{
 			app.UseSession();
 
