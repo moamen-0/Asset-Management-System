@@ -6,7 +6,6 @@ build:
       - echo "Building Asset Management System..."
       - docker build -t asset-management .
 run:
-  runtime-version: latest
   env:
     - name: ASPNETCORE_ENVIRONMENT
       value: "Production"
