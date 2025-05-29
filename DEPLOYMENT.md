@@ -41,6 +41,185 @@ For serverless container deployment:
 - Pay per use
 - Managed infrastructure
 
+## 🚨 Troubleshooting Deployment Issues
+
+### Common Deployment Problems and Solutions
+
+#### 1. Missing .NET 9 Runtime Error
+**Problem**: Application fails to start with ".NET runtime not found" error.
+
+**Solution**: The updated deployment script now automatically installs .NET 9 runtime. If you still encounter this issue:
+
+```bash
+# SSH into your EC2 instance
+ssh -i your-key.pem ec2-user@your-ec2-ip
+
+# Run the troubleshooting script
+chmod +x /var/www/assetmanagement/.aws/troubleshoot.sh
+sudo /var/www/assetmanagement/.aws/troubleshoot.sh
+
+# Manually install .NET 9 if needed
+curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime aspnetcore
+export PATH="$HOME/.dotnet:$PATH"
+sudo ln -sf $HOME/.dotnet/dotnet /usr/local/bin/dotnet
+```
+
+#### 2. Application Not Responding on Port 5000
+**Problem**: Service is running but not accessible.
+
+**Solution**:
+```bash
+# Check service status
+sudo systemctl status assetmanagement
+
+# Check application logs
+sudo journalctl -u assetmanagement -f
+
+# Verify port is listening
+sudo netstat -tlnp | grep :5000
+
+# Restart service if needed
+sudo systemctl restart assetmanagement
+```
+
+#### 3. Nginx Proxy Not Working
+**Problem**: Application works on port 5000 but not through nginx on port 80.
+
+**Solution**:
+```bash
+# Check nginx status
+sudo systemctl status nginx
+
+# Test nginx configuration
+sudo nginx -t
+
+# Check nginx logs
+sudo tail -f /var/log/nginx/error.log
+
+# Restart nginx
+sudo systemctl restart nginx
+```
+
+#### 4. Database Connection Issues
+**Problem**: Application starts but database operations fail.
+
+**Solution**:
+1. Verify database connection string in `appsettings.Production.json`
+2. Check AWS RDS security groups allow connections from EC2
+3. Test database connectivity:
+```bash
+# Test SQL Server connection (replace with your values)
+telnet your-rds-endpoint.amazonaws.com 1433
+```
+
+#### 5. File Upload Issues
+**Problem**: File uploads fail or files are not accessible.
+
+**Solution**:
+```bash
+# Check directory permissions
+ls -la /var/www/assetmanagement/current/wwwroot/files/
+
+# Fix permissions if needed
+sudo chown -R ec2-user:ec2-user /var/www/assetmanagement/
+sudo chmod -R 755 /var/www/assetmanagement/current/wwwroot/files/
+```
+
+### Quick Diagnostic Commands
+
+Run these commands on your EC2 instance to quickly diagnose issues:
+
+```bash
+# 1. Check all services
+sudo systemctl status assetmanagement nginx
+
+# 2. Check application is responding
+curl http://localhost:5000
+curl http://localhost:80
+
+# 3. Check recent logs
+sudo journalctl -u assetmanagement -n 50 --no-pager
+
+# 4. Check .NET installation
+dotnet --version
+dotnet --list-runtimes
+
+# 5. Check listening ports
+sudo netstat -tlnp | grep -E ':80|:5000'
+```
+
+### Using the Troubleshooting Script
+
+We've included a comprehensive troubleshooting script that checks all common issues:
+
+```bash
+# SSH into your EC2 instance
+ssh -i your-key.pem ec2-user@your-ec2-ip
+
+# Download and run the troubleshooting script
+curl -O https://raw.githubusercontent.com/your-repo/Asset-Management-System/main/.aws/troubleshoot.sh
+chmod +x troubleshoot.sh
+./troubleshoot.sh
+```
+
+This script will automatically check:
+- .NET runtime installation
+- Application files and permissions
+- Systemd service status
+- Application logs
+- Port availability
+- Nginx configuration
+- Network connectivity
+
+### Manual Deployment (Emergency Fallback)
+
+If the automated deployment fails, you can deploy manually:
+
+```bash
+# 1. Build locally
+dotnet publish AssetManagementSystem.PL/AssetManagementSystem.PL.csproj -c Release -o ./publish
+
+# 2. Create deployment package
+cd publish && zip -r deployment.zip .
+
+# 3. Upload to EC2
+scp -i your-key.pem deployment.zip ec2-user@your-ec2-ip:/tmp/
+
+# 4. SSH and extract
+ssh -i your-key.pem ec2-user@your-ec2-ip
+sudo systemctl stop assetmanagement
+cd /var/www/assetmanagement
+sudo unzip -o /tmp/deployment.zip -d current/
+sudo chown -R ec2-user:ec2-user current/
+sudo systemctl start assetmanagement
+```
+
+### Monitoring and Logs
+
+#### View Real-time Logs
+```bash
+# Application logs
+sudo journalctl -u assetmanagement -f
+
+# Nginx access logs
+sudo tail -f /var/log/nginx/access.log
+
+# Nginx error logs
+sudo tail -f /var/log/nginx/error.log
+```
+
+#### Check Application Health
+```bash
+# Direct application health check
+curl -I http://localhost:5000
+
+# Through nginx proxy
+curl -I http://your-domain.com
+
+# Detailed response
+curl -v http://your-domain.com
+```
+
 ## Required GitHub Secrets
 
 Add these secrets to your GitHub repository (Settings → Secrets and variables → Actions):

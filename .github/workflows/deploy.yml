@@ -99,7 +99,201 @@ jobs:
         # Create deployment archive
         zip -r ../deployment.zip .
         cd ..
-        echo "Deployment package created: $(ls -lh deployment.zip)"
+        echo "Deployment package created: $(ls -lh deployment.zip)"    - name: Check and install .NET 9 runtime
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USER }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        timeout: 600
+        script: |
+          echo "Checking .NET installation..."
+          
+          # Function to check if .NET 9 is installed
+          check_dotnet() {
+            if command -v dotnet &> /dev/null; then
+              echo "dotnet command found"
+              dotnet --list-runtimes | grep -q "Microsoft.AspNetCore.App 9.0"
+              return $?
+            else
+              return 1
+            fi
+          }
+          
+          # Check if .NET 9 is already installed
+          if check_dotnet; then
+            echo "✅ .NET 9 runtime is already installed"
+            dotnet --version
+            dotnet --list-runtimes
+          else
+            echo "⚠️  .NET 9 runtime not found. Installing..."
+            
+            # Update system packages
+            sudo yum update -y
+            
+            # Install required dependencies
+            sudo yum install -y wget curl
+            
+            # Download and install .NET 9
+            echo "Downloading .NET 9 installation script..."
+            curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime aspnetcore
+            
+            # Add .NET to PATH for current session
+            export PATH="$HOME/.dotnet:$PATH"
+            
+            # Add .NET to PATH permanently for ec2-user
+            echo 'export PATH="$HOME/.dotnet:$PATH"' >> ~/.bashrc
+            echo 'export DOTNET_ROOT="$HOME/.dotnet"' >> ~/.bashrc
+            
+            # Create system-wide dotnet symlink
+            sudo ln -sf $HOME/.dotnet/dotnet /usr/local/bin/dotnet
+            
+            # Verify installation
+            if check_dotnet; then
+              echo "✅ .NET 9 runtime installed successfully"
+              dotnet --version
+              dotnet --list-runtimes
+            else
+              echo "❌ Failed to install .NET 9 runtime"
+              exit 1
+            fi
+          fi
+
+    - name: Setup nginx
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USER }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        timeout: 300
+        script: |
+          echo "Setting up nginx..."
+          
+          # Install nginx if not present
+          if ! command -v nginx &> /dev/null; then
+            echo "Installing nginx..."
+            sudo yum update -y
+            sudo amazon-linux-extras install nginx1 -y || sudo yum install nginx -y
+          else
+            echo "nginx is already installed"
+          fi
+          
+          # Copy nginx configuration
+          sudo tee /etc/nginx/conf.d/assetmanagement.conf > /dev/null <<EOF
+          server {
+              listen 80;
+              server_name ${{ secrets.AWS_EC2_HOST }};
+              
+              # Security headers
+              add_header X-Frame-Options "SAMEORIGIN" always;
+              add_header X-XSS-Protection "1; mode=block" always;
+              add_header X-Content-Type-Options "nosniff" always;
+              add_header Referrer-Policy "no-referrer-when-downgrade" always;
+              add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+              
+              # Asset Management System
+              location / {
+                  proxy_pass http://127.0.0.1:5000;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade \$http_upgrade;
+                  proxy_set_header Connection keep-alive;
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
+                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto \$scheme;
+                  proxy_cache_bypass \$http_upgrade;
+                  proxy_buffering off;
+                  proxy_read_timeout 300;
+                  proxy_connect_timeout 300;
+                  proxy_send_timeout 300;
+              }
+              
+              # Static files
+              location /files/ {
+                  alias /var/www/assetmanagement/files/;
+                  expires 30d;
+                  add_header Cache-Control "public, immutable";
+              }
+              
+              # Health check
+              location /nginx-health {
+                  access_log off;
+                  return 200 "healthy\n";
+                  add_header Content-Type text/plain;
+              }
+          }
+          EOF
+          
+          # Test nginx configuration
+          sudo nginx -t
+          
+          # Enable and start nginx
+          sudo systemctl enable nginx
+          sudo systemctl start nginx
+          
+          echo "✅ nginx configured and started"
+
+    - name: Setup systemd service
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USER }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        script: |
+          echo "Setting up systemd service..."
+          
+          # Create systemd service file
+          sudo tee /etc/systemd/system/assetmanagement.service > /dev/null <<EOF
+          [Unit]
+          Description=Asset Management System - ASP.NET Core Application
+          After=network.target
+          StartLimitIntervalSec=0
+          
+          [Service]
+          Type=notify
+          User=ec2-user
+          Group=ec2-user
+          WorkingDirectory=/var/www/assetmanagement/current
+          ExecStart=/usr/local/bin/dotnet AssetManagementSystem.PL.dll
+          ExecReload=/bin/kill -HUP \$MAINPID
+          Restart=always
+          RestartSec=5
+          TimeoutStopSec=90
+          SyslogIdentifier=assetmanagement
+          Environment=ASPNETCORE_ENVIRONMENT=Production
+          Environment=DOTNET_ROOT=/home/ec2-user/.dotnet
+          Environment=PATH=/home/ec2-user/.dotnet:/usr/local/bin:/usr/bin:/bin
+          Environment=ASPNETCORE_URLS=http://0.0.0.0:5000
+          
+          # Security settings
+          NoNewPrivileges=true
+          PrivateTmp=true
+          ProtectSystem=strict
+          ReadWritePaths=/var/www/assetmanagement
+          ReadWritePaths=/tmp
+          ReadWritePaths=/var/log
+          
+          # Resource limits
+          LimitNOFILE=65536
+          LimitNPROC=4096
+          
+          # Logging
+          StandardOutput=journal
+          StandardError=journal
+          
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+          
+          # Create log directory
+          sudo mkdir -p /var/log/assetmanagement
+          sudo chown ec2-user:ec2-user /var/log/assetmanagement
+          
+          # Reload systemd
+          sudo systemctl daemon-reload
+          sudo systemctl enable assetmanagement
+          
+          echo "✅ systemd service configured"
 
     - name: Stop existing application
       uses: appleboy/ssh-action@v1.0.3
@@ -202,24 +396,81 @@ jobs:
             dotnet ef database update || echo "No migrations to run or EF tools not available"
           else
             echo "EF Core tools not available, skipping migrations"
-          fi
-
-    - name: Start application
+          fi    - name: Install .NET and Start application
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
         username: ${{ secrets.AWS_EC2_USER }}
         key: ${{ secrets.AWS_EC2_KEY }}
+        timeout: 300s
+        command_timeout: 15m
         script: |
+          # Install .NET 9 if not already installed
+          if ! command -v dotnet &> /dev/null; then
+            echo "📦 Installing .NET 9..."
+            
+            # Add Microsoft package repository
+            sudo rpm -Uvh https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm || true
+            
+            # Update package manager
+            sudo yum update -y
+            
+            # Install .NET 9 runtime
+            sudo yum install -y aspnetcore-runtime-9.0
+            
+            # Verify installation
+            dotnet --version
+            echo "✅ .NET 9 installed successfully"
+          else
+            echo "✅ .NET is already installed: $(dotnet --version)"
+          fi
+          
+          # Update systemd service file with correct configuration
+          sudo tee /etc/systemd/system/assetmanagement.service > /dev/null <<EOF
+          [Unit]
+          Description=Asset Management System - .NET Web Application
+          After=network.target
+          StartLimitIntervalSec=0
+
+          [Service]
+          Type=notify
+          User=ec2-user
+          Group=ec2-user
+          WorkingDirectory=/var/www/assetmanagement/current
+          ExecStart=/usr/bin/dotnet AssetManagementSystem.PL.dll
+          Restart=always
+          RestartSec=5
+          Environment=ASPNETCORE_ENVIRONMENT=Production
+          Environment=ASPNETCORE_URLS=http://localhost:5000
+          Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+          Environment=DOTNET_CLI_TELEMETRY_OPTOUT=1
+          NoNewPrivileges=true
+          PrivateTmp=true
+          ProtectSystem=strict
+          ProtectHome=true
+          ReadWritePaths=/var/www/assetmanagement/current/wwwroot/files
+          ReadWritePaths=/var/www/assetmanagement/current/Logs
+          StandardOutput=journal
+          StandardError=journal
+          SyslogIdentifier=assetmanagement
+          KillMode=mixed
+          TimeoutStartSec=30
+          TimeoutStopSec=30
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+          
           # Reload systemd configuration
           sudo systemctl daemon-reload
           
-          # Start the application service
+          # Enable and start the application service
           echo "Starting Asset Management System..."
+          sudo systemctl enable assetmanagement
           sudo systemctl start assetmanagement
           
           # Wait for service to start
-          sleep 10
+          sleep 15
           
           # Check service status
           if sudo systemctl is-active --quiet assetmanagement; then
@@ -230,48 +481,141 @@ jobs:
             echo "Service status:"
             sudo systemctl status assetmanagement --no-pager -l
             echo "Recent logs:"
-            sudo journalctl -u assetmanagement --no-pager -l -n 20
+            sudo journalctl -u assetmanagement --no-pager -l -n 30
+            echo "Checking dotnet availability:"
+            which dotnet || echo "dotnet not found in PATH"
+            dotnet --version || echo "dotnet version check failed"
+            echo "Checking application files:"
+            ls -la /var/www/assetmanagement/current/
             exit 1
-          fi
-
-    - name: Health check
+          fi    - name: Health check
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
         username: ${{ secrets.AWS_EC2_USER }}
         key: ${{ secrets.AWS_EC2_KEY }}
         script: |
-          echo "Performing health checks..."
+          echo "Performing comprehensive health checks..."
           
           # Wait for application to be fully ready
+          echo "Waiting for application to initialize..."
           sleep 15
           
-          # Check if application responds on localhost:5000
-          if curl -f http://localhost:5000/health > /dev/null 2>&1; then
-            echo "✅ Application health check passed"
-          else
-            echo "⚠️  Health check endpoint not responding, checking main page..."
-            if curl -f http://localhost:5000 > /dev/null 2>&1; then
-              echo "✅ Application is responding"
-            else
-              echo "❌ Application is not responding"
-              echo "Checking logs..."
-              sudo journalctl -u assetmanagement --no-pager -l -n 10
-              exit 1
-            fi
+          # Install and configure Nginx if not present
+          if ! command -v nginx &> /dev/null; then
+            echo "📦 Installing Nginx..."
+            sudo yum install -y nginx
+            sudo systemctl enable nginx
+            
+            # Create basic nginx configuration
+            sudo tee /etc/nginx/conf.d/assetmanagement.conf > /dev/null <<EOF
+          server {
+              listen 80;
+              server_name _;
+              
+              location / {
+                  proxy_pass http://localhost:5000;
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
+                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto \$scheme;
+              }
+              
+              location /health {
+                  proxy_pass http://localhost:5000/health;
+                  proxy_set_header Host \$host;
+              }
+          }
+          EOF
+            
+            sudo systemctl start nginx
+            echo "✅ Nginx installed and configured"
           fi
           
-          # Check nginx status
-          if sudo systemctl is-active --quiet nginx; then
-            echo "✅ Nginx is running"
+          # Ensure nginx is running
+          sudo systemctl start nginx || true
+          
+          # Check application service status
+          echo "=== SERVICE STATUS CHECK ==="
+          if sudo systemctl is-active --quiet assetmanagement; then
+            echo "✅ Asset Management service is active"
           else
-            echo "❌ Nginx is not running"
-            sudo systemctl status nginx
+            echo "❌ Asset Management service is not active"
+            echo "Service status:"
+            sudo systemctl status assetmanagement --no-pager -l
+            echo "Recent logs:"
+            sudo journalctl -u assetmanagement --no-pager -l -n 30
             exit 1
           fi
           
-          echo "🎉 Deployment completed successfully!"
-          echo "Application is available at: http://${{ secrets.AWS_EC2_HOST }}"
+          # Check if application responds on localhost:5000
+          echo "=== APPLICATION HEALTH CHECK ==="
+          echo "Testing application on port 5000..."
+          APP_READY=false
+          for i in {1..30}; do
+            if curl -f http://localhost:5000 > /dev/null 2>&1; then
+              echo "✅ Application is responding on port 5000 (attempt $i)"
+              APP_READY=true
+              break
+            fi
+            echo "Waiting for application... (attempt $i/30)"
+            sleep 5
+          done
+          
+          if [ "$APP_READY" = false ]; then
+            echo "❌ Application is not responding on port 5000 after 150 seconds"
+            echo "Checking application logs..."
+            sudo journalctl -u assetmanagement --no-pager -l -n 30
+            echo "Checking if process is running..."
+            ps aux | grep dotnet || echo "No dotnet processes found"
+            echo "Checking port 5000..."
+            sudo netstat -tlnp | grep :5000 || echo "Nothing listening on port 5000"
+            echo "Checking .NET version..."
+            dotnet --version || echo ".NET not found"
+            exit 1
+          fi
+          
+          # Test through nginx (port 80)
+          echo "=== NGINX PROXY CHECK ==="
+          echo "Testing application through Nginx..."
+          NGINX_READY=false
+          for i in {1..15}; do
+            if curl -f http://localhost > /dev/null 2>&1; then
+              echo "✅ Nginx proxy is working (attempt $i)"
+              NGINX_READY=true
+              break
+            fi
+            echo "Waiting for nginx... (attempt $i/15)"
+            sleep 3
+          done
+          
+          if [ "$NGINX_READY" = false ]; then
+            echo "❌ Nginx proxy is not working"
+            echo "Nginx status:"
+            sudo systemctl status nginx --no-pager -l
+            echo "Nginx configuration test:"
+            sudo nginx -t
+            echo "Checking port 80:"
+            sudo netstat -tlnp | grep :80 || echo "Nothing listening on port 80"
+          fi
+          
+          # Final deployment verification
+          echo "=== DEPLOYMENT VERIFICATION ==="
+          echo "Application URL: http://${{ secrets.AWS_EC2_HOST }}"
+          echo "Service Status: $(sudo systemctl is-active assetmanagement)"
+          echo "Nginx Status: $(sudo systemctl is-active nginx)"
+          echo "Listening Ports:"
+          sudo netstat -tlnp | grep -E ':80|:5000' || echo "No services listening on expected ports"
+          
+          if [ "$APP_READY" = true ] && [ "$NGINX_READY" = true ]; then
+            echo "🎉 DEPLOYMENT SUCCESSFUL!"
+            echo "Application is accessible at: http://${{ secrets.AWS_EC2_HOST }}"
+          else
+            echo "❌ DEPLOYMENT PARTIALLY FAILED"
+            echo "Application direct access (port 5000): $APP_READY"
+            echo "Nginx proxy access (port 80): $NGINX_READY"
+            exit 1
+          fi
 
     - name: Cleanup old backups
       uses: appleboy/ssh-action@v1.0.3
