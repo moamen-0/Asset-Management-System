@@ -1,20 +1,24 @@
-# AWS App Runner Configuration for Asset Management System
-# Last updated: 2025-05-29 - Fixed runtime version issue
 version: 1.0
-runtime: docker
+runtime: dotnet
 build:
   commands:
     build:
-      - echo "Building Asset Management System..."
-      - docker build -t asset-management .
+      - echo "Building Asset Management System with self-contained deployment..."
+      - dotnet restore AssetManagementSystem.PL/AssetManagementSystem.PL.sln
+      - dotnet publish AssetManagementSystem.PL/AssetManagementSystem.PL.csproj -c Release -o ./publish --self-contained true --runtime linux-x64
 run:
+  runtime-version: dotnet-8
+  commands:
+    start:
+      - chmod +x ./publish/AssetManagementSystem.PL
+      - ./publish/AssetManagementSystem.PL --urls http://+:8080
   env:
     - name: ASPNETCORE_ENVIRONMENT
       value: "Production"
     - name: ASPNETCORE_URLS
-      value: "http://+:80"
+      value: "http://+:8080"
   network:
-    port: 80
+    port: 8080
     env: PORT
   secrets:
     - name: ConnectionStrings__DefaultConnection
