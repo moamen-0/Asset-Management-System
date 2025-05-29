@@ -41,15 +41,21 @@ jobs:
       - name: Build and Push Container
         run: |-
           docker build -f Dockerfile.cloudrun -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.SERVICE }}:${{ github.sha }}" ./
-          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.SERVICE }}:${{ github.sha }}"
-
-      - name: Deploy to Cloud Run
+          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.SERVICE }}:${{ github.sha }}"      - name: Deploy to Cloud Run
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ env.SERVICE }}
           region: ${{ env.REGION }}
           image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.SERVICE }}:${{ github.sha }}
+          timeout: 900
+          flags: |
+            --cpu=1
+            --memory=2Gi
+            --min-instances=0
+            --max-instances=10
+            --timeout=900
+            --port=8080
           env_vars: |
             ASPNETCORE_ENVIRONMENT=Production
             DOTNET_RUNNING_IN_CONTAINER=true
