@@ -19,7 +19,7 @@ run:
       value-from: "/asset-management/production/connection-string"
     - name: Email__SenderEmail
       value-from: "/asset-management/production/email-sender"
-    - name: Email__Account  
+    - name: Email__Account
       value-from: "/asset-management/production/email-account"
     - name: Email__Password
       value-from: "/asset-management/production/email-password"

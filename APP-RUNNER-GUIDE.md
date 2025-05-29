@@ -166,9 +166,9 @@ runtime: docker
 build:
   commands:
     build:
+      - echo "Building Asset Management System..."
       - docker build -t asset-management .
 run:
-  runtime-version: latest
   env:
     - name: ASPNETCORE_ENVIRONMENT
       value: "Production"
@@ -177,6 +177,15 @@ run:
   network:
     port: 80
     env: PORT
+  secrets:
+    - name: ConnectionStrings__DefaultConnection
+      value-from: "/asset-management/production/connection-string"
+    - name: Email__SenderEmail
+      value-from: "/asset-management/production/email-sender"
+    - name: Email__Account  
+      value-from: "/asset-management/production/email-account"
+    - name: Email__Password
+      value-from: "/asset-management/production/email-password"
 ```
 
 ### Dockerfile Optimizations
