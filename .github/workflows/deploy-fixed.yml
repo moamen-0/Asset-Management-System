@@ -95,45 +95,19 @@ jobs:
           }
         }
         EOF
-          # Create deployment archive
+        
+        # Create deployment archive
         zip -r ../deployment.zip .
         cd ..
         echo "Deployment package created: $(ls -lh deployment.zip)"
-
-    - name: Debug SSH connection
-      run: |
-        echo "🔍 SSH Connection Debug Information:"
-        echo "Host: ${{ secrets.AWS_EC2_HOST }}"
-        echo "Username: ${{ secrets.AWS_EC2_USER }}"
-        echo "SSH Key (first 50 chars): $(echo '${{ secrets.AWS_EC2_KEY }}' | head -c 50)..."
-        echo "Testing SSH connection without key first..."        # Test basic connectivity
-        nc -zv ${{ secrets.AWS_EC2_HOST }} 22 || echo "Port 22 might be closed or filtered"
-
-    - name: Test SSH connection
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
-        key: ${{ secrets.AWS_EC2_KEY }}
-        port: 22
-        timeout: 60s
-        script: |
-          echo "✅ SSH connection successful!"
-          echo "Current user: $(whoami)"
-          echo "Current directory: $(pwd)"
-          echo "System info: $(uname -a)"
-          echo "Available disk space:"
-          df -h
 
     - name: Setup infrastructure
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
         key: ${{ secrets.AWS_EC2_KEY }}
-        port: 22
         timeout: 600s
-        command_timeout: 10m
         script: |
           echo "🔧 Setting up infrastructure..."
           
@@ -182,15 +156,15 @@ jobs:
           sudo systemctl enable nginx
           sudo systemctl start nginx
           
-          echo "✅ Infrastructure setup complete"    - name: Install .NET Runtime
+          echo "✅ Infrastructure setup complete"
+
+    - name: Install .NET Runtime
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
         key: ${{ secrets.AWS_EC2_KEY }}
-        port: 22
         timeout: 600s
-        command_timeout: 10m
         script: |
           echo "🔍 Checking current .NET installation status..."
           
@@ -273,28 +247,28 @@ jobs:
           else
             echo "❌ .NET command still not available"
             exit 1
-          fi    - name: Stop existing application
+          fi
+
+    - name: Stop existing application
       uses: appleboy/ssh-action@v1.0.3
       continue-on-error: true
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
         key: ${{ secrets.AWS_EC2_KEY }}
-        port: 22
-        timeout: 300s
         script: |
           echo "Stopping existing application..."
           sudo systemctl stop assetmanagement 2>/dev/null || echo "Service was not running"
           sudo pkill -f "AssetManagementSystem.PL" 2>/dev/null || echo "No processes to kill"
-          sleep 5    - name: Backup current version
+          sleep 5
+
+    - name: Backup current version
       uses: appleboy/ssh-action@v1.0.3
       continue-on-error: true
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
         key: ${{ secrets.AWS_EC2_KEY }}
-        port: 22
-        timeout: 300s
         script: |
           # Backup current version if exists
           if [ -d "/var/www/assetmanagement/current" ]; then
@@ -305,23 +279,23 @@ jobs:
             # Keep only last 3 backups
             cd /var/www/assetmanagement
             ls -t backup_* 2>/dev/null | tail -n +4 | xargs rm -rf || true
-          fi    - name: Deploy application
+          fi
+
+    - name: Deploy application
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
         key: ${{ secrets.AWS_EC2_KEY }}
-        port: 22
-        timeout: 300s
         source: "deployment.zip"
-        target: "/tmp/"    - name: Extract and configure application
+        target: "/tmp/"
+
+    - name: Extract and configure application
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
         key: ${{ secrets.AWS_EC2_KEY }}
-        port: 22
-        timeout: 300s
         script: |
           cd /var/www/assetmanagement
           
@@ -346,13 +320,14 @@ jobs:
           # Set ownership
           chown -R $USER:$USER /var/www/assetmanagement/
           
-          echo "Application extracted and configured successfully"    - name: Start application
+          echo "Application extracted and configured successfully"
+
+    - name: Start application
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
         key: ${{ secrets.AWS_EC2_KEY }}
-        port: 22
         timeout: 300s
         script: |
           # Stop and disable any existing service
@@ -435,14 +410,14 @@ jobs:
             echo "Application files:"
             ls -la /var/www/assetmanagement/current/AssetManagementSystem.PL.dll 2>/dev/null || echo "Application DLL not found"
             exit 1
-          fi    - name: Health check
+          fi
+
+    - name: Health check
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
         key: ${{ secrets.AWS_EC2_KEY }}
-        port: 22
-        timeout: 300s
         script: |
           echo "Performing comprehensive health checks..."
           
@@ -533,15 +508,15 @@ jobs:
             echo "Application direct access (port 5000): $APP_READY"
             echo "Nginx proxy access (port 80): $NGINX_READY"
             exit 1
-          fi    - name: Cleanup old backups
+          fi
+
+    - name: Cleanup old backups
       uses: appleboy/ssh-action@v1.0.3
       continue-on-error: true
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
         key: ${{ secrets.AWS_EC2_KEY }}
-        port: 22
-        timeout: 300s
         script: |
           # Clean up old backups (keep only 3 most recent)
           cd /var/www/assetmanagement

@@ -2,7 +2,9 @@
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 EXPOSE 80
-EXPOSE 443
+
+# Create a non-root user for security
+RUN groupadd -r appuser && useradd -r -g appuser appuser
 
 # Use the .NET 9 SDK image to build the application
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
@@ -33,11 +35,21 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-# Create directory for file uploads
-RUN mkdir -p /app/wwwroot/files
+# Create directories for file uploads and logs
+RUN mkdir -p /app/wwwroot/files /app/logs && \
+    chown -R appuser:appuser /app
 
-# Set environment variables
+# Set environment variables for App Runner
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:80
+ENV DOTNET_RUNNING_IN_CONTAINER=true
+ENV DOTNET_USE_POLLING_FILE_WATCHER=true
+
+# Switch to non-root user
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:80/health || exit 1
 
 ENTRYPOINT ["dotnet", "AssetManagementSystem.PL.dll"]
