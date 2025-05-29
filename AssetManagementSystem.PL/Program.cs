@@ -34,9 +34,7 @@ namespace AssetManagementSystem.PL
             // Configure database connection
             var connectionString = ProcessConnectionString(builder.Configuration);
             builder.Services.AddDbContext<AssetManagementDbContext>(options =>
-                options.UseSqlServer(connectionString));
-
-            // Configure Identity
+                options.UseSqlServer(connectionString));            // Configure Identity
             builder.Services.AddIdentity<User, IdentityRole>(options =>
             {
                 options.Password.RequireDigit = false;
@@ -47,6 +45,16 @@ namespace AssetManagementSystem.PL
             })
             .AddEntityFrameworkStores<AssetManagementDbContext>()
             .AddDefaultTokenProviders();
+
+            // Configure Identity cookie and login path
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = "/Auth/Login";
+                options.LogoutPath = "/Auth/Logout";
+                options.AccessDeniedPath = "/Auth/AccessDenied";
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+                options.SlidingExpiration = true;
+            });
 
             // Configure Services and Repositories
             builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
@@ -102,12 +110,13 @@ namespace AssetManagementSystem.PL
             app.UseRouting();
             app.UseSession();
             app.UseAuthentication();
-            app.UseAuthorization();
-
-            // Configure routing
+            app.UseAuthorization();            // Configure routing
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Auth}/{action=Login}/{id?}");
+
+            // Handle root URL explicitly
+            app.MapGet("/", () => Results.Redirect("/Auth/Login"));
 
             // Background initialization for database seeding
             _ = Task.Run(async () =>
