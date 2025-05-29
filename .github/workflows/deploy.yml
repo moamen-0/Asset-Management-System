@@ -162,23 +162,29 @@ jobs:
             echo "Adding Microsoft package repository..."
             if [ ! -f /etc/yum.repos.d/microsoft-prod.repo ]; then
               sudo rpm -Uvh https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm || echo "Repository already exists"
-            fi
-              echo "Installing .NET 9 ASP.NET Core Runtime..."
+            fi            echo "Installing .NET 9 ASP.NET Core Runtime..."
             sudo yum install -y aspnetcore-runtime-9.0 --skip-broken || {
               echo "Package manager installation failed, trying dotnet-install script..."
+              
+              # Remove any existing broken installation
+              rm -rf $HOME/.dotnet
               
               # Fallback to dotnet-install script - install both runtime and aspnetcore
               echo "Downloading .NET 9 installation script..."
               if command -v curl &> /dev/null; then
                 # Install .NET runtime first
-                curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime dotnet
+                echo "Installing .NET 9 runtime..."
+                curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime dotnet --install-dir $HOME/.dotnet --verbose
                 # Then install ASP.NET Core runtime
-                curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime aspnetcore
+                echo "Installing ASP.NET Core 9 runtime..."
+                curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime aspnetcore --install-dir $HOME/.dotnet --verbose
               elif command -v wget &> /dev/null; then
                 # Install .NET runtime first
-                wget -qO- https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime dotnet
+                echo "Installing .NET 9 runtime..."
+                wget -qO- https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime dotnet --install-dir $HOME/.dotnet --verbose
                 # Then install ASP.NET Core runtime
-                wget -qO- https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime aspnetcore
+                echo "Installing ASP.NET Core 9 runtime..."
+                wget -qO- https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime aspnetcore --install-dir $HOME/.dotnet --verbose
               else
                 echo "Neither curl nor wget available for downloading .NET installer"
                 exit 1
@@ -482,48 +488,105 @@ jobs:
         username: ${{ secrets.AWS_EC2_USER }}
         key: ${{ secrets.AWS_EC2_KEY }}
         timeout: 300s
-        command_timeout: 15m
-        script: |
-          # Ensure .NET is available and verify version
-          if ! command -v dotnet &> /dev/null; then
-            echo "📦 dotnet command not found, setting up PATH..."
-            export PATH="$HOME/.dotnet:/usr/local/bin:$PATH"
-            export DOTNET_ROOT="$HOME/.dotnet"
+        command_timeout: 15m        script: |
+          echo "🔍 Checking current .NET installation status..."
+          
+          # Check if dotnet executable exists and has content
+          if [ -f "$HOME/.dotnet/dotnet" ]; then
+            DOTNET_SIZE=$(stat -c%s "$HOME/.dotnet/dotnet" 2>/dev/null || echo "0")
+            echo "Current dotnet executable size: $DOTNET_SIZE bytes"
             
-            if ! command -v dotnet &> /dev/null; then
-              echo "❌ .NET still not available, attempting emergency installation..."              # Emergency fallback installation
-              # Install .NET runtime first
-              curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime dotnet
-              # Then install ASP.NET Core runtime
-              curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime aspnetcore
-              export PATH="$HOME/.dotnet:$PATH"
-              sudo ln -sf $HOME/.dotnet/dotnet /usr/local/bin/dotnet 2>/dev/null || true
-              sudo ln -sf $HOME/.dotnet/dotnet /usr/bin/dotnet 2>/dev/null || true
-              
-              if ! command -v dotnet &> /dev/null; then
-                echo "❌ Failed to install .NET runtime"
-                exit 1
-              fi
+            if [ "$DOTNET_SIZE" -eq 0 ] || [ "$DOTNET_SIZE" -lt 1000 ]; then
+              echo "⚠️ Detected corrupted .NET installation (size: $DOTNET_SIZE bytes)"
+              echo "🧹 Removing corrupted installation..."
+              rm -rf "$HOME/.dotnet"
+              sudo rm -f /usr/bin/dotnet /usr/local/bin/dotnet 2>/dev/null || true
             fi
           fi
-            # Verify .NET installation
-          echo "✅ .NET is available: $(dotnet --version)"
-          echo "Available runtimes:"
-          dotnet --list-runtimes
-            # Ensure dotnet symlinks exist for systemd service
-          sudo ln -sf $HOME/.dotnet/dotnet /usr/local/bin/dotnet 2>/dev/null || true
-          sudo ln -sf $HOME/.dotnet/dotnet /usr/bin/dotnet 2>/dev/null || true          # Stop and disable any existing service before creating new configuration
+          
+          # Force clean installation if .NET is not working
+          if ! command -v dotnet &> /dev/null || ! dotnet --version &> /dev/null; then
+            echo "🔄 Installing .NET 9 runtime with verbose logging..."
+            
+            # Set environment variables
+            export DOTNET_ROOT="$HOME/.dotnet"
+            export PATH="$DOTNET_ROOT:$PATH"
+            
+            # Create dotnet directory
+            mkdir -p "$DOTNET_ROOT"
+            
+            # Download and install .NET with explicit parameters
+            echo "📥 Downloading .NET installation script..."
+            curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+            chmod +x /tmp/dotnet-install.sh
+            
+            echo "🔧 Installing .NET Runtime 9.0..."
+            /tmp/dotnet-install.sh --channel 9.0 --runtime dotnet --install-dir "$DOTNET_ROOT" --verbose || {
+              echo "❌ First .NET installation attempt failed, trying alternative method..."
+              
+              # Alternative installation method
+              wget -q https://dot.net/v1/dotnet-install.sh -O /tmp/dotnet-install-alt.sh
+              chmod +x /tmp/dotnet-install-alt.sh
+              /tmp/dotnet-install-alt.sh --channel 9.0 --runtime dotnet --install-dir "$DOTNET_ROOT" --verbose
+            }
+            
+            echo "🔧 Installing ASP.NET Core Runtime 9.0..."
+            /tmp/dotnet-install.sh --channel 9.0 --runtime aspnetcore --install-dir "$DOTNET_ROOT" --verbose || {
+              echo "❌ ASP.NET Core installation failed, trying alternative..."
+              /tmp/dotnet-install-alt.sh --channel 9.0 --runtime aspnetcore --install-dir "$DOTNET_ROOT" --verbose
+            }
+            
+            # Verify installation was successful
+            if [ -f "$DOTNET_ROOT/dotnet" ]; then
+              DOTNET_SIZE=$(stat -c%s "$DOTNET_ROOT/dotnet")
+              echo "✅ .NET executable installed, size: $DOTNET_SIZE bytes"
+              
+              if [ "$DOTNET_SIZE" -gt 1000 ]; then
+                echo "✅ .NET installation appears successful"
+              else
+                echo "❌ .NET executable is too small ($DOTNET_SIZE bytes), installation may have failed"
+                exit 1
+              fi
+            else
+              echo "❌ .NET executable not found after installation"
+              exit 1
+            fi
+            
+            # Make executable
+            chmod +x "$DOTNET_ROOT/dotnet"
+            
+            # Create symlinks
+            sudo ln -sf "$DOTNET_ROOT/dotnet" /usr/local/bin/dotnet
+            sudo ln -sf "$DOTNET_ROOT/dotnet" /usr/bin/dotnet
+            
+            # Update PATH
+            export PATH="$DOTNET_ROOT:/usr/local/bin:$PATH"
+          fi
+          
+          # Final verification
+          echo "🔍 Final .NET verification..."
+          echo "PATH: $PATH"
+          echo "DOTNET_ROOT: $DOTNET_ROOT"
+          
+          if command -v dotnet &> /dev/null; then
+            echo "✅ .NET is available: $(dotnet --version)"
+            echo "Available runtimes:"
+            dotnet --list-runtimes
+          else
+            echo "❌ .NET command still not available"
+            exit 1
+          fi
+          
+          # Stop and disable any existing service
           sudo systemctl stop assetmanagement 2>/dev/null || true
           sudo systemctl disable assetmanagement 2>/dev/null || true
-          
-          # Remove old service file to ensure clean configuration
           sudo rm -f /etc/systemd/system/assetmanagement.service
           sudo systemctl daemon-reload
           
-          # Verify dotnet paths before creating service
-          echo "Verifying dotnet executable paths:"
-          ls -la /usr/bin/dotnet /usr/local/bin/dotnet $HOME/.dotnet/dotnet 2>/dev/null || echo "Some dotnet paths not found"
-          which dotnet || echo "dotnet not in PATH"# Update systemd service file with correct configuration
+          # Create systemd service with absolute path to verified dotnet
+          DOTNET_PATH="$HOME/.dotnet/dotnet"
+          
+          echo "📝 Creating systemd service with dotnet path: $DOTNET_PATH"
           sudo tee /etc/systemd/system/assetmanagement.service > /dev/null <<EOF
           [Unit]
           Description=Asset Management System - .NET Web Application
@@ -535,11 +598,13 @@ jobs:
           User=ec2-user
           Group=ec2-user
           WorkingDirectory=/var/www/assetmanagement/current
-          ExecStart=/home/ec2-user/.dotnet/dotnet AssetManagementSystem.PL.dll
+          ExecStart=$DOTNET_PATH AssetManagementSystem.PL.dll
           Restart=always
           RestartSec=5
           Environment=ASPNETCORE_ENVIRONMENT=Production
           Environment=ASPNETCORE_URLS=http://localhost:5000
+          Environment=DOTNET_ROOT=$HOME/.dotnet
+          Environment=PATH=$HOME/.dotnet:/usr/local/bin:/usr/bin:/bin
           Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
           Environment=DOTNET_CLI_TELEMETRY_OPTOUT=1
           NoNewPrivileges=true
@@ -558,31 +623,24 @@ jobs:
           [Install]
           WantedBy=multi-user.target
           EOF
-            # Reload systemd configuration
+          
+          # Reload and start service
           sudo systemctl daemon-reload
           
-          # Verify the service configuration
-          echo "Verifying systemd service configuration:"
-          sudo cat /etc/systemd/system/assetmanagement.service | grep ExecStart || echo "ExecStart not found"
-            # Test the dotnet executable path directly
-          echo "Testing dotnet executable:"
-          /home/ec2-user/.dotnet/dotnet --version || echo "Direct path test failed"
+          # Final verification before starting service
+          echo "🔍 Pre-start verification:"
+          echo "Dotnet executable exists: $([ -f "$DOTNET_PATH" ] && echo "YES" || echo "NO")"
+          echo "Dotnet executable size: $(stat -c%s "$DOTNET_PATH" 2>/dev/null || echo "NOT FOUND") bytes"
+          echo "Dotnet version test: $("$DOTNET_PATH" --version 2>/dev/null || echo "FAILED")"
           
-          # Test symlink paths as backup
-          if [ -L "/usr/bin/dotnet" ]; then
-            echo "Testing /usr/bin/dotnet symlink:"
-            /usr/bin/dotnet --version || echo "Symlink path test failed"
-          fi
-          
-          # Enable and start the application service
-          echo "Starting Asset Management System..."
+          # Start the service
+          echo "🚀 Starting Asset Management System..."
           sudo systemctl enable assetmanagement
           sudo systemctl start assetmanagement
           
-          # Wait for service to start
+          # Wait and check status
           sleep 15
           
-          # Check service status
           if sudo systemctl is-active --quiet assetmanagement; then
             echo "✅ Application started successfully"
             sudo systemctl status assetmanagement --no-pager -l
@@ -592,11 +650,12 @@ jobs:
             sudo systemctl status assetmanagement --no-pager -l
             echo "Recent logs:"
             sudo journalctl -u assetmanagement --no-pager -l -n 30
-            echo "Checking dotnet availability:"
-            which dotnet || echo "dotnet not found in PATH"
-            dotnet --version || echo "dotnet version check failed"
-            echo "Checking application files:"
-            ls -la /var/www/assetmanagement/current/
+            echo "Final diagnostic info:"
+            echo "Dotnet path: $DOTNET_PATH"
+            echo "Dotnet exists: $([ -f "$DOTNET_PATH" ] && echo "YES" || echo "NO")"
+            echo "Dotnet size: $(stat -c%s "$DOTNET_PATH" 2>/dev/null || echo "NOT FOUND") bytes"
+            echo "Application files:"
+            ls -la /var/www/assetmanagement/current/AssetManagementSystem.PL.dll 2>/dev/null || echo "Application DLL not found"
             exit 1
           fi
 
