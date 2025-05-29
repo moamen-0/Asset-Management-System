@@ -1,3 +1,5 @@
+# AWS App Runner Configuration for Asset Management System
+# Last updated: 2025-05-29 - Fixed runtime version issue
 version: 1.0
 runtime: docker
 build:
