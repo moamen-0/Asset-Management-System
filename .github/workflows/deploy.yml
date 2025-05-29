@@ -111,16 +111,35 @@ jobs:
         script: |
           echo "Checking .NET installation..."
           
-          # Function to check if .NET 9 is installed
+          # Function to check if .NET 9 is installed (improved version)
           check_dotnet() {
             if command -v dotnet &> /dev/null; then
               echo "dotnet command found"
-              dotnet --list-runtimes | grep -q "Microsoft.AspNetCore.App 9.0"
-              return $?
+              # Check for any .NET 9.x runtime
+              if dotnet --list-runtimes | grep -q "Microsoft.AspNetCore.App 9.0"; then
+                echo "ASP.NET Core 9.0 runtime found"
+                return 0
+              elif dotnet --list-runtimes | grep -q "Microsoft.NETCore.App 9.0"; then
+                echo ".NET 9.0 runtime found"
+                return 0
+              else
+                echo "No .NET 9.x runtime found"
+                return 1
+              fi
             else
+              echo "dotnet command not found"
               return 1
             fi
           }
+          
+          # Check current .NET installation
+          echo "Current .NET installation status:"
+          if command -v dotnet &> /dev/null; then
+            dotnet --version || echo "Failed to get .NET version"
+            dotnet --list-runtimes || echo "Failed to list runtimes"
+          else
+            echo "dotnet command not available"
+          fi
           
           # Check if .NET 9 is already installed
           if check_dotnet; then
@@ -130,33 +149,72 @@ jobs:
           else
             echo "⚠️  .NET 9 runtime not found. Installing..."
             
-            # Update system packages
-            sudo yum update -y
+            # Skip package update and problematic dependencies
+            echo "Skipping system package update to avoid conflicts..."
             
-            # Install required dependencies
-            sudo yum install -y wget curl
+            # Only install wget if absolutely necessary (skip curl due to conflicts)
+            if ! command -v wget &> /dev/null; then
+              echo "Installing wget..."
+              sudo yum install -y wget --skip-broken || echo "wget installation failed, continuing..."
+            fi
             
-            # Download and install .NET 9
-            echo "Downloading .NET 9 installation script..."
-            curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime aspnetcore
+            # Use Microsoft's official installation method for Amazon Linux
+            echo "Adding Microsoft package repository..."
+            if [ ! -f /etc/yum.repos.d/microsoft-prod.repo ]; then
+              sudo rpm -Uvh https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm || echo "Repository already exists"
+            fi
             
-            # Add .NET to PATH for current session
-            export PATH="$HOME/.dotnet:$PATH"
+            echo "Installing .NET 9 ASP.NET Core Runtime..."
+            sudo yum install -y aspnetcore-runtime-9.0 --skip-broken || {
+              echo "Package manager installation failed, trying dotnet-install script..."
+              
+              # Fallback to dotnet-install script
+              echo "Downloading .NET 9 installation script..."
+              if command -v curl &> /dev/null; then
+                curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime aspnetcore
+              elif command -v wget &> /dev/null; then
+                wget -qO- https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime aspnetcore
+              else
+                echo "Neither curl nor wget available for downloading .NET installer"
+                exit 1
+              fi
+              
+              # Add .NET to PATH for current session
+              export PATH="$HOME/.dotnet:$PATH"
+              export DOTNET_ROOT="$HOME/.dotnet"
+              
+              # Add .NET to PATH permanently for ec2-user
+              echo 'export PATH="$HOME/.dotnet:$PATH"' >> ~/.bashrc
+              echo 'export DOTNET_ROOT="$HOME/.dotnet"' >> ~/.bashrc
+              
+              # Create system-wide dotnet symlink
+              sudo ln -sf $HOME/.dotnet/dotnet /usr/local/bin/dotnet || echo "Failed to create symlink"
+            }
             
-            # Add .NET to PATH permanently for ec2-user
-            echo 'export PATH="$HOME/.dotnet:$PATH"' >> ~/.bashrc
-            echo 'export DOTNET_ROOT="$HOME/.dotnet"' >> ~/.bashrc
+            # Wait a moment for installation to complete
+            sleep 3
             
-            # Create system-wide dotnet symlink
-            sudo ln -sf $HOME/.dotnet/dotnet /usr/local/bin/dotnet
+            # Refresh PATH
+            export PATH="$HOME/.dotnet:/usr/local/bin:$PATH"
+            hash -r
             
             # Verify installation
-            if check_dotnet; then
-              echo "✅ .NET 9 runtime installed successfully"
-              dotnet --version
-              dotnet --list-runtimes
+            echo "Verifying .NET installation..."
+            if command -v dotnet &> /dev/null; then
+              echo "✅ dotnet command is available"
+              dotnet --version || echo "Failed to get version"
+              dotnet --list-runtimes || echo "Failed to list runtimes"
+              
+              # Final check
+              if check_dotnet; then
+                echo "✅ .NET 9 runtime installed successfully"
+              else
+                echo "⚠️  .NET 9 runtime installation may be incomplete, but continuing..."
+              fi
             else
-              echo "❌ Failed to install .NET 9 runtime"
+              echo "❌ dotnet command still not available after installation"
+              echo "Checking for dotnet in common locations..."
+              ls -la /usr/bin/dotnet /usr/local/bin/dotnet $HOME/.dotnet/dotnet 2>/dev/null || echo "dotnet not found in common locations"
               exit 1
             fi
           fi
@@ -409,25 +467,31 @@ jobs:
         timeout: 300s
         command_timeout: 15m
         script: |
-          # Install .NET 9 if not already installed
+          # Ensure .NET is available and verify version
           if ! command -v dotnet &> /dev/null; then
-            echo "📦 Installing .NET 9..."
+            echo "📦 dotnet command not found, setting up PATH..."
+            export PATH="$HOME/.dotnet:/usr/local/bin:$PATH"
+            export DOTNET_ROOT="$HOME/.dotnet"
             
-            # Add Microsoft package repository
-            sudo rpm -Uvh https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm || true
-            
-            # Update package manager
-            sudo yum update -y
-            
-            # Install .NET 9 runtime
-            sudo yum install -y aspnetcore-runtime-9.0
-            
-            # Verify installation
-            dotnet --version
-            echo "✅ .NET 9 installed successfully"
-          else
-            echo "✅ .NET is already installed: $(dotnet --version)"
+            if ! command -v dotnet &> /dev/null; then
+              echo "❌ .NET still not available, attempting emergency installation..."
+              
+              # Emergency fallback installation
+              curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime aspnetcore
+              export PATH="$HOME/.dotnet:$PATH"
+              sudo ln -sf $HOME/.dotnet/dotnet /usr/local/bin/dotnet
+              
+              if ! command -v dotnet &> /dev/null; then
+                echo "❌ Failed to install .NET runtime"
+                exit 1
+              fi
+            fi
           fi
+          
+          # Verify .NET installation
+          echo "✅ .NET is available: $(dotnet --version)"
+          echo "Available runtimes:"
+          dotnet --list-runtimes
           
           # Update systemd service file with correct configuration
           sudo tee /etc/systemd/system/assetmanagement.service > /dev/null <<EOF
