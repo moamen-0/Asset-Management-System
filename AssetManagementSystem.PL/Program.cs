@@ -18,97 +18,167 @@ namespace AssetManagementSystem.PL
 {
 	public class Program
 	{
-	public static async Task Main(string[] args)
-	{
-		try
+		public static async Task Main(string[] args)
 		{
-			// Load environment variables from .env file if it exists
+			Console.WriteLine("🚀 Starting Asset Management System...");
+			
 			try
 			{
-				DotNetEnv.Env.Load();
-			}
-			catch
-			{
-				// .env file might not exist in Cloud Run, ignore the error
-			}
-
-			var builder = WebApplication.CreateBuilder(args);
-
-			// 🔹 Configure port for Cloud Run (must be done before building)
-			var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-			Console.WriteLine($"Configuring application to listen on port: {port}");
-			builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
-
-			// 🔹 Add environment variables support
-			builder.Configuration.AddEnvironmentVariables();
-
-			// 🔹 Configure logging for better debugging
-			builder.Logging.ClearProviders();
-			builder.Logging.AddConsole();
-			builder.Logging.SetMinimumLevel(LogLevel.Information);
-
-			Console.WriteLine("Starting service configuration...");
-
-			// 🔹 Process connection string with environment variables
-			var connectionString = ProcessConnectionString(builder.Configuration);
-			Console.WriteLine("Database connection string processed successfully");
-
-			// 🔹 Configure Email with environment variables
-			ConfigureEmailService(builder);
-			Console.WriteLine("Email service configured successfully");
-
-			// Add services to the container
-			builder.Services.AddControllersWithViews();
-			builder.Services.AddLogging();
-
-			// Register all your services
-			RegisterServices(builder.Services);
-
-			// 🔹 Configure Database with processed connection string
-			builder.Services.AddDbContextPool<AssetManagementDbContext>(options =>
-			{
-				options.UseSqlServer(connectionString, sqlServerOptionsAction: sqlOptions =>
+				// Load environment variables from .env file if it exists
+				try
 				{
-					sqlOptions.CommandTimeout(30);
-					sqlOptions.EnableRetryOnFailure(
-						maxRetryCount: 5,
-						maxRetryDelay: TimeSpan.FromSeconds(30),
-						errorNumbersToAdd: null);
-				});
-			});
+					DotNetEnv.Env.Load();
+					Console.WriteLine("✅ Environment variables loaded from .env file");
+				}
+				catch
+				{
+					Console.WriteLine("ℹ️ No .env file found, using environment variables only");
+				}
 
-			// Configure Identity
-			ConfigureIdentity(builder.Services);
+				var builder = WebApplication.CreateBuilder(args);
 
-			// Configure other services
-			ConfigureOtherServices(builder.Services);
+				// 🔹 Configure port for Cloud Run FIRST
+				var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+				Console.WriteLine($"🌐 Configuring application to listen on port: {port}");
+				
+				// Configure URLs before building
+				builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
-			var app = builder.Build();
+				// 🔹 Add environment variables support
+				builder.Configuration.AddEnvironmentVariables();
 
-			// 🔹 Configure pipeline
-			ConfigurePipeline(app);
+				// 🔹 Configure logging for better debugging
+				builder.Logging.ClearProviders();
+				builder.Logging.AddConsole();
+				builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-			// 🔹 Initialize database
-			await InitializeDatabase(app);
+				Console.WriteLine("📋 Starting service configuration...");
 
-			Console.WriteLine($"Application starting on port: {port}");
-			app.Run();
+				// 🔹 Add basic services first
+				builder.Services.AddControllers();
+				builder.Services.AddHealthChecks();
+				Console.WriteLine("✅ Basic services configured");
+
+				// 🔹 Configure Database with connection string processing
+				try
+				{
+					var connectionString = ProcessConnectionString(builder.Configuration);
+					Console.WriteLine("🗄️ Database connection string processed successfully");
+
+					builder.Services.AddDbContextPool<AssetManagementDbContext>(options =>
+					{
+						options.UseSqlServer(connectionString, sqlServerOptionsAction: sqlOptions =>
+						{
+							sqlOptions.CommandTimeout(30);
+							sqlOptions.EnableRetryOnFailure(
+								maxRetryCount: 3,
+								maxRetryDelay: TimeSpan.FromSeconds(10),
+								errorNumbersToAdd: null);
+						});
+					});
+					Console.WriteLine("✅ Database context configured");
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"❌ Database configuration failed: {ex.Message}");
+					throw;
+				}
+
+				// 🔹 Configure Email services (with error handling)
+				try
+				{
+					ConfigureEmailService(builder);
+					Console.WriteLine("✅ Email service configured");
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"⚠️ Email service configuration failed (continuing): {ex.Message}");
+				}
+
+				// 🔹 Register application services
+				try
+				{
+					RegisterServices(builder.Services);
+					Console.WriteLine("✅ Application services registered");
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"❌ Service registration failed: {ex.Message}");
+					throw;
+				}
+
+				// 🔹 Configure Identity
+				try
+				{
+					ConfigureIdentity(builder.Services);
+					Console.WriteLine("✅ Identity services configured");
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"❌ Identity configuration failed: {ex.Message}");
+					throw;
+				}
+
+				// 🔹 Configure other services
+				try
+				{
+					ConfigureOtherServices(builder.Services);
+					Console.WriteLine("✅ Additional services configured");
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"❌ Additional services configuration failed: {ex.Message}");
+					throw;
+				}
+
+				Console.WriteLine("🔨 Building application...");
+				var app = builder.Build();
+				Console.WriteLine("✅ Application built successfully");
+
+				// 🔹 Configure pipeline
+				try
+				{
+					ConfigurePipeline(app);
+					Console.WriteLine("✅ Request pipeline configured");
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"❌ Pipeline configuration failed: {ex.Message}");
+					throw;
+				}
+
+				// 🔹 Initialize database (with timeout for Cloud Run)
+				try
+				{
+					Console.WriteLine("🗄️ Initializing database...");
+					await InitializeDatabase(app);
+					Console.WriteLine("✅ Database initialized successfully");
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"⚠️ Database initialization failed (continuing): {ex.Message}");
+					// Don't throw - let the app start even if DB init fails
+				}
+
+				Console.WriteLine($"🎉 Application starting on port: {port}");
+				Console.WriteLine($"🌐 Health endpoint: http://0.0.0.0:{port}/health");
+				
+				app.Run();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"💥 Application failed to start: {ex.Message}");
+				Console.WriteLine($"📋 Stack trace: {ex.StackTrace}");
+				Environment.Exit(1);
+			}
 		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"Application failed to start: {ex.Message}");
-			Console.WriteLine($"Stack trace: {ex.StackTrace}");
-			throw;
-		}
-	}
-
 		private static string ProcessConnectionString(IConfiguration configuration)
 		{
 			var connectionString = configuration.GetConnectionString("DefaultConnection");
 
 			if (string.IsNullOrEmpty(connectionString))
 			{
-				throw new InvalidOperationException("Connection string is not configured.");
+				throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 			}
 
 			// Replace environment variable placeholders
@@ -118,6 +188,7 @@ namespace AssetManagementSystem.PL
 				.Replace("${DB_USER}", Environment.GetEnvironmentVariable("DB_USER") ?? "admin")
 				.Replace("${DB_PASSWORD}", Environment.GetEnvironmentVariable("DB_PASSWORD") ?? throw new InvalidOperationException("DB_PASSWORD environment variable is required"));
 
+			Console.WriteLine($"🔗 Connection string configured for server: {Environment.GetEnvironmentVariable("DB_SERVER") ?? "default"}");
 			return connectionString;
 		}
 		private static void ConfigureEmailService(WebApplicationBuilder builder)
@@ -230,31 +301,42 @@ namespace AssetManagementSystem.PL
 		// 🔹 Add Health Checks services
 		services.AddHealthChecks();
 	}
-
 	private static void ConfigurePipeline(WebApplication app)
+	{
+		app.UseSession();
+
+		if (!app.Environment.IsDevelopment())
 		{
-			app.UseSession();
-
-			if (!app.Environment.IsDevelopment())
-			{
-				app.UseExceptionHandler("/Home/Error");
-				app.UseHsts(); // 🔹 Add HSTS for security
-			}
-
-			app.UseStaticFiles();
-			app.UseRouting();
-			app.UseAuthentication();
-			app.UseAuthorization();
-
-			// 🔹 Add health check endpoint (this will now work)
-			app.MapHealthChecks("/health");
-
-			app.MapControllers();
-			app.MapStaticAssets();
-			app.MapControllerRoute(
-				name: "default",
-				pattern: "{controller=Auth}/{action=Login}/{id?}");
+			app.UseExceptionHandler("/Home/Error");
+			app.UseHsts();
 		}
+		else
+		{
+			app.UseDeveloperExceptionPage();
+		}
+
+		app.UseStaticFiles();
+		app.UseRouting();
+		app.UseAuthentication();
+		app.UseAuthorization();
+
+		// Health check endpoint
+		app.MapHealthChecks("/health");
+
+		// Add a simple status endpoint for testing
+		app.MapGet("/status", () => new { 
+			Status = "Running", 
+			Timestamp = DateTime.UtcNow, 
+			Environment = app.Environment.EnvironmentName,
+			Port = Environment.GetEnvironmentVariable("PORT") ?? "8080"
+		});
+
+		app.MapControllers();
+		app.MapStaticAssets();
+		app.MapControllerRoute(
+			name: "default",
+			pattern: "{controller=Auth}/{action=Login}/{id?}");
+	}
 
 		private static async Task InitializeDatabase(WebApplication app)
 		{
