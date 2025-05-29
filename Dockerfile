@@ -1,7 +1,10 @@
 # Use the official .NET 9 runtime as the base image
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
+
+# Cloud Run expects port 8080, but also support port 80 for other deployments
 EXPOSE 80
+EXPOSE 8080
 
 # Create a non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
@@ -39,9 +42,10 @@ COPY --from=publish /app/publish .
 RUN mkdir -p /app/wwwroot/files /app/logs && \
     chown -R appuser:appuser /app
 
-# Set environment variables for App Runner
+# Set environment variables for Cloud Run and other platforms
 ENV ASPNETCORE_ENVIRONMENT=Production
-ENV ASPNETCORE_URLS=http://+:80
+ENV ASPNETCORE_URLS=http://+:8080
+ENV PORT=8080
 ENV DOTNET_RUNNING_IN_CONTAINER=true
 ENV DOTNET_USE_POLLING_FILE_WATCHER=true
 
@@ -50,6 +54,6 @@ USER appuser
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:80/health || exit 1
+  CMD curl -f http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "AssetManagementSystem.PL.dll"]
