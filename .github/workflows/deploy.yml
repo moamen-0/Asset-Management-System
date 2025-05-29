@@ -101,181 +101,33 @@ jobs:
         cd ..
         echo "Deployment package created: $(ls -lh deployment.zip)"
 
-    - name: Check and install .NET 9 runtime
+    - name: Setup infrastructure
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
         key: ${{ secrets.AWS_EC2_KEY }}
         timeout: 600s
         script: |
-          echo "Checking .NET installation..."
+          echo "🔧 Setting up infrastructure..."
           
-          # Function to check if .NET 9 is installed (improved version)
-          check_dotnet() {
-            if command -v dotnet &> /dev/null; then
-              echo "dotnet command found"
-              # Check for any .NET 9.x runtime
-              if dotnet --list-runtimes | grep -q "Microsoft.AspNetCore.App 9.0"; then
-                echo "ASP.NET Core 9.0 runtime found"
-                return 0
-              elif dotnet --list-runtimes | grep -q "Microsoft.NETCore.App 9.0"; then
-                echo ".NET 9.0 runtime found"
-                return 0
-              else
-                echo "No .NET 9.x runtime found"
-                return 1
-              fi
-            else
-              echo "dotnet command not found"
-              return 1
-            fi
-          }
-          
-          # Check current .NET installation
-          echo "Current .NET installation status:"
-          if command -v dotnet &> /dev/null; then
-            dotnet --version || echo "Failed to get .NET version"
-            dotnet --list-runtimes || echo "Failed to list runtimes"
-          else
-            echo "dotnet command not available"
-          fi
-          
-          # Check if .NET 9 is already installed
-          if check_dotnet; then
-            echo "✅ .NET 9 runtime is already installed"
-            dotnet --version
-            dotnet --list-runtimes
-          else
-            echo "⚠️  .NET 9 runtime not found. Installing..."
-            
-            # Skip package update and problematic dependencies
-            echo "Skipping system package update to avoid conflicts..."
-            
-            # Only install wget if absolutely necessary (skip curl due to conflicts)
-            if ! command -v wget &> /dev/null; then
-              echo "Installing wget..."
-              sudo yum install -y wget --skip-broken || echo "wget installation failed, continuing..."
-            fi
-            
-            # Use Microsoft's official installation method for Amazon Linux
-            echo "Adding Microsoft package repository..."
-            if [ ! -f /etc/yum.repos.d/microsoft-prod.repo ]; then
-              sudo rpm -Uvh https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm || echo "Repository already exists"
-            fi            echo "Installing .NET 9 ASP.NET Core Runtime..."
-            sudo yum install -y aspnetcore-runtime-9.0 --skip-broken || {
-              echo "Package manager installation failed, trying dotnet-install script..."
-              
-              # Remove any existing broken installation
-              rm -rf $HOME/.dotnet
-              
-              # Fallback to dotnet-install script - install both runtime and aspnetcore
-              echo "Downloading .NET 9 installation script..."
-              if command -v curl &> /dev/null; then
-                # Install .NET runtime first
-                echo "Installing .NET 9 runtime..."
-                curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime dotnet --install-dir $HOME/.dotnet --verbose
-                # Then install ASP.NET Core runtime
-                echo "Installing ASP.NET Core 9 runtime..."
-                curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime aspnetcore --install-dir $HOME/.dotnet --verbose
-              elif command -v wget &> /dev/null; then
-                # Install .NET runtime first
-                echo "Installing .NET 9 runtime..."
-                wget -qO- https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime dotnet --install-dir $HOME/.dotnet --verbose
-                # Then install ASP.NET Core runtime
-                echo "Installing ASP.NET Core 9 runtime..."
-                wget -qO- https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --runtime aspnetcore --install-dir $HOME/.dotnet --verbose
-              else
-                echo "Neither curl nor wget available for downloading .NET installer"
-                exit 1
-              fi
-              
-              # Add .NET to PATH for current session
-              export PATH="$HOME/.dotnet:$PATH"
-              export DOTNET_ROOT="$HOME/.dotnet"
-              
-              # Add .NET to PATH permanently for ec2-user
-              echo 'export PATH="$HOME/.dotnet:$PATH"' >> ~/.bashrc
-              echo 'export DOTNET_ROOT="$HOME/.dotnet"' >> ~/.bashrc
-                # Create system-wide dotnet symlink
-              sudo ln -sf $HOME/.dotnet/dotnet /usr/local/bin/dotnet || echo "Failed to create symlink at /usr/local/bin"
-              sudo ln -sf $HOME/.dotnet/dotnet /usr/bin/dotnet || echo "Failed to create symlink at /usr/bin"
-            }
-            
-            # Wait a moment for installation to complete
-            sleep 3
-            
-            # Refresh PATH
-            export PATH="$HOME/.dotnet:/usr/local/bin:$PATH"
-            hash -r
-              # Verify installation
-            echo "Verifying .NET installation..."
-            if command -v dotnet &> /dev/null; then
-              echo "✅ dotnet command is available"
-              echo "dotnet version: $(dotnet --version 2>&1 || echo 'version check failed')"
-              echo "dotnet runtimes: $(dotnet --list-runtimes 2>&1 || echo 'runtime list failed')"
-              
-              # Check if the dotnet executable is actually working
-              if dotnet --info >/dev/null 2>&1; then
-                echo "✅ dotnet executable is working properly"
-              else
-                echo "⚠️ dotnet executable found but not working properly"
-              fi
-              
-              # Final check
-              if check_dotnet; then
-                echo "✅ .NET 9 runtime installed successfully"
-              else
-                echo "⚠️  .NET 9 runtime installation may be incomplete, but continuing..."
-              fi
-            else
-              echo "❌ dotnet command still not available after installation"
-              echo "Checking for dotnet in common locations..."
-              ls -la /usr/bin/dotnet /usr/local/bin/dotnet $HOME/.dotnet/dotnet 2>/dev/null || echo "dotnet not found in common locations"
-              
-              # Try to add direct path and test
-              if [ -f "$HOME/.dotnet/dotnet" ]; then
-                echo "Found dotnet at $HOME/.dotnet/dotnet, testing directly:"
-                $HOME/.dotnet/dotnet --version || echo "Direct execution failed"
-              fi
-              
-              exit 1
-            fi
-          fi
-
-    - name: Setup nginx
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
-        key: ${{ secrets.AWS_EC2_KEY }}
-        timeout: 300s
-        script: |
-          echo "Setting up nginx..."
+          # Create app directory structure
+          sudo mkdir -p /var/www/assetmanagement
+          sudo chown $USER:$USER /var/www/assetmanagement
           
           # Install nginx if not present
           if ! command -v nginx &> /dev/null; then
             echo "Installing nginx..."
             sudo yum update -y
             sudo amazon-linux-extras install nginx1 -y || sudo yum install nginx -y
-          else
-            echo "nginx is already installed"
           fi
           
-          # Copy nginx configuration
+          # Configure nginx
           sudo tee /etc/nginx/conf.d/assetmanagement.conf > /dev/null <<EOF
           server {
               listen 80;
               server_name ${{ secrets.AWS_EC2_HOST }};
               
-              # Security headers
-              add_header X-Frame-Options "SAMEORIGIN" always;
-              add_header X-XSS-Protection "1; mode=block" always;
-              add_header X-Content-Type-Options "nosniff" always;
-              add_header Referrer-Policy "no-referrer-when-downgrade" always;
-              add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
-              
-              # Asset Management System
               location / {
                   proxy_pass http://127.0.0.1:5000;
                   proxy_http_version 1.1;
@@ -292,203 +144,28 @@ jobs:
                   proxy_send_timeout 300;
               }
               
-              # Static files
               location /files/ {
                   alias /var/www/assetmanagement/files/;
                   expires 30d;
                   add_header Cache-Control "public, immutable";
               }
-              
-              # Health check
-              location /nginx-health {
-                  access_log off;
-                  return 200 "healthy\n";
-                  add_header Content-Type text/plain;
-              }
           }
           EOF
           
-          # Test nginx configuration
           sudo nginx -t
-          
-          # Enable and start nginx
           sudo systemctl enable nginx
           sudo systemctl start nginx
           
-          echo "✅ nginx configured and started"
+          echo "✅ Infrastructure setup complete"
 
-    - name: Setup systemd service
+    - name: Install .NET Runtime
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
         key: ${{ secrets.AWS_EC2_KEY }}
+        timeout: 600s
         script: |
-          echo "Setting up systemd service..."
-            # Create systemd service file
-          sudo tee /etc/systemd/system/assetmanagement.service > /dev/null <<EOF
-          [Unit]
-          Description=Asset Management System - ASP.NET Core Application
-          After=network.target
-          StartLimitIntervalSec=0
-          
-          [Service]
-          Type=notify
-          User=ec2-user
-          Group=ec2-user
-          WorkingDirectory=/var/www/assetmanagement/current
-          ExecStart=/home/ec2-user/.dotnet/dotnet AssetManagementSystem.PL.dll
-          ExecReload=/bin/kill -HUP \$MAINPID
-          Restart=always
-          RestartSec=5
-          TimeoutStopSec=90
-          SyslogIdentifier=assetmanagement
-          Environment=ASPNETCORE_ENVIRONMENT=Production
-          Environment=DOTNET_ROOT=/home/ec2-user/.dotnet
-          Environment=PATH=/home/ec2-user/.dotnet:/usr/local/bin:/usr/bin:/bin
-          Environment=ASPNETCORE_URLS=http://0.0.0.0:5000
-          
-          # Security settings
-          NoNewPrivileges=true
-          PrivateTmp=true
-          ProtectSystem=strict
-          ReadWritePaths=/var/www/assetmanagement
-          ReadWritePaths=/tmp
-          ReadWritePaths=/var/log
-          
-          # Resource limits
-          LimitNOFILE=65536
-          LimitNPROC=4096
-          
-          # Logging
-          StandardOutput=journal
-          StandardError=journal
-          
-          [Install]
-          WantedBy=multi-user.target
-          EOF
-          
-          # Create log directory
-          sudo mkdir -p /var/log/assetmanagement
-          sudo chown ec2-user:ec2-user /var/log/assetmanagement
-          
-          # Reload systemd
-          sudo systemctl daemon-reload
-          sudo systemctl enable assetmanagement
-          
-          echo "✅ systemd service configured"
-
-    - name: Stop existing application
-      uses: appleboy/ssh-action@v1.0.3
-      continue-on-error: true
-      with:
-        host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
-        key: ${{ secrets.AWS_EC2_KEY }}
-        script: |
-          echo "Stopping existing application..."
-          sudo systemctl stop assetmanagement || echo "Service was not running"
-          
-          # Kill any remaining processes
-          sudo pkill -f "AssetManagementSystem.PL" || echo "No processes to kill"
-          
-          # Wait for processes to stop
-          sleep 5
-
-    - name: Backup current version
-      uses: appleboy/ssh-action@v1.0.3
-      continue-on-error: true
-      with:
-        host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
-        key: ${{ secrets.AWS_EC2_KEY }}
-        script: |
-          # Create app directory if it doesn't exist
-          sudo mkdir -p /var/www/assetmanagement
-          sudo chown ec2-user:ec2-user /var/www/assetmanagement
-          
-          # Backup current version if exists
-          if [ -d "/var/www/assetmanagement/current" ]; then
-            BACKUP_NAME="backup_$(date +%Y%m%d_%H%M%S)"
-            echo "Creating backup: $BACKUP_NAME"
-            mv /var/www/assetmanagement/current /var/www/assetmanagement/$BACKUP_NAME
-            
-            # Keep only last 3 backups
-            cd /var/www/assetmanagement
-            ls -t backup_* 2>/dev/null | tail -n +4 | xargs rm -rf
-          fi
-
-    - name: Deploy application
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
-        key: ${{ secrets.AWS_EC2_KEY }}
-        source: "deployment.zip"
-        target: "/tmp/"
-
-    - name: Extract and configure application
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
-        key: ${{ secrets.AWS_EC2_KEY }}
-        script: |
-          cd /var/www/assetmanagement
-          
-          # Extract application
-          echo "Extracting application..."
-          unzip -o /tmp/deployment.zip -d current/
-          rm /tmp/deployment.zip
-          
-          # Set permissions
-          chmod +x current/AssetManagementSystem.PL
-          
-          # Create necessary directories
-          mkdir -p current/wwwroot/files
-          mkdir -p current/Logs
-          chmod 755 current/wwwroot/files
-          
-          # Create symbolic link for file storage
-          if [ ! -L /var/www/assetmanagement/files ]; then
-            ln -sf /var/www/assetmanagement/current/wwwroot/files /var/www/assetmanagement/files
-          fi
-          
-          # Set ownership
-          chown -R ec2-user:ec2-user /var/www/assetmanagement/
-          
-          echo "Application extracted and configured successfully"
-
-    - name: Run database migrations
-      uses: appleboy/ssh-action@v1.0.3
-      continue-on-error: true
-      with:
-        host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
-        key: ${{ secrets.AWS_EC2_KEY }}
-        script: |
-          cd /var/www/assetmanagement/current
-          
-          # Set environment variables
-          export ASPNETCORE_ENVIRONMENT=Production
-          
-          # Try to run migrations if the command exists
-          echo "Checking for database migrations..."
-          if dotnet ef --help > /dev/null 2>&1; then
-            echo "Running database migrations..."
-            dotnet ef database update || echo "No migrations to run or EF tools not available"
-          else
-            echo "EF Core tools not available, skipping migrations"
-          fi
-
-    - name: Install .NET and Start application
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
-        key: ${{ secrets.AWS_EC2_KEY }}
-        timeout: 300s
-        command_timeout: 15m        script: |
           echo "🔍 Checking current .NET installation status..."
           
           # Check if dotnet executable exists and has content
@@ -552,10 +229,8 @@ jobs:
               exit 1
             fi
             
-            # Make executable
+            # Make executable and create symlinks
             chmod +x "$DOTNET_ROOT/dotnet"
-            
-            # Create symlinks
             sudo ln -sf "$DOTNET_ROOT/dotnet" /usr/local/bin/dotnet
             sudo ln -sf "$DOTNET_ROOT/dotnet" /usr/bin/dotnet
             
@@ -565,9 +240,6 @@ jobs:
           
           # Final verification
           echo "🔍 Final .NET verification..."
-          echo "PATH: $PATH"
-          echo "DOTNET_ROOT: $DOTNET_ROOT"
-          
           if command -v dotnet &> /dev/null; then
             echo "✅ .NET is available: $(dotnet --version)"
             echo "Available runtimes:"
@@ -576,7 +248,88 @@ jobs:
             echo "❌ .NET command still not available"
             exit 1
           fi
+
+    - name: Stop existing application
+      uses: appleboy/ssh-action@v1.0.3
+      continue-on-error: true
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        script: |
+          echo "Stopping existing application..."
+          sudo systemctl stop assetmanagement 2>/dev/null || echo "Service was not running"
+          sudo pkill -f "AssetManagementSystem.PL" 2>/dev/null || echo "No processes to kill"
+          sleep 5
+
+    - name: Backup current version
+      uses: appleboy/ssh-action@v1.0.3
+      continue-on-error: true
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        script: |
+          # Backup current version if exists
+          if [ -d "/var/www/assetmanagement/current" ]; then
+            BACKUP_NAME="backup_$(date +%Y%m%d_%H%M%S)"
+            echo "Creating backup: $BACKUP_NAME"
+            mv /var/www/assetmanagement/current /var/www/assetmanagement/$BACKUP_NAME
+            
+            # Keep only last 3 backups
+            cd /var/www/assetmanagement
+            ls -t backup_* 2>/dev/null | tail -n +4 | xargs rm -rf || true
+          fi
+
+    - name: Deploy application
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        source: "deployment.zip"
+        target: "/tmp/"
+
+    - name: Extract and configure application
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        script: |
+          cd /var/www/assetmanagement
           
+          # Extract application
+          echo "Extracting application..."
+          unzip -o /tmp/deployment.zip -d current/
+          rm /tmp/deployment.zip
+          
+          # Set permissions
+          chmod +x current/AssetManagementSystem.PL
+          
+          # Create necessary directories
+          mkdir -p current/wwwroot/files
+          mkdir -p current/Logs
+          chmod 755 current/wwwroot/files
+          
+          # Create symbolic link for file storage
+          if [ ! -L /var/www/assetmanagement/files ]; then
+            ln -sf /var/www/assetmanagement/current/wwwroot/files /var/www/assetmanagement/files
+          fi
+          
+          # Set ownership
+          chown -R $USER:$USER /var/www/assetmanagement/
+          
+          echo "Application extracted and configured successfully"
+
+    - name: Start application
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.AWS_EC2_HOST }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
+        key: ${{ secrets.AWS_EC2_KEY }}
+        timeout: 300s
+        script: |
           # Stop and disable any existing service
           sudo systemctl stop assetmanagement 2>/dev/null || true
           sudo systemctl disable assetmanagement 2>/dev/null || true
@@ -595,8 +348,8 @@ jobs:
 
           [Service]
           Type=notify
-          User=ec2-user
-          Group=ec2-user
+          User=$USER
+          Group=$USER
           WorkingDirectory=/var/www/assetmanagement/current
           ExecStart=$DOTNET_PATH AssetManagementSystem.PL.dll
           Restart=always
@@ -663,7 +416,7 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
         key: ${{ secrets.AWS_EC2_KEY }}
         script: |
           echo "Performing comprehensive health checks..."
@@ -671,37 +424,6 @@ jobs:
           # Wait for application to be fully ready
           echo "Waiting for application to initialize..."
           sleep 15
-          
-          # Install and configure Nginx if not present
-          if ! command -v nginx &> /dev/null; then
-            echo "📦 Installing Nginx..."
-            sudo yum install -y nginx
-            sudo systemctl enable nginx
-            
-            # Create basic nginx configuration
-            sudo tee /etc/nginx/conf.d/assetmanagement.conf > /dev/null <<EOF
-          server {
-              listen 80;
-              server_name _;
-              
-              location / {
-                  proxy_pass http://localhost:5000;
-                  proxy_set_header Host \$host;
-                  proxy_set_header X-Real-IP \$remote_addr;
-                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto \$scheme;
-              }
-              
-              location /health {
-                  proxy_pass http://localhost:5000/health;
-                  proxy_set_header Host \$host;
-              }
-          }
-          EOF
-            
-            sudo systemctl start nginx
-            echo "✅ Nginx installed and configured"
-          fi
           
           # Ensure nginx is running
           sudo systemctl start nginx || true
@@ -793,7 +515,7 @@ jobs:
       continue-on-error: true
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
+        username: ${{ secrets.AWS_EC2_USERNAME }}
         key: ${{ secrets.AWS_EC2_KEY }}
         script: |
           # Clean up old backups (keep only 3 most recent)
