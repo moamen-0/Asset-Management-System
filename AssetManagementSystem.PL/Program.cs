@@ -18,22 +18,44 @@ namespace AssetManagementSystem.PL
 {
 	public class Program
 	{
-		public static async Task Main(string[] args)
+	public static async Task Main(string[] args)
+	{
+		try
 		{
-			DotNetEnv.Env.Load();			var builder = WebApplication.CreateBuilder(args);
+			// Load environment variables from .env file if it exists
+			try
+			{
+				DotNetEnv.Env.Load();
+			}
+			catch
+			{
+				// .env file might not exist in Cloud Run, ignore the error
+			}
+
+			var builder = WebApplication.CreateBuilder(args);
 
 			// 🔹 Configure port for Cloud Run (must be done before building)
 			var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+			Console.WriteLine($"Configuring application to listen on port: {port}");
 			builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 			// 🔹 Add environment variables support
 			builder.Configuration.AddEnvironmentVariables();
 
+			// 🔹 Configure logging for better debugging
+			builder.Logging.ClearProviders();
+			builder.Logging.AddConsole();
+			builder.Logging.SetMinimumLevel(LogLevel.Information);
+
+			Console.WriteLine("Starting service configuration...");
+
 			// 🔹 Process connection string with environment variables
 			var connectionString = ProcessConnectionString(builder.Configuration);
+			Console.WriteLine("Database connection string processed successfully");
 
 			// 🔹 Configure Email with environment variables
 			ConfigureEmailService(builder);
+			Console.WriteLine("Email service configured successfully");
 
 			// Add services to the container
 			builder.Services.AddControllersWithViews();
@@ -69,8 +91,16 @@ namespace AssetManagementSystem.PL
 			// 🔹 Initialize database
 			await InitializeDatabase(app);
 
+			Console.WriteLine($"Application starting on port: {port}");
 			app.Run();
 		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Application failed to start: {ex.Message}");
+			Console.WriteLine($"Stack trace: {ex.StackTrace}");
+			throw;
+		}
+	}
 
 		private static string ProcessConnectionString(IConfiguration configuration)
 		{
@@ -197,10 +227,11 @@ namespace AssetManagementSystem.PL
 			{
 				options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 			});
+		// 🔹 Add Health Checks services
+		services.AddHealthChecks();
+	}
 
-			// 🔹 Add Health Checks services
-			services.AddHealthChecks();
-		}		private static void ConfigurePipeline(WebApplication app)
+	private static void ConfigurePipeline(WebApplication app)
 		{
 			app.UseSession();
 
