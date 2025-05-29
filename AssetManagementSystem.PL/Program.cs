@@ -57,13 +57,16 @@ namespace AssetManagementSystem.PL
             });
 
             // Configure Services and Repositories
-            builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
-            builder.Services.AddTransient<IAssetService, AssetService>();
-            builder.Services.AddTransient<IAssetRepository, AssetRepository>();
-            builder.Services.AddTransient<IFacilityService, FacilityService>();
-            builder.Services.AddTransient<IAssetTransferService, AssetTransferService>();
-            builder.Services.AddTransient<INotificationService, NotificationService>();
-            builder.Services.AddScoped<UserManager<User>>();
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddScoped<IAssetService, AssetService>();
+            builder.Services.AddScoped<IAssetRepository, AssetRepository>();
+            builder.Services.AddScoped<IFacilityService, FacilityService>();
+            builder.Services.AddScoped<IAssetTransferService, AssetTransferService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
+			builder.Services.AddScoped<IUserService, UserService>();
+			builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+			builder.Services.AddScoped<UserManager<User>>();
             builder.Services.AddScoped<SignInManager<User>>();
 
             // Configure Session
