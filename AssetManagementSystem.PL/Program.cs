@@ -54,19 +54,34 @@ namespace AssetManagementSystem.PL
                 options.AccessDeniedPath = "/Auth/AccessDenied";
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
                 options.SlidingExpiration = true;
-            });
-
-            // Configure Services and Repositories
+            });            // Configure Services and Repositories
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-            builder.Services.AddScoped<IAssetService, AssetService>();
+            builder.Services.AddScoped<IEmailSenderService, EmailService>();
             builder.Services.AddScoped<IAssetRepository, AssetRepository>();
-            builder.Services.AddScoped<IFacilityService, FacilityService>();
+            builder.Services.AddScoped<IAssetService, AssetService>();
+            builder.Services.AddScoped<IDisposalRepository, DisposalRepository>();
+            builder.Services.AddScoped<IDisposalService, DisposalService>();
+            builder.Services.AddScoped<IAssetTransferRepository, AssetTransferRepository>();
             builder.Services.AddScoped<IAssetTransferService, AssetTransferService>();
+            builder.Services.AddScoped<IChangeLogService, ChangeLogService>();
+            builder.Services.AddScoped<IChangeLogRepository, ChangeLogRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IFacilityRepository, FacilityRepository>();
+            builder.Services.AddScoped<IFacilityService, FacilityService>();
+            builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+            builder.Services.AddScoped<IFloorRepository, FloorRepository>();
+            builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+            builder.Services.AddScoped<IBuildingRepository, BuildingRepository>();
+            builder.Services.AddScoped<IDisbursementRepository, DisbursementRepository>();
+            builder.Services.AddScoped<IStoreKeeperRepository, StoreKeeperRepository>();
+            builder.Services.AddScoped<IDisbursementService, DisbursementService>();
+            builder.Services.AddScoped<IReturnDocumentRepository, ReturnDocumentRepository>();
+            builder.Services.AddScoped<IReturnDocumentService, ReturnDocumentService>();
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
-			builder.Services.AddScoped<IUserService, UserService>();
-			builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-			builder.Services.AddScoped<UserManager<User>>();
+            builder.Services.AddScoped<UserManager<User>>();
             builder.Services.AddScoped<SignInManager<User>>();
 
             // Configure Session
