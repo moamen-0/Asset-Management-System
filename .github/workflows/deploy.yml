@@ -92,7 +92,8 @@ jobs:
             "Account": "momenhassan7240@gmail.com",
             "Password": "${{ secrets.EMAIL_PASSWORD }}",
             "Security": true
-          }        }
+          }
+        }
         EOF
         
         # Create deployment archive
@@ -149,7 +150,8 @@ jobs:
             # Create system-wide dotnet symlink
             sudo ln -sf $HOME/.dotnet/dotnet /usr/local/bin/dotnet
             
-            # Verify installation            if check_dotnet; then
+            # Verify installation
+            if check_dotnet; then
               echo "✅ .NET 9 runtime installed successfully"
               dotnet --version
               dotnet --list-runtimes
@@ -385,7 +387,8 @@ jobs:
         key: ${{ secrets.AWS_EC2_KEY }}
         script: |
           cd /var/www/assetmanagement/current
-            # Set environment variables
+          
+          # Set environment variables
           export ASPNETCORE_ENVIRONMENT=Production
           
           # Try to run migrations if the command exists
@@ -478,7 +481,8 @@ jobs:
             echo "✅ Application started successfully"
             sudo systemctl status assetmanagement --no-pager -l
           else
-            echo "❌ Failed to start application"            echo "Service status:"
+            echo "❌ Failed to start application"
+            echo "Service status:"
             sudo systemctl status assetmanagement --no-pager -l
             echo "Recent logs:"
             sudo journalctl -u assetmanagement --no-pager -l -n 30
