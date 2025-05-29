@@ -10,101 +10,146 @@ using AssetManagementSystem.DAL.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using NETCore.MailKit.Extensions;
-using NETCore.MailKit.Infrastructure.Internal;
 using System.Text.Json.Serialization;
 
 namespace AssetManagementSystem.PL
 {
-	public class Program
-	{
-		private static bool _isInitialized = false;
-		private static string _initStatus = "Starting...";
+    public class Program
+    {
+        private static bool _isInitialized = false;
+        private static string _initStatus = "Starting...";
 
-		public static void Main(string[] args)
-		{
-			// Absolutely minimal startup for Cloud Run
-			var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-			Console.WriteLine($"🚀 Quick start on port {port}");
+        public static void Main(string[] args)
+        {
+            var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+            Console.WriteLine($"🚀 Starting Asset Management System on port {port}");
 
-			var builder = WebApplication.CreateBuilder(args);
-			
-			// Essential configuration only
-			builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
-			builder.Configuration.AddEnvironmentVariables();
-			
-			// Minimal services
-			builder.Services.AddHealthChecks();
-			builder.Services.AddControllers();
+            var builder = WebApplication.CreateBuilder(args);
+            
+            // Configure for Cloud Run
+            builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+            builder.Configuration.AddEnvironmentVariables();
+            DotNetEnv.Env.Load();
 
-			var app = builder.Build();
+            // Configure database connection
+            var connectionString = ProcessConnectionString(builder.Configuration);
+            builder.Services.AddDbContext<AssetManagementDbContext>(options =>
+                options.UseSqlServer(connectionString));
 
-			// Immediate health endpoints
-			app.MapHealthChecks("/health");
-			app.MapGet("/status", () => new { 
-				Status = "Running", 
-				Initialized = _isInitialized,
-				InitStatus = _initStatus,
-				Port = port,
-				Timestamp = DateTime.UtcNow 
-			});
-			app.MapGet("/ready", () => Results.Ok($"Ready - Init: {_isInitialized}"));
+            // Configure Identity
+            builder.Services.AddIdentity<User, IdentityRole>(options =>
+            {
+                options.Password.RequireDigit = false;
+                options.Password.RequiredLength = 3;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireLowercase = false;
+            })
+            .AddEntityFrameworkStores<AssetManagementDbContext>()
+            .AddDefaultTokenProviders();
 
-			// Start background initialization AFTER app is listening
-			_ = Task.Run(async () =>
-			{
-				await Task.Delay(2000); // Wait for app to be fully listening
-				await InitializeFullApplication(app, builder.Configuration);
-			});
+            // Configure Services and Repositories
+            builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddTransient<IAssetService, AssetService>();
+            builder.Services.AddTransient<IAssetRepository, AssetRepository>();
+            builder.Services.AddTransient<IFacilityService, FacilityService>();
+            builder.Services.AddTransient<IAssetTransferService, AssetTransferService>();
+            builder.Services.AddTransient<INotificationService, NotificationService>();
+            builder.Services.AddScoped<UserManager<User>>();
+            builder.Services.AddScoped<SignInManager<User>>();
 
-			Console.WriteLine($"✅ Listening on port {port}");
-			app.Run();
-		}
+            // Configure Session
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
 
-		private static async Task InitializeFullApplication(WebApplication app, IConfiguration configuration)
-		{
-			try
-			{
-				_initStatus = "Loading environment...";
-				DotNetEnv.Env.Load();
+            // Add services for MVC
+            builder.Services.AddControllersWithViews().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+            });
 
-				_initStatus = "Configuring database...";
-				var connectionString = ProcessConnectionString(configuration);
-				
-				_initStatus = "Setting up services...";
-				// Here we would need to reconfigure services, but for now just test connection
-				
-				_initStatus = "Testing database connection...";
-				await TestDatabaseConnection(connectionString);
-				
-				_initStatus = "Database initialization complete";
-				_isInitialized = true;
-				
-				Console.WriteLine("✅ Full application initialized");
-			}
-			catch (Exception ex)
-			{
-				_initStatus = $"Initialization failed: {ex.Message}";
-				Console.WriteLine($"⚠️ Background init failed: {ex.Message}");
-			}
-		}
+            // Add MemoryCache for performance
+            builder.Services.AddMemoryCache();
 
-		private static async Task TestDatabaseConnection(string connectionString)
-		{
-			using var connection = new Microsoft.Data.SqlClient.SqlConnection(connectionString);
-			await connection.OpenAsync();
-			Console.WriteLine("✅ Database connection test successful");
-		}
+            // Health checks
+            builder.Services.AddHealthChecks();
 
-		private static string ProcessConnectionString(IConfiguration configuration)
-		{
-			var connectionString = "Server=${DB_SERVER};Database=${DB_NAME};User Id=${DB_USER};Password=${DB_PASSWORD};Trust Server Certificate=true;";
-			
-			return connectionString
-				.Replace("${DB_SERVER}", Environment.GetEnvironmentVariable("DB_SERVER") ?? "assetmanagement-db.c5ukygaowo6o.eu-north-1.rds.amazonaws.com")
-				.Replace("${DB_NAME}", Environment.GetEnvironmentVariable("DB_NAME") ?? "AssetManagementDB")
-				.Replace("${DB_USER}", Environment.GetEnvironmentVariable("DB_USER") ?? "admin")
-				.Replace("${DB_PASSWORD}", Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "asset1234");
-		}
-	}
+            var app = builder.Build();
+
+            // Health endpoints (for Cloud Run)
+            app.MapHealthChecks("/health");
+            app.MapGet("/status", () => new { 
+                Status = "Running",
+                Initialized = _isInitialized,
+                InitStatus = _initStatus,
+                Port = port,
+                Timestamp = DateTime.UtcNow 
+            });
+            app.MapGet("/ready", () => Results.Ok($"Ready - Init: {_isInitialized}"));
+
+            // Configure the HTTP request pipeline
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseExceptionHandler("/Home/Error");
+                app.UseHsts();
+            }
+
+            app.UseStaticFiles();
+            app.UseRouting();
+            app.UseSession();
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            // Configure routing
+            app.MapControllerRoute(
+                name: "default",
+                pattern: "{controller=Auth}/{action=Login}/{id?}");
+
+            // Background initialization for database seeding
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(2000);
+                await InitializeDatabase(app);
+            });
+
+            Console.WriteLine($"✅ Listening on port {port}");
+            app.Run();
+        }
+
+        private static async Task InitializeDatabase(WebApplication app)
+        {
+            try
+            {
+                _initStatus = "Initializing database...";
+                using var scope = app.Services.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<AssetManagementDbContext>();
+                
+                await context.Database.EnsureCreatedAsync();
+                _initStatus = "Database initialized successfully";
+                _isInitialized = true;
+                
+                Console.WriteLine("✅ Database initialization completed");
+            }
+            catch (Exception ex)
+            {
+                _initStatus = $"Database initialization failed: {ex.Message}";
+                Console.WriteLine($"⚠️ Database init failed: {ex.Message}");
+            }
+        }
+
+        private static string ProcessConnectionString(IConfiguration configuration)
+        {
+            var connectionString = "Server=${DB_SERVER};Database=${DB_NAME};User Id=${DB_USER};Password=${DB_PASSWORD};Trust Server Certificate=true;";
+            
+            return connectionString
+                .Replace("${DB_SERVER}", Environment.GetEnvironmentVariable("DB_SERVER") ?? "assetmanagement-db.c5ukygaowo6o.eu-north-1.rds.amazonaws.com")
+                .Replace("${DB_NAME}", Environment.GetEnvironmentVariable("DB_NAME") ?? "AssetManagementDB")
+                .Replace("${DB_USER}", Environment.GetEnvironmentVariable("DB_USER") ?? "admin")
+                .Replace("${DB_PASSWORD}", Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "asset1234");
+        }
+    }
 }
