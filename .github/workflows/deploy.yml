@@ -95,11 +95,12 @@ jobs:
           }
         }
         EOF
-        
-        # Create deployment archive
+          # Create deployment archive
         zip -r ../deployment.zip .
         cd ..
-        echo "Deployment package created: $(ls -lh deployment.zip)"    - name: Check and install .NET 9 runtime
+        echo "Deployment package created: $(ls -lh deployment.zip)"
+
+    - name: Check and install .NET 9 runtime
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
@@ -393,10 +394,11 @@ jobs:
           echo "Checking for database migrations..."
           if dotnet ef --help > /dev/null 2>&1; then
             echo "Running database migrations..."
-            dotnet ef database update || echo "No migrations to run or EF tools not available"
-          else
+            dotnet ef database update || echo "No migrations to run or EF tools not available"          else
             echo "EF Core tools not available, skipping migrations"
-          fi    - name: Install .NET and Start application
+          fi
+
+    - name: Install .NET and Start application
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
@@ -485,10 +487,11 @@ jobs:
             echo "Checking dotnet availability:"
             which dotnet || echo "dotnet not found in PATH"
             dotnet --version || echo "dotnet version check failed"
-            echo "Checking application files:"
-            ls -la /var/www/assetmanagement/current/
+            echo "Checking application files:"            ls -la /var/www/assetmanagement/current/
             exit 1
-          fi    - name: Health check
+          fi
+
+    - name: Health check
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AWS_EC2_HOST }}
