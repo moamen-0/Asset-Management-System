@@ -138,6 +138,8 @@ For a typical small-medium application:
 ## 🎯 Next Steps After Deployment
 
 1. **Custom Domain**: Map your domain to Cloud Run
+   - 📖 **See**: `DOMAIN-MAPPING-GUIDE.md` for step-by-step instructions
+   - 🚀 **Quick Setup**: Run `./setup-domain.ps1` for automated setup
 2. **CDN**: Enable Cloud CDN for better performance
 3. **Monitoring**: Set up alerts and dashboards
 4. **Backup**: Configure automated database backups

@@ -66,7 +66,7 @@ $DB_USER = "admin"
 $DB_PASSWORD = "asset1234"
 $EMAIL_SENDER = "momenhassan7240@gmail.com"
 $EMAIL_ACCOUNT = "momenhassan7240@gmail.com"
-$EMAIL_PASSWORD = "edlp uhjb bkoz ejpc"
+$EMAIL_PASSWORD = "qebv vfcq ovof brjx"
 
 # Create the connection string
 $CONNECTION_STRING = "Server=$DB_SERVER;Database=$DB_NAME;User Id=$DB_USER;Password=$DB_PASSWORD;Encrypt=True;TrustServerCertificate=True;"

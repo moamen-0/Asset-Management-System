@@ -25,7 +25,7 @@ namespace AssetManagementSystem.PL
             Console.WriteLine($"🚀 Starting Asset Management System on port {port}");
 
             var builder = WebApplication.CreateBuilder(args);
-            
+
             // Configure for Cloud Run
             builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
             builder.Configuration.AddEnvironmentVariables();
@@ -108,12 +108,13 @@ namespace AssetManagementSystem.PL
 
             // Health endpoints (for Cloud Run)
             app.MapHealthChecks("/health");
-            app.MapGet("/status", () => new { 
+            app.MapGet("/status", () => new
+            {
                 Status = "Running",
                 Initialized = _isInitialized,
                 InitStatus = _initStatus,
                 Port = port,
-                Timestamp = DateTime.UtcNow 
+                Timestamp = DateTime.UtcNow
             });
             app.MapGet("/ready", () => Results.Ok($"Ready - Init: {_isInitialized}"));
 
@@ -154,11 +155,11 @@ namespace AssetManagementSystem.PL
                 _initStatus = "Initializing database...";
                 using var scope = app.Services.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<AssetManagementDbContext>();
-                
+
                 await context.Database.EnsureCreatedAsync();
                 _initStatus = "Database initialized successfully";
                 _isInitialized = true;
-                
+
                 Console.WriteLine("✅ Database initialization completed");
             }
             catch (Exception ex)
@@ -171,7 +172,7 @@ namespace AssetManagementSystem.PL
         private static string ProcessConnectionString(IConfiguration configuration)
         {
             var connectionString = "Server=${DB_SERVER};Database=${DB_NAME};User Id=${DB_USER};Password=${DB_PASSWORD};Trust Server Certificate=true;";
-            
+
             return connectionString
                 .Replace("${DB_SERVER}", Environment.GetEnvironmentVariable("DB_SERVER") ?? "assetmanagement-db.c5ukygaowo6o.eu-north-1.rds.amazonaws.com")
                 .Replace("${DB_NAME}", Environment.GetEnvironmentVariable("DB_NAME") ?? "AssetManagementDB")

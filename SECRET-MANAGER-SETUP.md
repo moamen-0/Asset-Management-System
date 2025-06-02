@@ -44,7 +44,7 @@ Click **"CREATE SECRET"**
 #### Secret 4: Email Password
 ```
 Name: email-password
-Secret value: edlp uhjb bkoz ejpc
+Secret value: qebv vfcq ovof brjx
 ```
 Click **"CREATE SECRET"**
 
