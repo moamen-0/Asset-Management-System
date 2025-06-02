@@ -123,13 +123,11 @@ namespace AssetManagementSystem.PL
             {
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
-            }
-
-            app.UseStaticFiles();
+            }            app.UseStaticFiles();
             app.UseRouting();
-            app.UseSession();
             app.UseAuthentication();
-            app.UseAuthorization();            // Configure routing
+            app.UseAuthorization();
+            app.UseSession();// Configure routing
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Auth}/{action=Login}/{id?}");
