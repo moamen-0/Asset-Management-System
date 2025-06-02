@@ -1,0 +1,107 @@
+@{
+    ViewData["Title"] = "Email Test";
+    Layout = "~/Views/Shared/_Dashboard_Tabler.cshtml";
+}
+
+<div class="container mt-4" dir="rtl">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-primary text-white p-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-envelope fa-2x me-3"></i>
+                        <div>
+                            <h3 class="mb-0">Email Test</h3>
+                            <p class="mb-0 text-white-50">Test the email configuration and SMTP settings</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    @if (!string.IsNullOrEmpty(ViewBag.Success))
+                    {
+                        <div class="alert alert-success mb-4">
+                            <i class="fas fa-check-circle me-2"></i>
+                            @ViewBag.Success
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(ViewBag.Error))
+                    {
+                        <div class="alert alert-danger mb-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            @ViewBag.Error
+                        </div>
+                    }
+
+                    <form asp-action="TestEmail" method="post">
+                        <div class="form-group mb-3">
+                            <label for="toEmail" class="form-label fw-bold">To Email Address <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-envelope text-primary"></i>
+                                </span>
+                                <input type="email" class="form-control" name="toEmail" id="toEmail" 
+                                       placeholder="Enter recipient email address" dir="ltr" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="subject" class="form-label fw-bold">Subject</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-tag text-primary"></i>
+                                </span>
+                                <input type="text" class="form-control" name="subject" id="subject" 
+                                       value="Test Email from Asset Management System" dir="ltr">
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="body" class="form-label fw-bold">Message Body</label>
+                            <textarea class="form-control" name="body" id="body" rows="5" 
+                                      placeholder="Enter email message" dir="ltr">This is a test email to verify SMTP configuration.
+
+Current configuration:
+- Email: momenhassan7240@gmail.com
+- Server: smtp.gmail.com
+- Port: 587
+- Security: SSL/TLS
+
+If you receive this email, the configuration is working correctly.</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-controller="User" asp-action="Profile" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="sendButton">
+                                <i class="fas fa-paper-plane me-2"></i> Send Test Email
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6 class="fw-bold mb-2">Current Email Configuration:</h6>
+                        <ul class="list-unstyled mb-0 small text-muted">
+                            <li><strong>Server:</strong> smtp.gmail.com</li>
+                            <li><strong>Port:</strong> 587</li>
+                            <li><strong>Email:</strong> momenhassan7240@gmail.com</li>
+                            <li><strong>Security:</strong> SSL/TLS enabled</li>
+                            <li><strong>Authentication:</strong> App Password</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('sendButton').addEventListener('click', function() {
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Sending...';
+            this.disabled = true;
+        });
+    </script>
+}
