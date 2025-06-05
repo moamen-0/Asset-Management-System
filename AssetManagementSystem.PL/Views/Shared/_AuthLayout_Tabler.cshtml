@@ -195,9 +195,10 @@
             to {
                 opacity: 1;
                 transform: translateY(0);
-            }
-        }
+            }        }
     </style>
+    
+    @RenderSection("Styles", required: false)
 </head>
 
 <body>
@@ -255,9 +256,10 @@
                 setTimeout(() => {
                     submitBtn.prop('disabled', false);
                     submitBtn.html('<i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول');
-                }, 3000);
-            });
+                }, 3000);            });
         });
     </script>
+    
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

@@ -1,162 +1,94 @@
-﻿@model LoginViewModel
+﻿@using AssetManagementSystem.PL.Models
+@model LoginViewModel
 @{
-    Layout = "~/Views/Shared/_AuthLayout_Tabler.cshtml";
+    Layout = "~/Views/Shared/_AuthLayout_Enhanced.cshtml";
+    ViewData["Title"] = "تسجيل الدخول";
 }
 
-<div class="login-container">
-    <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-body p-5">
-            <h2 class="text-center fw-bold mb-4 text-primary display-5">تسجيل الدخول</h2>
-
-            <form asp-action="Login" method="post">
-                <!-- Validation Summary -->
-             
-
-                <div class="mb-4">
-                    <label asp-for="Email" class="form-label fw-semibold fs-4">البريد الإلكتروني</label>
-                    <div class="input-group input-group-lg">
-                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                        <input asp-for="Email" class="form-control fs-5" placeholder="أدخل بريدك الإلكتروني" dir="ltr" />
+<div class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-card-content">
+                <!-- Visual Section -->
+                <div class="auth-visual">
+                    <div class="auth-visual-content">
+                        <div class="auth-visual-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>مرحباً بك مرة أخرى</h3>
+                        <p>قم بتسجيل الدخول للوصول إلى نظام إدارة الأصول وإدارة موارد مؤسستك بكفاءة عالية</p>
                     </div>
-                    <span asp-validation-for="Email" class="text-danger fs-5 mt-2"></span>
                 </div>
 
-                <div class="mb-4">
-                    <label asp-for="Password" class="form-label fw-semibold fs-4">كلمة المرور</label>
-                    <div class="input-group input-group-lg">
-                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                        <input asp-for="Password" type="password" class="form-control fs-5" id="password" placeholder="أدخل كلمة المرور" />
-                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility()">
-                            <i class="fas fa-eye fs-5" id="password-toggle-icon"></i>
+                <!-- Form Section -->
+                <div class="auth-form-section">
+                    <div class="auth-header">
+                        <h1>تسجيل الدخول</h1>
+                        <p>أدخل بياناتك للوصول إلى حسابك</p>
+                    </div>
+
+                    @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                    {
+                        <div class="auth-alert auth-alert-danger">
+                            <i class="fas fa-exclamation-triangle ms-2"></i>
+                            <strong>يرجى تصحيح الأخطاء التالية:</strong>
+                            <div asp-validation-summary="All" class="mt-2"></div>
+                        </div>
+                    }
+
+                    <form asp-action="Login" method="post" id="loginForm">
+                        <div class="form-group">
+                            <label asp-for="Email" class="form-label">البريد الإلكتروني</label>
+                            <div class="form-control-wrapper">
+                                <input asp-for="Email" 
+                                       class="form-control" 
+                                       placeholder="أدخل بريدك الإلكتروني" 
+                                       dir="ltr" 
+                                       autocomplete="email" />
+                                <i class="fas fa-envelope form-icon"></i>
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Password" class="form-label">كلمة المرور</label>
+                            <div class="form-control-wrapper">
+                                <input asp-for="Password" 
+                                       type="password" 
+                                       class="form-control" 
+                                       id="password" 
+                                       placeholder="أدخل كلمة المرور" 
+                                       autocomplete="current-password" />
+                                <i class="fas fa-lock form-icon"></i>
+                                <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
+                                    <i class="fas fa-eye" id="password-toggle-icon"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger"></span>                        </div>                        <div class="form-group">
+                            <div class="d-flex justify-content-center">
+                                <a asp-action="ForgotPassword" class="auth-link">نسيت كلمة المرور؟</a>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-auth btn-primary" id="loginBtn">
+                            <i class="fas fa-sign-in-alt ms-2"></i>
+                            تسجيل الدخول
                         </button>
-                    </div>
-                    <span asp-validation-for="Password" class="text-danger fs-5 mt-2"></span>
-                </div>
 
-                <div class="mb-4 d-flex justify-content-center align-items-center">
-                    <div>
-                        <a asp-action="ForgotPassword" class="text-primary fs-5">نسيت كلمة المرور؟</a>
-                    </div>
+                        <div class="auth-footer">
+                            <p>
+                                ليس لديك حساب؟
+                                <a asp-action="Register" class="auth-link">إنشاء حساب جديد</a>
+                            </p>
+                        </div>
+                    </form>
                 </div>
-
-                <button type="submit" class="btn btn-primary w-100 py-3 fw-bold mb-3 fs-4">
-                    <i class="fas fa-sign-in-alt me-2"></i> تسجيل الدخول
-                </button>
-
-                <div class="text-center mt-4">
-                    <p class="mb-0 fs-5">
-                        ليس لديك حساب؟
-                        <a asp-action="Register" class="text-decoration-none fw-semibold text-primary fs-5">إنشاء حساب جديد</a>
-                    </p>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
-<style>
-    .login-container {
-        max-width: 600px; /* زيادة العرض قليلاً */
-        width: 100%;
-        margin: 0 auto;
-    }
-
-    .card {
-        background-color: rgba(255, 255, 255, 0.95);
-        border-radius: 15px;
-        overflow: hidden;
-    }
-
-    .form-control {
-        border-radius: 8px;
-        padding: 15px; /* زيادة المساحة الداخلية */
-        height: auto;
-        font-size: 18px; /* زيادة حجم الخط */
-        transition: all 0.3s;
-    }
-
-        .form-control:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-
-    .input-group-text {
-        background-color: #f8f9fa;
-        border-color: #dee2e6;
-        font-size: 18px; /* زيادة حجم الأيقونات */
-        padding: 0 15px; /* زيادة المساحة الداخلية */
-    }
-
-    .btn-primary {
-        background: linear-gradient(45deg, #2937f0, #9f1ae2);
-        border: none;
-        border-radius: 8px;
-        font-size: 20px; /* زيادة حجم الخط للزر */
-        transition: all 0.3s;
-    }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
-            background: linear-gradient(45deg, #1e2bd1, #8614c0);
-        }
-
-    /* For RTL support with input fields */
-    input[dir="ltr"] {
-        text-align: left;
-    }
-
-    /* Animation for form elements */
-    .card {
-        animation: fadeIn 0.8s ease-in-out;
-    }
-
-    @@keyframes fadeIn {
-        from
-
-    {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    }
-
-    /* For error messages */
-    .text-danger {
-        font-size: 16px; /* زيادة حجم رسائل الخطأ */
-        margin-top: 5px;
-        display: block;
-    }
-
-    /* Make validation summary look better */
-    .validation-summary-errors ul {
-        list-style: none;
-        padding-right: 0; /* تعديل للغة العربية */
-        margin-bottom: 0;
-        font-size: 16px; /* زيادة حجم الخط */
-    }
-
-    /* زيادة حجم الخط في جميع أنحاء التطبيق */
-    body {
-        font-size: 18px;
-    }
-
-    /* تكبير حجم مربع الاختيار "تذكرني" */
-    .form-check-input {
-        width: 20px;
-        height: 20px;
-    }
-
-    .form-check-label {
-        margin-right: 10px; /* مساحة أكبر للغة العربية */
-    }
-</style>
-
+@section Scripts {
 <script>
     function togglePasswordVisibility() {
         const passwordInput = document.getElementById('password');
@@ -173,11 +105,15 @@
         }
     }
 
-    // Show validation summary if it contains errors
+    // Form validation and loading state
     document.addEventListener('DOMContentLoaded', function() {
-        const validationSummary = document.querySelector('.validation-summary-errors');
-        if (validationSummary) {
-            validationSummary.closest('.alert').classList.remove('d-none');
-        }
+        const form = document.getElementById('loginForm');
+        const submitBtn = document.getElementById('loginBtn');
+        
+        form.addEventListener('submit', function() {
+            submitBtn.classList.add('btn-loading');
+            submitBtn.disabled = true;
+        });
     });
 </script>
+}

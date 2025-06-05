@@ -1,209 +1,153 @@
-﻿@model RegisterViewModel
+﻿@using AssetManagementSystem.PL.Models
+@model RegisterViewModel
 @{
-    Layout = "~/Views/Shared/_AuthLayout_Tabler.cshtml";
+    Layout = "~/Views/Shared/_AuthLayout_Enhanced.cshtml";
+    ViewData["Title"] = "إنشاء حساب جديد";
 }
-<div class="register-container">
-    <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-body p-5">
-            <h2 class="text-center fw-bold mb-4 text-primary fs-1">إنشاء حساب جديد</h2>
-            @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
-            {
-                <div class="alert alert-danger alert-dismissible fade show fs-5 mb-4">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>يرجى تصحيح الأخطاء التالية:</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    <div asp-validation-summary="All" class="mt-2 fs-6"></div>
-                </div>
-            }
 
-            <form asp-action="Register" method="post">
-                <div asp-validation-summary="All" class="d-none" role="alert"></div>
-
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <div class="form-group mb-1">
-                            <label asp-for="FullName" class="form-label fw-semibold fs-4">الاسم الكامل</label>
-                            <div class="input-group input-group-lg">
-                                <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                <input asp-for="FullName" class="form-control rounded-end fs-5"
-                                       placeholder="أدخل اسمك الكامل" />
-                            </div>
-                            <span asp-validation-for="FullName" class="text-danger fs-6 mt-1"></span>
+<div class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-card-content">
+                <!-- Visual Section -->
+                <div class="auth-visual">
+                    <div class="auth-visual-content">
+                        <div class="auth-visual-icon">
+                            <i class="fas fa-user-plus"></i>
                         </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-group mb-1">
-                            <label asp-for="Email" class="form-label fw-semibold fs-4">البريد الإلكتروني</label>
-                            <div class="input-group input-group-lg">
-                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                                <input asp-for="Email" class="form-control rounded-end fs-5"
-                                       placeholder="أدخل بريدك الإلكتروني" dir="ltr" />
-                            </div>
-                            <span asp-validation-for="Email" class="text-danger fs-6 mt-1"></span>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-group mb-1">
-                            <label asp-for="Password" class="form-label fw-semibold fs-4">كلمة المرور</label>
-                            <div class="input-group input-group-lg">
-                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                <input asp-for="Password" type="password" class="form-control fs-5"
-                                       id="password" placeholder="أدخل كلمة مرور قوية" dir="ltr" />
-                                <button type="button" class="btn btn-outline-secondary"
-                                        onclick="togglePassword('password')">
-                                    <i class="fas fa-eye" id="passwordToggle"></i>
-                                </button>
-                            </div>
-                            <span asp-validation-for="Password" class="text-danger fs-6 mt-1"></span>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-group mb-1">
-                            <label asp-for="ConfirmPassword" class="form-label fw-semibold fs-4">تأكيد كلمة المرور</label>
-                            <div class="input-group input-group-lg">
-                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                <input asp-for="ConfirmPassword" type="password" class="form-control fs-5"
-                                       id="confirmPassword" placeholder="أعد إدخال كلمة المرور" dir="ltr" />
-                                <button type="button" class="btn btn-outline-secondary"
-                                        onclick="togglePassword('confirmPassword')">
-                                    <i class="fas fa-eye" id="confirmPasswordToggle"></i>
-                                </button>
-                            </div>
-                            <span asp-validation-for="ConfirmPassword" class="text-danger fs-6 mt-1"></span>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-group mb-1">
-                            <label asp-for="NationalId" class="form-label fw-semibold fs-4">رقم الهوية الوطنية</label>
-                            <div class="input-group input-group-lg">
-                                <span class="input-group-text"><i class="fas fa-id-card"></i></span>
-                                <input asp-for="NationalId" class="form-control rounded-end fs-5"
-                                       placeholder="أدخل رقم الهوية الوطنية" dir="ltr" />
-                            </div>
-                            <span asp-validation-for="NationalId" class="text-danger fs-6 mt-1"></span>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-group mb-1">
-                            <label asp-for="RecipientFileNumber" class="form-label fw-semibold fs-4">رقم الملف</label>
-                            <div class="input-group input-group-lg">
-                                <span class="input-group-text"><i class="fas fa-folder"></i></span>
-                                <input asp-for="RecipientFileNumber" class="form-control rounded-end fs-5"
-                                       placeholder="أدخل رقم الملف" dir="ltr" />
-                            </div>
-                            <span asp-validation-for="RecipientFileNumber" class="text-danger fs-6 mt-1"></span>
-                        </div>
+                        <h3>انضم إلينا اليوم</h3>
+                        <p>أنشئ حسابك الجديد للاستفادة من نظام إدارة الأصول المتطور وإدارة موارد مؤسستك بكفاءة</p>
                     </div>
                 </div>
 
-                <div class="mt-5">
-                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold fs-4 shadow-sm">
-                        <i class="fas fa-user-plus me-2"></i> إنشاء الحساب
-                    </button>
-                </div>
-            </form>
+                <!-- Form Section -->
+                <div class="auth-form-section">
+                    <div class="auth-header">
+                        <h1>إنشاء حساب جديد</h1>
+                        <p>املأ البيانات التالية لإنشاء حسابك</p>
+                    </div>
 
-            <p class="mt-4 text-center fs-5">
-                <span class="text-muted">لديك حساب بالفعل؟</span>
-                <a asp-controller="Auth" asp-action="Login" class="text-decoration-none fw-semibold text-primary">تسجيل الدخول</a>
-            </p>
-        </div>
+                    @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                    {
+                        <div class="auth-alert auth-alert-danger">
+                            <i class="fas fa-exclamation-triangle ms-2"></i>
+                            <strong>يرجى تصحيح الأخطاء التالية:</strong>
+                            <div asp-validation-summary="All" class="mt-2"></div>
+                        </div>
+                    }
+
+                    <form asp-action="Register" method="post" id="registerForm">
+                        <div asp-validation-summary="All" class="d-none" role="alert"></div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="FullName" class="form-label">الاسم الكامل</label>
+                                <div class="form-control-wrapper">
+                                    <input asp-for="FullName" 
+                                           class="form-control" 
+                                           placeholder="أدخل اسمك الكامل" 
+                                           autocomplete="name" />
+                                    <i class="fas fa-user form-icon"></i>
+                                </div>
+                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Email" class="form-label">البريد الإلكتروني</label>
+                                <div class="form-control-wrapper">
+                                    <input asp-for="Email" 
+                                           class="form-control" 
+                                           placeholder="أدخل بريدك الإلكتروني" 
+                                           dir="ltr" 
+                                           autocomplete="email" />
+                                    <i class="fas fa-envelope form-icon"></i>
+                                </div>
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="Password" class="form-label">كلمة المرور</label>
+                                <div class="form-control-wrapper">
+                                    <input asp-for="Password" 
+                                           type="password" 
+                                           class="form-control" 
+                                           id="password" 
+                                           placeholder="أدخل كلمة مرور قوية" 
+                                           dir="ltr" 
+                                           autocomplete="new-password" />
+                                    <i class="fas fa-lock form-icon"></i>
+                                    <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                                        <i class="fas fa-eye" id="passwordToggle"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="Password" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="ConfirmPassword" class="form-label">تأكيد كلمة المرور</label>
+                                <div class="form-control-wrapper">
+                                    <input asp-for="ConfirmPassword" 
+                                           type="password" 
+                                           class="form-control" 
+                                           id="confirmPassword" 
+                                           placeholder="أعد إدخال كلمة المرور" 
+                                           dir="ltr" 
+                                           autocomplete="new-password" />
+                                    <i class="fas fa-lock form-icon"></i>
+                                    <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
+                                        <i class="fas fa-eye" id="confirmPasswordToggle"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label asp-for="NationalId" class="form-label">رقم الهوية الوطنية</label>
+                                <div class="form-control-wrapper">
+                                    <input asp-for="NationalId" 
+                                           class="form-control" 
+                                           placeholder="أدخل رقم الهوية الوطنية" 
+                                           dir="ltr" />
+                                    <i class="fas fa-id-card form-icon"></i>
+                                </div>
+                                <span asp-validation-for="NationalId" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="RecipientFileNumber" class="form-label">رقم الملف</label>
+                                <div class="form-control-wrapper">
+                                    <input asp-for="RecipientFileNumber" 
+                                           class="form-control" 
+                                           placeholder="أدخل رقم الملف" 
+                                           dir="ltr" />
+                                    <i class="fas fa-folder form-icon"></i>
+                                </div>
+                                <span asp-validation-for="RecipientFileNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-auth btn-primary" id="registerBtn">
+                            <i class="fas fa-user-plus ms-2"></i>
+                            إنشاء الحساب
+                        </button>
+
+                        <div class="auth-footer">
+                            <p>
+                                لديك حساب بالفعل؟
+                                <a asp-controller="Auth" asp-action="Login" class="auth-link">تسجيل الدخول</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>        </div>
     </div>
 </div>
-<style>
-    .register-container {
-        max-width: 800px;
-        width: 100%;
-        margin: 0 auto;
-    }
 
-    .card {
-        background-color: rgba(255, 255, 255, 0.95);
-        border-radius: 15px;
-        overflow: hidden;
-        animation: fadeIn 0.8s ease-in-out;
-    }
-
-    @@keyframes fadeIn {
-        from
-
-    {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    }
-
-    .form-control {
-        border-radius: 0 8px 8px 0;
-        padding: 12px;
-        transition: all 0.3s;
-    }
-
-        .form-control:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-
-    .input-group-text {
-        background-color: #f8f9fa;
-        border-color: #dee2e6;
-        border-radius: 8px 0 0 8px;
-    }
-
-    .btn-primary {
-        background: linear-gradient(45deg, #2937f0, #9f1ae2);
-        border: none;
-        border-radius: 8px;
-        transition: all 0.3s;
-    }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
-            background: linear-gradient(45deg, #1e2bd1, #8614c0);
-        }
-
-    /* Fix for RTL with input fields */
-    input[dir="ltr"] {
-        text-align: left;
-    }
-
-    .validation-summary-errors ul {
-        list-style-type: none;
-        padding-right: 10px;
-    }
-
-    .validation-summary-errors li {
-        margin-bottom: 5px;
-    }
-
-    /* Fix for RTL input groups */
-    .input-group > .form-control:not(:last-child) {
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
-        border-top-right-radius: 8px;
-        border-bottom-right-radius: 8px;
-    }
-
-    .input-group > :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(.invalid-feedback) {
-        margin-right: -1px;
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
-        border-top-left-radius: 8px;
-        border-bottom-left-radius: 8px;
-    }
-</style>
+@section Scripts {
 <script>
     function togglePassword(fieldId) {
         const passwordField = document.getElementById(fieldId);
@@ -220,14 +164,65 @@
         }
     }
 
-    // Show validation summary if it contains errors
+    // Form validation and loading state
     document.addEventListener('DOMContentLoaded', function() {
-        const validationSummary = document.querySelector('.validation-summary-errors');
-        if (validationSummary) {
-            const alertContainer = validationSummary.closest('.alert');
-            if (alertContainer && alertContainer.classList.contains('d-none')) {
-                alertContainer.classList.remove('d-none');
-            }
-        }
+        const form = document.getElementById('registerForm');
+        const submitBtn = document.getElementById('registerBtn');
+        
+        form.addEventListener('submit', function() {
+            submitBtn.classList.add('btn-loading');
+            submitBtn.disabled = true;
+        });
+
+        // Password strength indicator
+        const passwordField = document.getElementById('password');
+        const confirmPasswordField = document.getElementById('confirmPassword');
+        
+        passwordField.addEventListener('input', function() {
+            validatePasswordStrength(this.value);
+        });
+        
+        confirmPasswordField.addEventListener('input', function() {
+            validatePasswordMatch();
+        });
+        
+        passwordField.addEventListener('input', validatePasswordMatch);
     });
+
+    function validatePasswordStrength(password) {
+        const strengthIndicator = document.getElementById('password-strength');
+        if (!strengthIndicator) return;
+        
+        let strength = 0;
+        if (password.length >= 8) strength++;
+        if (password.match(/[a-z]/)) strength++;
+        if (password.match(/[A-Z]/)) strength++;
+        if (password.match(/[0-9]/)) strength++;
+        if (password.match(/[^a-zA-Z0-9]/)) strength++;
+        
+        const strengthTexts = ['ضعيف جداً', 'ضعيف', 'متوسط', 'قوي', 'قوي جداً'];
+        const strengthColors = ['#dc2626', '#f59e0b', '#eab308', '#10b981', '#059669'];
+        
+        strengthIndicator.textContent = strengthTexts[strength] || '';
+        strengthIndicator.style.color = strengthColors[strength] || '';
+    }
+
+    function validatePasswordMatch() {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const matchIndicator = document.getElementById('password-match');
+        
+        if (!matchIndicator) return;
+        
+        if (confirmPassword && password !== confirmPassword) {
+            matchIndicator.textContent = 'كلمات المرور غير متطابقة';
+            matchIndicator.style.color = '#dc2626';
+        } else if (confirmPassword && password === confirmPassword) {
+            matchIndicator.textContent = 'كلمات المرور متطابقة';
+            matchIndicator.style.color = '#059669';
+        } else {
+            matchIndicator.textContent = '';
+        }
+    }
 </script>
+}
