@@ -153,12 +153,20 @@ namespace AssetManagementSystem.PL
                 _initStatus = "Initializing database...";
                 using var scope = app.Services.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<AssetManagementDbContext>();
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
                 await context.Database.EnsureCreatedAsync();
+                
+                // Seed roles and admin user
+                _initStatus = "Seeding admin user and roles...";
+                await IdentitySeeder.SeedRolesAndAdmin(userManager, roleManager);
+                
                 _initStatus = "Database initialized successfully";
                 _isInitialized = true;
 
                 Console.WriteLine("✅ Database initialization completed");
+                Console.WriteLine("✅ Admin user seeded: admin@admin.com / Admin@123");
             }
             catch (Exception ex)
             {
