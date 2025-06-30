@@ -172,10 +172,10 @@ namespace AssetManagementSystem.PL
             var connectionString = "Server=${DB_SERVER};Database=${DB_NAME};User Id=${DB_USER};Password=${DB_PASSWORD};Trust Server Certificate=true;";
 
             return connectionString
-                .Replace("${DB_SERVER}", Environment.GetEnvironmentVariable("DB_SERVER") ?? "assetmanagement-db.c5ukygaowo6o.eu-north-1.rds.amazonaws.com")
+                .Replace("${DB_SERVER}", Environment.GetEnvironmentVariable("DB_SERVER") ?? "34.71.143.39,1433")
                 .Replace("${DB_NAME}", Environment.GetEnvironmentVariable("DB_NAME") ?? "AssetManagementDB")
-                .Replace("${DB_USER}", Environment.GetEnvironmentVariable("DB_USER") ?? "admin")
-                .Replace("${DB_PASSWORD}", Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "asset1234");
+                .Replace("${DB_USER}", Environment.GetEnvironmentVariable("DB_USER") ?? "sqlserver")
+                .Replace("${DB_PASSWORD}", Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "asset@123!");
         }
     }
 }

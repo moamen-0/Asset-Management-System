@@ -17,7 +17,7 @@ Click **"+ CREATE SECRET"** for each of the following:
 #### Secret 1: Database Connection String
 ```
 Name: db-connection-string
-Secret value: Server=assetmanagement-db.c5ukygaowo6o.eu-north-1.rds.amazonaws.com;Database=AssetManagementDB;User Id=admin;Password=asset1234;Encrypt=True;TrustServerCertificate=True;
+Secret value: Server=34.71.143.39,1433;Database=AssetManagementDB;User Id=sqlserver;Password=asset@123!;Encrypt=True;TrustServerCertificate=True;
 ```
 Click **"CREATE SECRET"**
 

@@ -60,10 +60,10 @@ function Create-Secret {
 }
 
 # Your database and email configuration
-$DB_SERVER = "assetmanagement-db.c5ukygaowo6o.eu-north-1.rds.amazonaws.com"
+$DB_SERVER = "34.71.143.39,1433"
 $DB_NAME = "AssetManagementDB"
-$DB_USER = "admin"
-$DB_PASSWORD = "asset1234"
+$DB_USER = "sqlserver"
+$DB_PASSWORD = "asset@123!"
 $EMAIL_SENDER = "momenhassan7240@gmail.com"
 $EMAIL_ACCOUNT = "momenhassan7240@gmail.com"
 $EMAIL_PASSWORD = "qebv vfcq ovof brjx"

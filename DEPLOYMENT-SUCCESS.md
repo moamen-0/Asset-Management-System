@@ -73,8 +73,9 @@ Response: "Ready - Init: True"
 - **Max Instances**: 10
 
 ### Database Configuration
-- **Type**: AWS RDS (SQL Server)
-- **Server**: assetmanagement-db.c5ukygaowo6o.eu-north-1.rds.amazonaws.com
+- **Type**: Google Cloud SQL (SQL Server 2022 Express)
+- **Server**: 34.71.143.39,1433
+- **Connection Name**: durable-office-464510-t3:us-central1:assetmanagement-db
 - **Database**: AssetManagementDB
 - **Connection**: Successful ✅
 
